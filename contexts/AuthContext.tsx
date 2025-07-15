@@ -1,19 +1,11 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { Session, User, AuthError } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+import { useAuthStore } from '@/stores/authStore';
 
-// Types pour le contexte d'authentification
+// Contexte simplifié pour l'initialisation
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signOut: () => Promise<{ error: AuthError | null }>;
-  resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
+  initialized: boolean;
 }
 
-// Créer le contexte
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Props pour le provider
@@ -21,111 +13,24 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Provider d'authentification
+// Provider d'authentification simplifié
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const initialize = useAuthStore((state) => state.initialize);
+  const cleanup = useAuthStore((state) => state.cleanup);
+  const initialized = useAuthStore((state) => state.initialized);
 
   useEffect(() => {
-    // Récupérer la session initiale
-    const getInitialSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Erreur lors de la récupération de la session:', error);
-      } else {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-      
-      setLoading(false);
+    // Initialiser le store d'authentification
+    initialize();
+
+    // Nettoyer lors du démontage
+    return () => {
+      cleanup();
     };
+  }, [initialize, cleanup]);
 
-    getInitialSession();
-
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: string, session: Session | null) => {
-        console.log('Changement d\'état d\'authentification:', event);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    // Nettoyer l'abonnement
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Fonction d'inscription
-  const signUp = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      return { error };
-    } catch (error) {
-      console.error('Erreur lors de l\'inscription:', error);
-      return { error: error as AuthError };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fonction de connexion
-  const signIn = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      return { error };
-    } catch (error) {
-      console.error('Erreur lors de la connexion:', error);
-      return { error: error as AuthError };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fonction de déconnexion
-  const signOut = async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signOut();
-      return { error };
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
-      return { error: error as AuthError };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fonction de réinitialisation du mot de passe
-  const resetPassword = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      return { error };
-    } catch (error) {
-      console.error('Erreur lors de la réinitialisation du mot de passe:', error);
-      return { error: error as AuthError };
-    }
-  };
-
-  // Valeur du contexte
   const value: AuthContextType = {
-    user,
-    session,
-    loading,
-    signUp,
-    signIn,
-    signOut,
-    resetPassword,
+    initialized,
   };
 
   return (
@@ -135,17 +40,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 };
 
-// Hook pour utiliser le contexte d'authentification
-export const useAuth = (): AuthContextType => {
+// Hook pour utiliser le contexte d'initialisation
+export const useAuthContext = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth doit être utilisé dans un AuthProvider');
+    throw new Error('useAuthContext doit être utilisé dans un AuthProvider');
   }
   return context;
 };
 
-// Hook pour vérifier si l'utilisateur est connecté
-export const useIsAuthenticated = (): boolean => {
-  const { user } = useAuth();
-  return !!user;
-}; 
+// Re-export des hooks du store pour la compatibilité
+export { useAuth, useIsAuthenticated, useAuthUser, useAuthSession, useAuthLoading } from '@/stores/authStore'; 

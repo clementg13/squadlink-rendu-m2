@@ -10,11 +10,14 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, useAuthUser, useAuthLoading } from '@/stores/authStore';
 import { env } from '@/constants/Environment';
 
 export default function HomeScreen() {
-  const { user, loading, signIn, signUp, signOut } = useAuth();
+  const user = useAuthUser();
+  const loading = useAuthLoading();
+  const { signIn, signUp, signOut } = useAuth();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
@@ -107,6 +110,13 @@ export default function HomeScreen() {
           </Text>
         </View>
 
+        <View style={styles.storeInfo}>
+          <Text style={styles.envTitle}>État du store Zustand :</Text>
+          <Text style={styles.envText}>✅ Utilisateur connecté</Text>
+          <Text style={styles.envText}>✅ Session active</Text>
+          <Text style={styles.envText}>✅ Store initialisé</Text>
+        </View>
+
         <View style={styles.envInfo}>
           <Text style={styles.envTitle}>Configuration Supabase :</Text>
           <Text style={styles.envText}>URL: {env.EXPO_PUBLIC_SUPABASE_URL}</Text>
@@ -132,6 +142,7 @@ export default function HomeScreen() {
           <Text style={styles.subtitle}>
             {isSignUp ? 'Créer un compte' : 'Se connecter'}
           </Text>
+          <Text style={styles.zustandBadge}>Powered by Zustand 🐻</Text>
         </View>
 
         <View style={styles.form}>
@@ -187,6 +198,7 @@ export default function HomeScreen() {
           <Text style={styles.envTitle}>Configuration :</Text>
           <Text style={styles.envText}>Environnement: {env.NODE_ENV}</Text>
           <Text style={styles.envText}>Debug: {env.DEBUG ? 'Activé' : 'Désactivé'}</Text>
+          <Text style={styles.envText}>🐻 Gestion d'état: Zustand</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -226,6 +238,12 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 18,
     color: '#666',
+    marginBottom: 4,
+  },
+  zustandBadge: {
+    fontSize: 14,
+    color: '#8B5CF6',
+    fontWeight: '600',
   },
   form: {
     width: '100%',
@@ -279,6 +297,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 5,
     color: '#666',
+  },
+  storeInfo: {
+    backgroundColor: '#E8F5E8',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
   },
   envInfo: {
     backgroundColor: 'rgba(0,0,0,0.1)',
