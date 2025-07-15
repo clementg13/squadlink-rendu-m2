@@ -107,6 +107,12 @@ npx expo start --clear
 
 ## Dépannage rapide
 
+### Erreur "Property 'structuredClone' doesn't exist"
+
+- **Problème** : React Native ne supporte pas `structuredClone` requis par Supabase
+- **Solution** : Un polyfill a été automatiquement implémenté dans le projet
+- **Vérification** : Redémarrer l'application avec `npx expo start --clear`
+
 ### Erreur "Invalid API key"
 
 - Vérifier que `EXPO_PUBLIC_SUPABASE_KEY` est correct

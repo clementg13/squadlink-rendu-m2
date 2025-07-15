@@ -1,3 +1,6 @@
+// Importer les polyfills nécessaires pour React Native
+import './polyfills';
+
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { env } from '@/constants/Environment';

@@ -57,6 +57,9 @@ const envSchema = z.object({
 
 **Fichier `lib/supabase.ts`** :
 ```typescript
+// Importer les polyfills nécessaires pour React Native
+import './polyfills';
+
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { env } from '@/constants/Environment';
@@ -74,6 +77,16 @@ export const supabase = createClient(
   }
 );
 ```
+
+### 3. Polyfills React Native
+
+**Fichier `lib/polyfills.ts`** :
+React Native ne supporte pas certaines APIs Web modernes requises par Supabase. Un polyfill a été implémenté pour :
+
+- **`structuredClone`** : Clonage profond d'objets
+- **`crypto.getRandomValues`** : Génération de nombres aléatoires cryptographiques
+
+Le polyfill est automatiquement importé dans `app/_layout.tsx` pour garantir sa disponibilité avant l'initialisation de Supabase.
 
 ## Authentification
 
@@ -236,6 +249,11 @@ EXPO_PUBLIC_SUPABASE_KEY=your-anon-key
 ## Dépannage
 
 ### 1. Erreurs communes
+
+**"Property 'structuredClone' doesn't exist"** :
+- **Problème** : React Native ne supporte pas `structuredClone` natif requis par Supabase
+- **Solution** : Un polyfill a été implémenté dans `lib/polyfills.ts`
+- **Vérification** : Le polyfill est importé dans `app/_layout.tsx` et `lib/supabase.ts`
 
 **"Invalid JWT"** :
 - Vérifier que la clé API est correcte
