@@ -6,6 +6,10 @@ const envSchema = z.object({
   // Variables d'environnement requises
   API_URL: z.string().url('API_URL doit être une URL valide'),
   
+  // Variables Supabase (requises)
+  EXPO_PUBLIC_SUPABASE_URL: z.string().url('EXPO_PUBLIC_SUPABASE_URL doit être une URL valide'),
+  EXPO_PUBLIC_SUPABASE_KEY: z.string().min(1, 'EXPO_PUBLIC_SUPABASE_KEY est requis'),
+  
   // Variables d'environnement optionnelles avec valeurs par défaut
   DEBUG: z.string().default('false').transform((val) => val === 'true'),
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),

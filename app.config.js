@@ -45,6 +45,10 @@ export default {
       NODE_ENV: process.env.NODE_ENV,
       SENTRY_DSN: process.env.SENTRY_DSN,
       ANALYTICS_KEY: process.env.ANALYTICS_KEY,
+      
+      // Variables Supabase
+      EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
+      EXPO_PUBLIC_SUPABASE_KEY: process.env.EXPO_PUBLIC_SUPABASE_KEY,
     }
   }
 }; 
