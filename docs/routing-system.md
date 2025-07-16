@@ -88,10 +88,10 @@ export default function IndexScreen() {
 graph TD
     A[App Launch] --> B[index.tsx]
     B --> C{Utilisateur connecté?}
-    C -->|Oui| D[/(protected)/(tabs)]
-    C -->|Non| E[/(public)/onboarding]
+    C -->|Oui| D[Routes protégées]
+    C -->|Non| E[Onboarding]
     E --> F[Slides d'introduction]
-    F --> G[/(auth)/login]
+    F --> G[Écran de connexion]
     G --> H[Formulaire de connexion]
     H --> I{Connexion réussie?}
     I -->|Oui| D
