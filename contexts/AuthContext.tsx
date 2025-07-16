@@ -20,14 +20,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const initialized = useAuthStore((state) => state.initialized);
 
   useEffect(() => {
+    console.log('🚀 AuthProvider: Initialisation du store d\'authentification');
+    
     // Initialiser le store d'authentification
     initialize();
 
     // Nettoyer lors du démontage
     return () => {
+      console.log('🧹 AuthProvider: Nettoyage du store d\'authentification');
       cleanup();
     };
   }, [initialize, cleanup]);
+
+  useEffect(() => {
+    console.log('📊 AuthProvider: État d\'initialisation changé:', initialized);
+  }, [initialized]);
 
   const value: AuthContextType = {
     initialized,

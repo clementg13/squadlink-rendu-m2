@@ -27,6 +27,10 @@ interface AuthState {
   // Méthodes utilitaires
   initialize: () => Promise<void>;
   cleanup: () => void;
+  
+  // Callback de redirection
+  onAuthChange?: (user: User | null) => void;
+  setOnAuthChange: (callback: (user: User | null) => void) => void;
 }
 
 // Créer le store avec persistance
@@ -40,22 +44,49 @@ export const useAuthStore = create<AuthState>()(
       initialized: false,
 
       // Actions de base
-      setUser: (user) => set({ user }),
-      setSession: (session) => set({ session }),
-      setLoading: (loading) => set({ loading }),
-      setInitialized: (initialized) => set({ initialized }),
+      setUser: (user) => {
+        console.log('👤 Store: Mise à jour utilisateur:', user ? 'Connecté' : 'Déconnecté');
+        set({ user });
+        
+        // Appeler le callback de redirection si défini
+        const { onAuthChange } = get();
+        if (onAuthChange) {
+          console.log('🔄 Store: Appel du callback de redirection');
+          onAuthChange(user);
+        }
+      },
+      setSession: (session) => {
+        console.log('🔐 Store: Mise à jour session:', session ? 'Active' : 'Inactive');
+        set({ session });
+      },
+      setLoading: (loading) => {
+        console.log('⏳ Store: Mise à jour loading:', loading);
+        set({ loading });
+      },
+      setInitialized: (initialized) => {
+        console.log('🚀 Store: Mise à jour initialized:', initialized);
+        set({ initialized });
+      },
+
+      // Callback de redirection
+      setOnAuthChange: (callback) => {
+        console.log('📞 Store: Définition du callback de redirection');
+        set({ onAuthChange: callback });
+      },
 
       // Inscription
       signUp: async (email: string, password: string) => {
         try {
+          console.log('📝 Store: Tentative d\'inscription pour:', email);
           set({ loading: true });
           const { error } = await supabase.auth.signUp({
             email,
             password,
           });
+          console.log('📝 Store: Résultat inscription:', error ? 'Erreur' : 'Succès');
           return { error };
         } catch (error) {
-          console.error('Erreur lors de l\'inscription:', error);
+          console.error('❌ Store: Erreur lors de l\'inscription:', error);
           return { error: error as AuthError };
         } finally {
           set({ loading: false });
@@ -65,14 +96,16 @@ export const useAuthStore = create<AuthState>()(
       // Connexion
       signIn: async (email: string, password: string) => {
         try {
+          console.log('🔑 Store: Tentative de connexion pour:', email);
           set({ loading: true });
           const { error } = await supabase.auth.signInWithPassword({
             email,
             password,
           });
+          console.log('🔑 Store: Résultat connexion:', error ? 'Erreur' : 'Succès');
           return { error };
         } catch (error) {
-          console.error('Erreur lors de la connexion:', error);
+          console.error('❌ Store: Erreur lors de la connexion:', error);
           return { error: error as AuthError };
         } finally {
           set({ loading: false });
@@ -82,14 +115,16 @@ export const useAuthStore = create<AuthState>()(
       // Déconnexion
       signOut: async () => {
         try {
+          console.log('🚪 Store: Tentative de déconnexion');
           set({ loading: true });
           const { error } = await supabase.auth.signOut();
           if (!error) {
+            console.log('🚪 Store: Déconnexion réussie, nettoyage de l\'état');
             set({ user: null, session: null });
           }
           return { error };
         } catch (error) {
-          console.error('Erreur lors de la déconnexion:', error);
+          console.error('❌ Store: Erreur lors de la déconnexion:', error);
           return { error: error as AuthError };
         } finally {
           set({ loading: false });
@@ -99,10 +134,12 @@ export const useAuthStore = create<AuthState>()(
       // Réinitialisation du mot de passe
       resetPassword: async (email: string) => {
         try {
+          console.log('🔄 Store: Réinitialisation mot de passe pour:', email);
           const { error } = await supabase.auth.resetPasswordForEmail(email);
+          console.log('🔄 Store: Résultat réinitialisation:', error ? 'Erreur' : 'Succès');
           return { error };
         } catch (error) {
-          console.error('Erreur lors de la réinitialisation du mot de passe:', error);
+          console.error('❌ Store: Erreur lors de la réinitialisation du mot de passe:', error);
           return { error: error as AuthError };
         }
       },
@@ -110,14 +147,16 @@ export const useAuthStore = create<AuthState>()(
       // Initialisation du store
       initialize: async () => {
         try {
+          console.log('🚀 Store: Début de l\'initialisation');
           set({ loading: true });
           
           // Récupérer la session initiale
           const { data: { session }, error } = await supabase.auth.getSession();
           
           if (error) {
-            console.error('Erreur lors de la récupération de la session:', error);
+            console.error('❌ Store: Erreur lors de la récupération de la session:', error);
           } else {
+            console.log('📋 Store: Session récupérée:', session ? 'Trouvée' : 'Aucune');
             set({ 
               session, 
               user: session?.user ?? null 
@@ -127,21 +166,23 @@ export const useAuthStore = create<AuthState>()(
           // Écouter les changements d'authentification
           const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event: string, session: Session | null) => {
-              console.log('Changement d\'état d\'authentification:', event);
-              set({ 
-                session, 
-                user: session?.user ?? null,
-                loading: false 
-              });
+              console.log('🔄 Store: Changement d\'état d\'authentification:', event, session ? 'Session active' : 'Pas de session');
+              
+              // Utiliser setUser et setSession pour déclencher les callbacks
+              const { setUser, setSession, setLoading } = get();
+              setSession(session);
+              setUser(session?.user ?? null);
+              setLoading(false);
             }
           );
 
           // Stocker la subscription pour pouvoir la nettoyer
           (get() as any)._subscription = subscription;
           
+          console.log('✅ Store: Initialisation terminée');
           set({ initialized: true });
         } catch (error) {
-          console.error('Erreur lors de l\'initialisation:', error);
+          console.error('❌ Store: Erreur lors de l\'initialisation:', error);
         } finally {
           set({ loading: false });
         }
@@ -149,6 +190,7 @@ export const useAuthStore = create<AuthState>()(
 
       // Nettoyage
       cleanup: () => {
+        console.log('🧹 Store: Nettoyage des subscriptions');
         const subscription = (get() as any)._subscription;
         if (subscription) {
           subscription.unsubscribe();
