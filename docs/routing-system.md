@@ -1,14 +1,8 @@
-# Système de Routage SquadLink
-
-Ce document décrit l'implémentation complète du système de routage dans l'application SquadLink, utilisant Expo Router avec les dernières bonnes pratiques.
+# Documentation du Système de Routage SquadLink
 
 ## Vue d'ensemble
 
-Le système de routage est basé sur **Expo Router** (v3) avec une architecture organisée en groupes de routes selon les niveaux d'accès :
-
-- **Routes publiques** : Accessibles sans authentification (onboarding, conditions, etc.)
-- **Routes d'authentification** : Connexion, inscription, mot de passe oublié
-- **Routes protégées** : Nécessitent une authentification (dashboard, profil, etc.)
+SquadLink utilise **Expo Router** (v3) avec une architecture de routage basée sur le système de fichiers. L'application est organisée en trois groupes principaux selon les niveaux d'accès utilisateur.
 
 ## Architecture des Routes
 
@@ -16,49 +10,47 @@ Le système de routage est basé sur **Expo Router** (v3) avec une architecture 
 
 ```
 app/
-├── _layout.tsx                 # Layout principal avec AuthProvider
-├── index.tsx                   # Route de redirection automatique
+├── _layout.tsx                 # Layout racine avec AuthProvider
+├── index.tsx                   # Point d'entrée et redirection automatique
 ├── modal.tsx                   # Modal global
-├── (public)/                   # Routes publiques
+├── (public)/                   # 🌐 Routes publiques (sans authentification)
 │   ├── _layout.tsx
 │   ├── onboarding.tsx
 │   ├── terms.tsx
 │   └── privacy.tsx
-├── (auth)/                     # Routes d'authentification
+├── (auth)/                     # 🔐 Routes d'authentification
 │   ├── _layout.tsx
 │   ├── login.tsx
 │   ├── register.tsx
 │   ├── forgot-password.tsx
 │   └── reset-password.tsx
-└── (protected)/                # Routes protégées
-    ├── _layout.tsx             # Protection d'accès
-    └── (tabs)/                 # Navigation par onglets
+└── (protected)/                # 🛡️ Routes protégées (authentification requise)
+    ├── _layout.tsx
+    └── (tabs)/
         ├── _layout.tsx
-        ├── index.tsx           # Accueil
+        ├── index.tsx
         ├── dashboard.tsx
         ├── messages.tsx
         └── profile.tsx
 ```
 
-## Fonctionnalités Principales
+### Groupes de Routes
 
-### 1. Redirection Automatique
+Les parenthèses `()` créent des groupes de routes sans affecter l'URL. Chaque groupe a son propre layout et sa logique spécifique.
 
-**Fichier : `app/index.tsx`**
+## Flux de Navigation
 
-Le système de redirection a été amélioré avec un callback système pour gérer les problèmes de persistance Zustand :
+### 1. Point d'entrée (`app/index.tsx`)
 
 ```typescript
 export default function IndexScreen() {
   const router = useRouter();
-  
-  // Utiliser des selectors spécifiques pour forcer les re-renders
   const user = useAuthUser();
   const loading = useAuthLoading();
   const initialized = useAuthStore((state) => state.initialized);
   const setOnAuthChange = useAuthStore((state) => state.setOnAuthChange);
 
-  // Configurer le callback de redirection
+  // Callback pour redirection automatique après connexion
   useEffect(() => {
     setOnAuthChange((user) => {
       if (user) {
@@ -69,6 +61,7 @@ export default function IndexScreen() {
     });
   }, [router, setOnAuthChange]);
 
+  // Redirection initiale
   useEffect(() => {
     if (!initialized || loading) return;
 
@@ -83,71 +76,52 @@ export default function IndexScreen() {
 }
 ```
 
-**Améliorations récentes :**
-- ✅ Callback système pour forcer la redirection après connexion
-- ✅ Selectors Zustand spécifiques pour éviter les problèmes de re-render
-- ✅ Gestion robuste des états de chargement
-- ✅ Logs détaillés pour le débogage
+**Logique :**
+- Vérifie l'état d'authentification
+- Redirige vers les routes protégées si connecté
+- Redirige vers l'onboarding si non connecté
+- Configure un callback pour les redirections automatiques
 
-### 2. Store d'Authentification Amélioré
+### 2. Diagramme de flux
 
-**Fichier : `stores/authStore.ts`**
-
-Le store a été amélioré avec un système de callbacks pour les redirections :
-
-```typescript
-interface AuthState {
-  // ... autres propriétés
-  
-  // Callback de redirection
-  onAuthChange?: (user: User | null) => void;
-  setOnAuthChange: (callback: (user: User | null) => void) => void;
-}
-
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      // ... autres méthodes
-      
-      setUser: (user) => {
-        set({ user });
-        
-        // Appeler le callback de redirection si défini
-        const { onAuthChange } = get();
-        if (onAuthChange) {
-          onAuthChange(user);
-        }
-      },
-      
-      setOnAuthChange: (callback) => {
-        set({ onAuthChange: callback });
-      },
-      
-      // Correction dans onAuthStateChange
-      initialize: async () => {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event: string, session: Session | null) => {
-            // Utiliser setUser et setSession pour déclencher les callbacks
-            const { setUser, setSession, setLoading } = get();
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-          }
-        );
-      }
-    })
-  )
-);
+```mermaid
+graph TD
+    A[App Launch] --> B[index.tsx]
+    B --> C{Utilisateur connecté?}
+    C -->|Oui| D[/(protected)/(tabs)]
+    C -->|Non| E[/(public)/onboarding]
+    E --> F[Slides d'introduction]
+    F --> G[/(auth)/login]
+    G --> H[Formulaire de connexion]
+    H --> I{Connexion réussie?}
+    I -->|Oui| D
+    I -->|Non| G
+    D --> J[Navigation par onglets]
 ```
 
-**Corrections apportées :**
-- ✅ Callback système pour redirection forcée
-- ✅ Correction du `onAuthStateChange` pour utiliser `setUser()`
-- ✅ Hooks spécialisés (`useAuthUser`, `useAuthLoading`)
+## Layouts et Protection
 
-### 3. Protection des Routes
+### Layout Racine (`app/_layout.tsx`)
 
-**Fichier : `app/(protected)/_layout.tsx`**
+```typescript
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <ThemeProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(public)" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(protected)" />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        </Stack>
+      </ThemeProvider>
+    </AuthProvider>
+  );
+}
+```
+
+### Layout Protégé (`app/(protected)/_layout.tsx`)
 
 ```typescript
 export default function ProtectedLayout() {
@@ -157,304 +131,290 @@ export default function ProtectedLayout() {
   useEffect(() => {
     if (!initialized || loading) return;
 
-    // Rediriger vers l'authentification si pas connecté
+    // Redirection si non connecté
     if (!user) {
       router.replace('/(auth)/login');
     }
   }, [user, loading, initialized, router]);
 
-  // Écrans de chargement pendant la vérification
+  // Écran de chargement pendant la vérification
   if (!initialized || loading || !user) {
     return <LoadingScreen />;
   }
 
-  return <Stack>{/* Routes protégées */}</Stack>;
-}
-```
-
-**Avantages :**
-- ✅ Protection automatique de toutes les routes enfants
-- ✅ Redirection vers l'authentification si non connecté
-- ✅ Gestion des états de chargement
-
-### 4. Layouts Spécialisés
-
-#### Layout Public
-```typescript
-// app/(public)/_layout.tsx
-export default function PublicLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="onboarding" />
-      <Stack.Screen name="terms" />
-      <Stack.Screen name="privacy" />
+      <Stack.Screen name="(tabs)" />
     </Stack>
   );
 }
 ```
 
-#### Layout d'Authentification
+**Fonctionnement :**
+- Vérifie automatiquement l'authentification
+- Redirige vers `/login` si non connecté
+- Affiche un écran de chargement pendant la vérification
+- Protège toutes les routes enfants
+
+## Gestion d'État avec Zustand
+
+### Store d'authentification (`stores/authStore.ts`)
+
 ```typescript
-// app/(auth)/_layout.tsx
-export default function AuthLayout() {
-  return (
-    <Stack screenOptions={{ 
-      headerShown: false,
-      animation: 'slide_from_right' 
-    }}>
-      <Stack.Screen name="login" />
-      <Stack.Screen name="register" />
-      <Stack.Screen name="forgot-password" />
-      <Stack.Screen name="reset-password" />
-    </Stack>
-  );
+interface AuthState {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  initialized: boolean;
+  
+  // Callback pour redirection
+  onAuthChange?: (user: User | null) => void;
+  setOnAuthChange: (callback: (user: User | null) => void) => void;
 }
+
+// Hooks spécialisés
+export const useAuthUser = () => useAuthStore((state) => state.user);
+export const useAuthLoading = () => useAuthStore((state) => state.loading);
 ```
 
-#### Layout Protégé avec Tabs
+### Intégration Supabase
+
 ```typescript
-// app/(protected)/(tabs)/_layout.tsx
-export default function TabLayout() {
-  return (
-    <Tabs screenOptions={{
-      tabBarActiveTintColor: '#007AFF',
-      headerShown: true,
-    }}>
-      <Tabs.Screen name="index" options={{ title: 'Accueil' }} />
-      <Tabs.Screen name="dashboard" options={{ title: 'Dashboard' }} />
-      <Tabs.Screen name="messages" options={{ title: 'Messages' }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profil' }} />
-    </Tabs>
-  );
-}
+// Dans initialize()
+const { data: { subscription } } = supabase.auth.onAuthStateChange(
+  async (event: string, session: Session | null) => {
+    // Utiliser les setters pour déclencher les callbacks
+    const { setUser, setSession, setLoading } = get();
+    setSession(session);
+    setUser(session?.user ?? null);
+    setLoading(false);
+  }
+);
 ```
 
-## Écrans Implémentés
+## Écrans et Fonctionnalités
 
-### Routes Publiques (`(public)`)
+### Routes Publiques
 
-| Écran | Fichier | Description | Liens vers |
-|-------|---------|-------------|------------|
-| **Onboarding** | `onboarding.tsx` | Introduction à l'application avec slides | Terms, Privacy |
-| **Conditions** | `terms.tsx` | Conditions d'utilisation | - |
-| **Confidentialité** | `privacy.tsx` | Politique de confidentialité | - |
+| Écran | Route | Description |
+|-------|-------|-------------|
+| **Onboarding** | `/(public)/onboarding` | Introduction avec slides |
+| **Terms** | `/(public)/terms` | Conditions d'utilisation |
+| **Privacy** | `/(public)/privacy` | Politique de confidentialité |
 
-### Routes d'Authentification (`(auth)`)
+### Routes d'Authentification
 
-| Écran | Fichier | Description | Liens vers |
-|-------|---------|-------------|------------|
-| **Connexion** | `login.tsx` | Formulaire de connexion | Register, Forgot Password, Terms, Privacy |
-| **Inscription** | `register.tsx` | Formulaire d'inscription | Login, Terms, Privacy |
-| **Mot de passe oublié** | `forgot-password.tsx` | Réinitialisation par email | Login |
-| **Nouveau mot de passe** | `reset-password.tsx` | Saisie du nouveau mot de passe | Login |
+| Écran | Route | Description |
+|-------|-------|-------------|
+| **Login** | `/(auth)/login` | Connexion utilisateur |
+| **Register** | `/(auth)/register` | Inscription utilisateur |
+| **Forgot Password** | `/(auth)/forgot-password` | Réinitialisation mot de passe |
+| **Reset Password** | `/(auth)/reset-password` | Nouveau mot de passe |
 
-### Routes Protégées (`(protected)`)
+### Routes Protégées
 
-| Écran | Fichier | Description |
-|-------|---------|-------------|
-| **Accueil** | `(tabs)/index.tsx` | Tableau de bord principal |
-| **Dashboard** | `(tabs)/dashboard.tsx` | Statistiques et métriques |
-| **Messages** | `(tabs)/messages.tsx` | Communication d'équipe |
-| **Profil** | `(tabs)/profile.tsx` | Profil utilisateur (onglet) |
+| Écran | Route | Description |
+|-------|-------|-------------|
+| **Home** | `/(protected)/(tabs)/` | Accueil principal |
+| **Dashboard** | `/(protected)/(tabs)/dashboard` | Tableau de bord |
+| **Messages** | `/(protected)/(tabs)/messages` | Messagerie |
+| **Profile** | `/(protected)/(tabs)/profile` | Profil utilisateur |
 
-## Intégration avec l'Authentification
+## Navigation
 
-### 1. Hooks Optimisés
-
-```typescript
-// Hooks spécialisés pour éviter les re-renders inutiles
-const user = useAuthUser();
-const loading = useAuthLoading();
-const initialized = useAuthStore((state) => state.initialized);
-
-// Hook complet pour les actions
-const { signIn, signOut, signUp } = useAuth();
-```
-
-### 2. Redirections Automatiques
+### Méthodes de Navigation
 
 ```typescript
-// Après connexion réussie
-const { error } = await signIn(email, password);
-if (!error) {
-  // Redirection automatique via le callback système
-  // Pas besoin de router.push() manuel
-}
-```
+import { useRouter } from 'expo-router';
 
-### 3. Gestion des Erreurs
+const router = useRouter();
 
-```typescript
-// Gestion cohérente des erreurs d'auth
-if (error) {
-  Alert.alert('Erreur de connexion', error.message);
-} else {
-  Alert.alert('Succès', 'Connexion réussie !');
-}
-```
-
-## Navigation et Liens
-
-### 1. Navigation Typée
-
-```typescript
-// Utilisation de router.replace() pour éviter l'historique
+// Remplacer la route actuelle (pas d'historique)
 router.replace('/(protected)/(tabs)');
 
-// Utilisation de router.push() pour la navigation normale
+// Naviguer vers une nouvelle route (avec historique)
 router.push('/(public)/terms');
 
-// Utilisation de router.back() pour revenir
+// Retour en arrière
 router.back();
 ```
 
-### 2. Liens vers Terms et Privacy
-
-Les liens vers les conditions d'utilisation et la politique de confidentialité sont disponibles dans :
-
-- **Écran d'onboarding** : Liens en bas de page
-- **Écrans d'authentification** : Liens dans le footer
-- **Navigation directe** : `/(public)/terms` et `/(public)/privacy`
-
-## Débogage et Monitoring
-
-### 1. Logs de Navigation
+### Liens dans l'Interface
 
 ```typescript
-// Logs détaillés pour le débogage
-console.log('🔄 IndexScreen render #', renderCount, '- État:', { 
-  user: !!user, 
-  loading, 
-  initialized,
-  userEmail: user?.email || 'null' 
-});
-```
-
-### 2. Gestion des Erreurs de Navigation
-
-```typescript
-// Wrapper pour les erreurs de navigation
-try {
-  router.replace('/(protected)/(tabs)');
-} catch (error) {
-  console.error('❌ Erreur de navigation:', error);
-}
-```
-
-## Problèmes Résolus
-
-### 1. Redirection après Connexion
-
-**Problème :** La redirection automatique ne fonctionnait pas après une connexion réussie.
-
-**Solution :** 
-- Ajout d'un système de callbacks dans le store
-- Correction du `onAuthStateChange` pour utiliser `setUser()`
-- Utilisation de selectors spécifiques pour forcer les re-renders
-
-### 2. Persistance Zustand
-
-**Problème :** La persistance Zustand interférait avec les mises à jour d'état.
-
-**Solution :**
-- Callback système pour contourner les problèmes de persistance
-- Hooks spécialisés pour éviter les re-renders inutiles
-
-### 3. Gestion des États de Chargement
-
-**Problème :** États de chargement incohérents entre les écrans.
-
-**Solution :**
-- Centralisation de la logique de chargement
-- Écrans de chargement cohérents
-- Gestion appropriée des dépendances `useEffect`
-
-## Bonnes Pratiques
-
-### 1. Structure des Routes
-
-- ✅ Groupement logique par niveau d'accès
-- ✅ Layouts spécialisés pour chaque groupe
-- ✅ Protection automatique des routes sensibles
-
-### 2. Gestion d'État
-
-- ✅ Store Zustand avec persistance
-- ✅ Hooks spécialisés pour éviter les re-renders
-- ✅ Callbacks pour les actions critiques
-
-### 3. Navigation
-
-- ✅ Redirection automatique selon l'état d'auth
-- ✅ Navigation typée avec TypeScript
-- ✅ Gestion cohérente des erreurs
-
-### 4. UX/UI
-
-- ✅ Écrans de chargement pendant les transitions
-- ✅ Animations fluides entre les écrans
-- ✅ Feedback utilisateur approprié
-
-## Maintenance et Extension
-
-### 1. Ajouter une Nouvelle Route
-
-```typescript
-// 1. Créer le fichier dans le bon groupe
-// app/(public)/help.tsx
-
-// 2. Ajouter au layout correspondant
-// app/(public)/_layout.tsx
-<Stack.Screen name="help" />
-
-// 3. Naviguer vers la route
-router.push('/(public)/help');
-```
-
-### 2. Modifier les Redirections
-
-```typescript
-// Dans app/index.tsx ou le callback
-if (user) {
-  router.replace('/(protected)/dashboard');
-} else {
-  router.replace('/(public)/welcome');
-}
-```
-
-### 3. Ajouter des Liens
-
-```typescript
-// Dans n'importe quel écran
+// Lien vers les conditions d'utilisation
 <TouchableOpacity onPress={() => router.push('/(public)/terms')}>
-  <Text>Conditions d'utilisation</Text>
+  <Text style={styles.linkText}>Conditions d'utilisation</Text>
+</TouchableOpacity>
+
+// Lien vers la politique de confidentialité
+<TouchableOpacity onPress={() => router.push('/(public)/privacy')}>
+  <Text style={styles.linkText}>Politique de confidentialité</Text>
 </TouchableOpacity>
 ```
 
+## Authentification et Redirection
+
+### Processus de Connexion
+
+1. **Saisie des identifiants** dans `/(auth)/login`
+2. **Appel à `signIn()`** du store
+3. **Supabase traite l'authentification**
+4. **`onAuthStateChange` déclenché**
+5. **Callback de redirection appelé**
+6. **Redirection automatique** vers `/(protected)/(tabs)`
+
+### Processus de Déconnexion
+
+1. **Appel à `signOut()`** du store
+2. **Supabase supprime la session**
+3. **`onAuthStateChange` déclenché**
+4. **Store mis à jour** (`user: null`)
+5. **Redirection automatique** vers `/(auth)/login`
+
 ## Sécurité
 
-### 1. Protection des Routes
+### Protection des Routes
 
-- ✅ Vérification automatique de l'authentification
-- ✅ Redirection forcée si non autorisé
-- ✅ Gestion des tokens expirés
+- **Vérification automatique** dans `ProtectedLayout`
+- **Redirection forcée** si non authentifié
+- **Écrans de chargement** pendant la vérification
+- **Gestion des sessions expirées**
 
-### 2. Navigation Sécurisée
+### Validation des Données
 
-- ✅ Validation des routes avant navigation
-- ✅ Nettoyage de l'historique sur déconnexion
-- ✅ Gestion des deep links sécurisée
+```typescript
+// Exemple dans login.tsx
+const handleSignIn = async () => {
+  if (!email || !password) {
+    Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+    return;
+  }
 
-## Performance
+  const { error } = await signIn(email, password);
+  if (error) {
+    Alert.alert('Erreur de connexion', error.message);
+  }
+};
+```
 
-### 1. Optimisations
+## Développement
 
-- ✅ Lazy loading des écrans
-- ✅ Memoization des composants lourds
-- ✅ Selectors optimisés pour Zustand
+### Ajouter une Nouvelle Route
 
-### 2. Monitoring
+#### 1. Route Publique
 
-- ✅ Logs détaillés pour le débogage
-- ✅ Métriques de performance
-- ✅ Gestion des erreurs centralisée 
+```typescript
+// 1. Créer le fichier
+// app/(public)/help.tsx
+export default function HelpScreen() {
+  return <View>...</View>;
+}
+
+// 2. Ajouter au layout
+// app/(public)/_layout.tsx
+<Stack.Screen name="help" />
+
+// 3. Naviguer
+router.push('/(public)/help');
+```
+
+#### 2. Route Protégée
+
+```typescript
+// 1. Créer le fichier
+// app/(protected)/settings.tsx
+export default function SettingsScreen() {
+  return <View>...</View>;
+}
+
+// 2. Ajouter au layout
+// app/(protected)/_layout.tsx
+<Stack.Screen name="settings" />
+
+// 3. La protection est automatique
+```
+
+### Debugging
+
+```typescript
+// Logs utiles pour le débogage
+console.log('Auth state:', { user: !!user, loading, initialized });
+console.log('Navigation to:', route);
+```
+
+### Tests
+
+```typescript
+// Test de redirection
+describe('Navigation', () => {
+  it('should redirect to login when not authenticated', () => {
+    // Test logic
+  });
+});
+```
+
+## Bonnes Pratiques
+
+### 1. Navigation
+
+- ✅ Utiliser `router.replace()` pour les redirections d'auth
+- ✅ Utiliser `router.push()` pour la navigation normale
+- ✅ Toujours vérifier l'état d'auth avant navigation
+
+### 2. Layouts
+
+- ✅ Un layout par groupe de routes
+- ✅ Logique de protection dans le layout approprié
+- ✅ Écrans de chargement cohérents
+
+### 3. État
+
+- ✅ Hooks spécialisés pour éviter les re-renders
+- ✅ Callbacks pour les actions critiques
+- ✅ Persistance des données importantes
+
+### 4. Sécurité
+
+- ✅ Validation côté client ET serveur
+- ✅ Gestion des erreurs appropriée
+- ✅ Nettoyage des données sensibles
+
+## Dépannage
+
+### Problèmes Courants
+
+1. **Redirection ne fonctionne pas**
+   - Vérifier l'état d'initialisation
+   - Contrôler les dépendances useEffect
+   - Vérifier les callbacks
+
+2. **Écran blanc**
+   - Vérifier les imports
+   - Contrôler les layouts
+   - Vérifier la configuration Stack
+
+3. **Boucle de redirection**
+   - Vérifier les conditions de redirection
+   - Contrôler l'état d'authentification
+   - Vérifier les dépendances useEffect
+
+### Logs de Debug
+
+```typescript
+// Temporairement pour debug
+console.log('Current route:', router.pathname);
+console.log('Auth state:', { user, loading, initialized });
+```
+
+## Conclusion
+
+Ce système de routage offre :
+
+- **Sécurité** : Protection automatique des routes
+- **Simplicité** : Structure claire et intuitive
+- **Performance** : Chargement optimisé
+- **Maintenabilité** : Code organisé et extensible
+- **UX** : Redirections fluides et feedback approprié
+
+Pour toute question ou problème, référez-vous à cette documentation ou consultez les fichiers de code correspondants. 
