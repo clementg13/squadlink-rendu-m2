@@ -24,7 +24,8 @@ export default {
         foregroundImage: './assets/images/adaptive-icon.png',
         backgroundColor: '#ffffff'
       },
-      edgeToEdgeEnabled: true
+      edgeToEdgeEnabled: true,
+      package: 'com.clementgexpo.squadlink'
     },
     web: {
       bundler: 'metro',
