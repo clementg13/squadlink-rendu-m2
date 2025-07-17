@@ -14,6 +14,9 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     persistSession: true,
     detectSessionInUrl: false,
   },
+  db: {
+    schema: 'musclemeet',
+  },
 });
 
 // Types pour l'authentification
