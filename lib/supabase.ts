@@ -14,6 +14,9 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     persistSession: true,
     detectSessionInUrl: false,
   },
+  db: {
+    schema: 'musclemeet',
+  },
 });
 
 // Types pour l'authentification
@@ -42,4 +45,4 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
 export const getCurrentSession = async (): Promise<AuthSession | null> => {
   const { data: { session } } = await supabase.auth.getSession();
   return session;
-}; 
+};

@@ -1,65 +1,227 @@
-import { StyleSheet } from 'react-native';
-import { Text, View } from '@/components/Themed';
-import { useAuthUser } from '@/stores/authStore';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAuth } from '@/stores/authStore';
+import { useProfile } from '@/stores/profileStore';
+
+// Composants
+import ProfileHeader from '@/components/profile/ProfileHeader';
+import ProfileForm from '@/components/profile/ProfileForm';
+import ProfileHobbies from '@/components/profile/ProfileHobbies';
+import ProfileInfo from '@/components/profile/ProfileInfo';
+import ProfileActions from '@/components/profile/ProfileActions';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 export default function ProfileScreen() {
-  const user = useAuthUser();
+  const router = useRouter();
+  const { signOut } = useAuth();
+  const { 
+    profile, 
+    hobbies,
+    loading, 
+    saving, 
+    error, 
+    initialized,
+    loadProfile,
+    addUserHobby,
+    removeUserHobby,
+    toggleHighlightHobby,
+    updateProfile, 
+    initialize,
+    clearError 
+  } = useProfile();
+
+  const [formData, setFormData] = useState({
+    lastname: '',
+    firstname: '',
+    birthdate: '',
+    biography: '',
+  });
+  const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    const initializeStore = async () => {
+      if (!initialized) {
+        await initialize();
+      }
+      await loadProfile();
+    };
+    
+    initializeStore();
+  }, [initialized]);
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        lastname: profile.lastname || '',
+        firstname: profile.firstname || '',
+        birthdate: profile.birthdate || '',
+        biography: profile.biography || '',
+      });
+    }
+  }, [profile]);
+
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+    
+    if (error) {
+      clearError();
+    }
+  };
+
+  const handleSave = async () => {
+    const updateData = {
+      lastname: formData.lastname,
+      firstname: formData.firstname,
+      birthdate: formData.birthdate,
+      biography: formData.biography,
+      id_gym: profile?.id_gym,
+      id_gymsubscription: profile?.id_gymsubscription,
+    };
+
+    const { error } = await updateProfile(updateData);
+    
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    } else {
+      setHasChanges(false);
+      Alert.alert('Succès', 'Profil mis à jour avec succès !');
+    }
+  };
+
+  const handleCancel = () => {
+    if (profile) {
+      setFormData({
+        lastname: profile.lastname || '',
+        firstname: profile.firstname || '',
+        birthdate: profile.birthdate || '',
+        biography: profile.biography || '',
+      });
+    }
+    setHasChanges(false);
+    clearError();
+  };
+
+  const handleSignOut = () => {
+    Alert.alert(
+      'Déconnexion',
+      'Êtes-vous sûr de vouloir vous déconnecter ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { 
+          text: 'Déconnexion', 
+          style: 'destructive',
+          onPress: async () => {
+            const { error } = await signOut();
+            if (error) {
+              Alert.alert('Erreur', error.message);
+            }
+          }
+        },
+      ]
+    );
+  };
+
+  const handleAddHobby = async (hobbyId: string) => {
+    const { error } = await addUserHobby(hobbyId);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  const handleRemoveHobby = async (hobbyId: string) => {
+    const { error } = await removeUserHobby(hobbyId);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  const handleToggleHighlight = async (hobbyId: string) => {
+    const { error } = await toggleHighlightHobby(hobbyId);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  if (loading && !profile) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>Chargement du profil...</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Profil</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      
-      <View style={styles.profileInfo}>
-        <Text style={styles.label}>Email:</Text>
-        <Text style={styles.value}>{user?.email}</Text>
-        
-        <Text style={styles.label}>Statut:</Text>
-        <Text style={styles.value}>
-          {user?.email_confirmed_at ? 'Compte confirmé' : 'En attente de confirmation'}
-        </Text>
-        
-        <Text style={styles.label}>Membre depuis:</Text>
-        <Text style={styles.value}>
-          {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
-        </Text>
-      </View>
-    </View>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ProfileHeader 
+          firstname={formData.firstname}
+          lastname={formData.lastname}
+        />
+
+        <ProfileForm
+          formData={formData}
+          profile={profile}
+          saving={saving}
+          onFieldChange={handleFieldChange}
+        />
+
+        {error && <ErrorMessage message={error} />}
+
+        <ProfileHobbies
+          profile={profile}
+          hobbies={hobbies}
+          saving={saving}
+          onAddHobby={handleAddHobby}
+          onRemoveHobby={handleRemoveHobby}
+          onToggleHighlight={handleToggleHighlight}
+        />
+
+        <ProfileInfo profile={profile} />
+
+        <ProfileActions
+          hasChanges={hasChanges}
+          saving={saving}
+          onSave={handleSave}
+          onCancel={handleCancel}
+          onSignOut={handleSignOut}
+        />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
-    padding: 20,
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-  profileInfo: {
-    width: '100%',
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    padding: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+  loadingText: {
     marginTop: 10,
-  },
-  value: {
     fontSize: 16,
     color: '#666',
-    marginTop: 5,
   },
-}); 
+  scrollView: {
+    flex: 1,
+  },
+});
