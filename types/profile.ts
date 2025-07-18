@@ -21,12 +21,30 @@ export interface Hobbie {
   name: string;
 }
 
+export interface Sport {
+  id: string;
+  name: string;
+}
+
+export interface SportLevel {
+  id: string;
+  name: string;
+}
+
 export interface ProfileHobby {
   id: string;
   id_profile: string;
   id_hobbie: string;
   is_highlighted: boolean;
   hobbie?: Hobbie;
+}
+
+export interface ProfileSport {
+  id_profile: string;
+  id_sport: string;
+  id_sport_level: string;
+  sport?: Sport;
+  sportlevel?: SportLevel;
 }
 
 export interface UserProfile {
@@ -48,6 +66,7 @@ export interface UserProfile {
   gym?: Gym;
   gymsubscription?: GymSubscription;
   hobbies?: ProfileHobby[];
+  sports?: ProfileSport[];
 }
 
 export interface ProfileState {
@@ -56,6 +75,8 @@ export interface ProfileState {
   gyms: Gym[];
   gymSubscriptions: GymSubscription[];
   hobbies: Hobbie[];
+  sports: Sport[];
+  sportLevels: SportLevel[];
   loading: boolean;
   saving: boolean;
   error: string | null;

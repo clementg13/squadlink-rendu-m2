@@ -1,9 +1,29 @@
 import { supabase } from '@/lib/supabase';
-import { ProfileHobby } from '@/types/profile';
+import { Sport, SportLevel, ProfileSport } from '@/types/profile';
 
-export class HobbyService {
+export class SportService {
 
-  async getUserHobbies(userId: string): Promise<ProfileHobby[]> {
+  async getAllSports(): Promise<Sport[]> {
+    const { data, error } = await supabase
+      .from('sport')
+      .select('*')
+      .order('name');
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getAllSportLevels(): Promise<SportLevel[]> {
+    const { data, error } = await supabase
+      .from('sportlevel')
+      .select('*')
+      .order('name');
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getUserSports(userId: string): Promise<ProfileSport[]> {
     try {
       // D'abord récupérer l'ID du profil
       const { data: profileData, error: profileError } = await supabase
@@ -17,22 +37,23 @@ export class HobbyService {
       }
 
       const { data, error } = await supabase
-        .from('profilehobbie')
+        .from('profilesport')
         .select(`
           *,
-          hobbie!inner(*)
+          sport!inner(*),
+          sportlevel!inner(*)
         `)
         .eq('id_profile', profileData.id);
 
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('❌ HobbyService: Exception lors de getUserHobbies:', error);
+      console.error('❌ SportService: Exception lors de getUserSports:', error);
       return [];
     }
   }
 
-  async addUserHobby(userId: string, hobbyId: string, isHighlighted = false): Promise<ProfileHobby> {
+  async addUserSport(userId: string, sportId: string, sportLevelId: string): Promise<ProfileSport> {
     // Récupérer l'ID du profil
     const { data: profileData, error: profileError } = await supabase
       .from('profile')
@@ -45,15 +66,16 @@ export class HobbyService {
     }
 
     const { data, error } = await supabase
-      .from('profilehobbie')
+      .from('profilesport')
       .insert([{
         id_profile: profileData.id,
-        id_hobbie: hobbyId,
-        is_highlighted: isHighlighted
+        id_sport: sportId,
+        id_sport_level: sportLevelId
       }])
       .select(`
         *,
-        hobbie!inner(*)
+        sport!inner(*),
+        sportlevel!inner(*)
       `)
       .single();
 
@@ -61,7 +83,7 @@ export class HobbyService {
     return data;
   }
 
-  async removeUserHobby(userId: string, hobbyId: string): Promise<void> {
+  async removeUserSport(userId: string, sportId: string): Promise<void> {
     // Récupérer l'ID du profil
     const { data: profileData, error: profileError } = await supabase
       .from('profile')
@@ -74,15 +96,15 @@ export class HobbyService {
     }
 
     const { error } = await supabase
-      .from('profilehobbie')
+      .from('profilesport')
       .delete()
       .eq('id_profile', profileData.id)
-      .eq('id_hobbie', hobbyId);
+      .eq('id_sport', sportId);
 
     if (error) throw error;
   }
 
-  async toggleHighlightHobby(userId: string, hobbyId: string, newStatus: boolean): Promise<void> {
+  async updateUserSportLevel(userId: string, sportId: string, newLevelId: string): Promise<void> {
     // Récupérer l'ID du profil
     const { data: profileData, error: profileError } = await supabase
       .from('profile')
@@ -95,13 +117,13 @@ export class HobbyService {
     }
 
     const { error } = await supabase
-      .from('profilehobbie')
-      .update({ is_highlighted: newStatus })
+      .from('profilesport')
+      .update({ id_sport_level: newLevelId })
       .eq('id_profile', profileData.id)
-      .eq('id_hobbie', hobbyId);
+      .eq('id_sport', sportId);
 
     if (error) throw error;
   }
 }
 
-export const hobbyService = new HobbyService();
+export const sportService = new SportService();

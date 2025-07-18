@@ -22,6 +22,7 @@ import ProfileActions from '@/components/profile/ProfileActions';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import ProfileGym from '@/components/profile/gym/ProfileGym';
 import ProfileLocation from '@/components/profile/location/ProfileLocation';
+import ProfileSports from '@/components/profile/sports/ProfileSports';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -31,6 +32,8 @@ export default function ProfileScreen() {
     hobbies,
     gyms,
     gymSubscriptions,
+    sports,
+    sportLevels,
     loading, 
     saving, 
     error, 
@@ -39,6 +42,8 @@ export default function ProfileScreen() {
     addUserHobby,
     removeUserHobby,
     toggleHighlightHobby,
+    addUserSport,
+    removeUserSport,
     updateProfile,
     updateLocation,
     loadGymSubscriptions,
@@ -56,9 +61,15 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     const initializeStore = async () => {
+      // Forcer la re-initialisation si nécessaire
+      if (sports.length === 0 && sportLevels.length === 0) {
+        await initialize();
+      }
+      
       if (!initialized) {
         await initialize();
       }
+      
       await loadProfile();
     };
     
@@ -159,6 +170,20 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleAddSport = async (sportId: string, levelId: string) => {
+    const { error } = await addUserSport(sportId, levelId);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  const handleRemoveSport = async (sportId: string) => {
+    const { error } = await removeUserSport(sportId);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
   const handleUpdateGym = async (subscriptionId: string | null) => {
     const updateData = {
       id_gymsubscription: subscriptionId !== null ? subscriptionId : undefined,
@@ -225,6 +250,15 @@ export default function ProfileScreen() {
           saving={saving}
           onUpdateGym={handleUpdateGym}
           onLoadGymSubscriptions={handleLoadGymSubscriptions}
+        />
+
+        <ProfileSports
+          profile={profile}
+          sports={sports}
+          sportLevels={sportLevels}
+          saving={saving}
+          onAddSport={handleAddSport}
+          onRemoveSport={handleRemoveSport}
         />
 
         <ProfileHobbies
