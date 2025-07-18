@@ -15,6 +15,7 @@ import { profileService } from '@/services/profileService';
 import { hobbyService } from '@/services/hobbyService';
 import { sportService } from '@/services/sportService';
 import { locationService } from '@/services/locationService';
+import { socialMediaService } from '@/services/socialMediaService';
 
 // Types pour les actions du store
 interface ProfileActions {
@@ -46,12 +47,18 @@ interface ProfileActions {
   addUserSport: (sportId: string, levelId: string) => Promise<{ error: Error | null }>;
   removeUserSport: (sportId: string) => Promise<{ error: Error | null }>;
   
+  // Actions pour les réseaux sociaux
+  addUserSocialMedia: (socialMediaId: string, username: string) => Promise<{ error: Error | null }>;
+  updateUserSocialMedia: (socialMediaId: string, username: string) => Promise<{ error: Error | null }>;
+  removeUserSocialMedia: (socialMediaId: string) => Promise<{ error: Error | null }>;
+  
   // Actions pour les données de référence
   loadAllGyms: () => Promise<{ error: Error | null }>;
   loadGymSubscriptions: (gymId?: string) => Promise<{ error: Error | null }>;
   loadAllHobbies: () => Promise<{ error: Error | null }>;
   loadAllSports: () => Promise<{ error: Error | null }>;
   loadAllSportLevels: () => Promise<{ error: Error | null }>;
+  loadAllSocialMedias: () => Promise<{ error: Error | null }>;
   
   // Actions système
   initialize: () => Promise<void>;
@@ -74,6 +81,7 @@ export const useProfileStore = create<ProfileStoreState>()(
       hobbies: [],
       sports: [],
       sportLevels: [],
+      socialMedias: [],
       loading: false,
       saving: false,
       error: null,
@@ -96,30 +104,25 @@ export const useProfileStore = create<ProfileStoreState>()(
             throw new Error('Utilisateur non connecté');
           }
 
-          console.log('🔄 ProfileStore: Chargement du profil pour l\'utilisateur:', user.id);
-
           // Récupérer ou créer le profil
           let profileData = await profileService.getProfile(user.id);
           if (!profileData) {
-            console.log('➕ ProfileStore: Création d\'un nouveau profil');
             profileData = await profileService.createProfile(user.id);
             set({ profile: profileData, loading: false });
             return { error: null };
           }
 
-          console.log('✅ ProfileStore: Profil trouvé:', profileData.id_user);
-
           // Charger les relations en série pour éviter les problèmes de concurrence
-            let location: UserProfile['location'] | undefined;
-            let gym: Gym | undefined;
-            let gymsubscription: GymSubscription | undefined;
-            let userHobbies: UserProfile['hobbies'] | undefined;
-            let userSports: UserProfile['sports'] | undefined;
+          let location: UserProfile['location'] | undefined;
+          let gym: Gym | undefined;
+          let gymsubscription: GymSubscription | undefined;
+          let userHobbies: UserProfile['hobbies'] | undefined;
+          let userSports: UserProfile['sports'] | undefined;
+          let userSocialMedias: UserProfile['socialMedias'] | undefined;
 
           try {
             // Charger la localisation si elle existe
             if (profileData.id_location) {
-              console.log('📍 ProfileStore: Chargement de la localisation');
               const loc = await profileService.getLocationDetails(profileData.id_location);
               location = loc === null ? undefined : loc;
             }
@@ -130,7 +133,6 @@ export const useProfileStore = create<ProfileStoreState>()(
           try {
             // Charger la salle de sport si elle existe
             if (profileData.id_gym) {
-              console.log('🏋️ ProfileStore: Chargement de la salle de sport');
               const gymResult = await profileService.getGymDetails(profileData.id_gym);
               gym = gymResult === null ? undefined : gymResult;
             }
@@ -141,7 +143,6 @@ export const useProfileStore = create<ProfileStoreState>()(
           try {
             // Charger l'abonnement salle si il existe
             if (profileData.id_gymsubscription) {
-              console.log('💳 ProfileStore: Chargement de l\'abonnement');
               const gymSubResult = await profileService.getGymSubscriptionDetails(profileData.id_gymsubscription);
               gymsubscription = gymSubResult === null ? undefined : gymSubResult;
             }
@@ -151,7 +152,6 @@ export const useProfileStore = create<ProfileStoreState>()(
 
           try {
             // Charger les hobbies utilisateur
-            console.log('🎯 ProfileStore: Chargement des hobbies');
             userHobbies = await hobbyService.getUserHobbies(profileData.id_user);
           } catch (error) {
             console.warn('⚠️ ProfileStore: Erreur lors du chargement des hobbies:', error);
@@ -160,11 +160,18 @@ export const useProfileStore = create<ProfileStoreState>()(
 
           try {
             // Charger les sports utilisateur
-            console.log('⚽ ProfileStore: Chargement des sports');
             userSports = await sportService.getUserSports(profileData.id_user);
           } catch (error) {
             console.warn('⚠️ ProfileStore: Erreur lors du chargement des sports:', error);
             userSports = [];
+          }
+
+          try {
+            // Charger les réseaux sociaux utilisateur
+            userSocialMedias = await socialMediaService.getUserSocialMedias(profileData.id_user);
+          } catch (error) {
+            console.warn('⚠️ ProfileStore: Erreur lors du chargement des réseaux sociaux:', error);
+            userSocialMedias = [];
           }
 
           // Populer les relations
@@ -174,10 +181,10 @@ export const useProfileStore = create<ProfileStoreState>()(
             gym: gym || undefined,
             gymsubscription: gymsubscription || undefined,
             hobbies: userHobbies || [],
-            sports: userSports || []
+            sports: userSports || [],
+            socialMedias: userSocialMedias || []
           };
 
-          console.log('✅ ProfileStore: Profil enrichi avec succès');
           set({ profile: enrichedProfile, loading: false });
           return { error: null };
 
@@ -410,6 +417,87 @@ export const useProfileStore = create<ProfileStoreState>()(
         }
       },
 
+      // Actions pour les réseaux sociaux
+      addUserSocialMedia: async (socialMediaId: string, username: string) => {
+        try {
+          set({ saving: true, error: null });
+          
+          const { profile } = get();
+          if (!profile) {
+            throw new Error('Profil non chargé');
+          }
+
+          const newSocialMedia = await socialMediaService.addUserSocialMedia(profile.id_user, socialMediaId, username);
+          
+          set({ 
+            profile: { 
+              ...profile, 
+              socialMedias: [...(profile.socialMedias || []), newSocialMedia] 
+            },
+            saving: false 
+          });
+
+          return { error: null };
+
+        } catch (error) {
+          return get().handleError('addUserSocialMedia', error, 'Erreur lors de l\'ajout du réseau social');
+        }
+      },
+
+      updateUserSocialMedia: async (socialMediaId: string, username: string) => {
+        try {
+          set({ saving: true, error: null });
+          
+          const { profile } = get();
+          if (!profile) {
+            throw new Error('Profil non chargé');
+          }
+
+          await socialMediaService.updateUserSocialMedia(profile.id_user, socialMediaId, username);
+          
+          set({ 
+            profile: { 
+              ...profile, 
+              socialMedias: profile.socialMedias?.map(s => 
+                s.id_social_media === socialMediaId ? { ...s, username } : s
+              ) || [] 
+            },
+            saving: false 
+          });
+
+          return { error: null };
+
+        } catch (error) {
+          return get().handleError('updateUserSocialMedia', error, 'Erreur lors de la mise à jour du réseau social');
+        }
+      },
+
+      removeUserSocialMedia: async (socialMediaId: string) => {
+        try {
+          set({ saving: true, error: null });
+          
+          const { profile } = get();
+          if (!profile) {
+            throw new Error('Profil non chargé');
+          }
+
+          await socialMediaService.removeUserSocialMedia(profile.id_user, socialMediaId);
+          
+          set({ 
+            profile: { 
+              ...profile, 
+              socialMedias: profile.socialMedias?.filter(s => s.id_social_media !== socialMediaId) || [] 
+            },
+            saving: false 
+          });
+
+          return { error: null };
+
+        } catch (error) {
+          return get().handleError('removeUserSocialMedia', error, 'Erreur lors de la suppression du réseau social');
+        }
+      },
+
       // Actions pour les données de référence
       loadAllGyms: async () => {
         try {
@@ -466,12 +554,25 @@ export const useProfileStore = create<ProfileStoreState>()(
         }
       },
 
+      loadAllSocialMedias: async () => {
+        try {
+          const socialMedias = await socialMediaService.getAllSocialMedias();
+          set({ socialMedias });
+          return { error: null };
+        } catch (error) {
+          console.error('❌ ProfileStore - loadAllSocialMedias:', error);
+          return { error: error as Error };
+        }
+      },
+
       // Initialisation du store
       initialize: async () => {
         try {
           // Forcer la re-initialisation si les données essentielles manquent
           const currentState = get();
-          const needsReinit = currentState.sports.length === 0 || currentState.sportLevels.length === 0;
+          const needsReinit = currentState.sports.length === 0 || 
+                             currentState.sportLevels.length === 0 || 
+                             currentState.socialMedias.length === 0;
           
           if (currentState.initialized && !needsReinit) {
             return;
@@ -485,7 +586,8 @@ export const useProfileStore = create<ProfileStoreState>()(
             sportLevels: [],
             hobbies: [],
             gyms: [],
-            gymSubscriptions: []
+            gymSubscriptions: [],
+            socialMedias: []
           });
           
           // Charger les sports directement
@@ -508,6 +610,17 @@ export const useProfileStore = create<ProfileStoreState>()(
             }));
           } catch (error) {
             console.error('❌ ProfileStore: Erreur lors du chargement des niveaux:', error);
+          }
+
+          // Charger les réseaux sociaux directement
+          try {
+            const socialMediasFromService = await socialMediaService.getAllSocialMedias();
+            set(state => ({ 
+              ...state, 
+              socialMedias: socialMediasFromService || []
+            }));
+          } catch (error) {
+            console.error('❌ ProfileStore: Erreur lors du chargement des réseaux sociaux:', error);
           }
 
           // Charger les autres données
@@ -546,6 +659,7 @@ export const useProfileStore = create<ProfileStoreState>()(
           hobbies: [],
           sports: [],
           sportLevels: [],
+          socialMedias: [],
           loading: false, 
           saving: false, 
           error: null, 
@@ -572,6 +686,7 @@ export const useProfileStore = create<ProfileStoreState>()(
         hobbies: state.hobbies,
         sports: state.sports,
         sportLevels: state.sportLevels,
+        socialMedias: state.socialMedias,
         initialized: state.initialized,
       }),
       // Configuration pour éviter l'hydratation lors du chargement
@@ -592,6 +707,7 @@ export const useProfile = () => {
     hobbies: store.hobbies,
     sports: store.sports,
     sportLevels: store.sportLevels,
+    socialMedias: store.socialMedias,
     loading: store.loading,
     saving: store.saving,
     error: store.error,
@@ -611,12 +727,18 @@ export const useProfile = () => {
     addUserSport: store.addUserSport,
     removeUserSport: store.removeUserSport,
     
+    // Actions réseaux sociaux
+    addUserSocialMedia: store.addUserSocialMedia,
+    updateUserSocialMedia: store.updateUserSocialMedia,
+    removeUserSocialMedia: store.removeUserSocialMedia,
+    
     // Actions données de référence
     loadAllGyms: store.loadAllGyms,
     loadGymSubscriptions: store.loadGymSubscriptions,
     loadAllHobbies: store.loadAllHobbies,
     loadAllSports: store.loadAllSports,
     loadAllSportLevels: store.loadAllSportLevels,
+    loadAllSocialMedias: store.loadAllSocialMedias,
     
     // Actions système
     initialize: store.initialize,
@@ -638,6 +760,7 @@ export const useGymSubscriptions = () => useProfileStore(state => state.gymSubsc
 export const useHobbies = () => useProfileStore(state => state.hobbies);
 export const useSports = () => useProfileStore(state => state.sports);
 export const useSportLevels = () => useProfileStore(state => state.sportLevels);
+export const useSocialMedias = () => useProfileStore(state => state.socialMedias);
 
 // Hook pour les hobbies utilisateur avec logique métier
 export const useUserHobbies = () => {
@@ -655,4 +778,9 @@ export const useUserHobbies = () => {
 // Hook pour les sports utilisateur
 export const useUserSports = () => {
   return useProfileStore(state => state.profile?.sports || []);
+};
+
+// Hook pour les réseaux sociaux utilisateur
+export const useUserSocialMedias = () => {
+  return useProfileStore(state => state.profile?.socialMedias || []);
 };

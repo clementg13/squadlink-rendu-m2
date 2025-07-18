@@ -23,6 +23,7 @@ import ErrorMessage from '@/components/ui/ErrorMessage';
 import ProfileGym from '@/components/profile/gym/ProfileGym';
 import ProfileLocation from '@/components/profile/location/ProfileLocation';
 import ProfileSports from '@/components/profile/sports/ProfileSports';
+import ProfileSocialMedias from '@/components/profile/socialMedias/ProfileSocialMedias';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function ProfileScreen() {
     gymSubscriptions,
     sports,
     sportLevels,
+    socialMedias,
     loading, 
     saving, 
     error, 
@@ -44,6 +46,9 @@ export default function ProfileScreen() {
     toggleHighlightHobby,
     addUserSport,
     removeUserSport,
+    addUserSocialMedia,
+    updateUserSocialMedia,
+    removeUserSocialMedia,
     updateProfile,
     updateLocation,
     loadGymSubscriptions,
@@ -62,7 +67,7 @@ export default function ProfileScreen() {
   useEffect(() => {
     const initializeStore = async () => {
       // Forcer la re-initialisation si nécessaire
-      if (sports.length === 0 && sportLevels.length === 0) {
+      if (sports.length === 0 && sportLevels.length === 0 && socialMedias.length === 0) {
         await initialize();
       }
       
@@ -184,6 +189,27 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleAddSocialMedia = async (socialMediaId: string, username: string) => {
+    const { error } = await addUserSocialMedia(socialMediaId, username);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  const handleUpdateSocialMedia = async (socialMediaId: string, username: string) => {
+    const { error } = await updateUserSocialMedia(socialMediaId, username);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  const handleRemoveSocialMedia = async (socialMediaId: string) => {
+    const { error } = await removeUserSocialMedia(socialMediaId);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
   const handleUpdateGym = async (subscriptionId: string | null) => {
     const updateData = {
       id_gymsubscription: subscriptionId !== null ? subscriptionId : undefined,
@@ -259,6 +285,15 @@ export default function ProfileScreen() {
           saving={saving}
           onAddSport={handleAddSport}
           onRemoveSport={handleRemoveSport}
+        />
+
+        <ProfileSocialMedias
+          profile={profile}
+          socialMedias={socialMedias}
+          saving={saving}
+          onAddSocialMedia={handleAddSocialMedia}
+          onUpdateSocialMedia={handleUpdateSocialMedia}
+          onRemoveSocialMedia={handleRemoveSocialMedia}
         />
 
         <ProfileHobbies

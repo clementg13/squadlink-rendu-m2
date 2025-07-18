@@ -47,6 +47,18 @@ export interface ProfileSport {
   sportlevel?: SportLevel;
 }
 
+export interface SocialMedia {
+  id: string;
+  name: string;
+}
+
+export interface ProfileSocialMedia {
+  id_profile: string;
+  id_social_media: string;
+  username: string;
+  socialmedia?: SocialMedia;
+}
+
 export interface UserProfile {
   id_user: string;
   lastname?: string;
@@ -67,6 +79,7 @@ export interface UserProfile {
   gymsubscription?: GymSubscription;
   hobbies?: ProfileHobby[];
   sports?: ProfileSport[];
+  socialMedias?: ProfileSocialMedia[];
 }
 
 export interface ProfileState {
@@ -77,6 +90,7 @@ export interface ProfileState {
   hobbies: Hobbie[];
   sports: Sport[];
   sportLevels: SportLevel[];
+  socialMedias: SocialMedia[];
   loading: boolean;
   saving: boolean;
   error: string | null;
