@@ -20,6 +20,8 @@ import ProfileHobbies from '@/components/profile/ProfileHobbies';
 import ProfileInfo from '@/components/profile/ProfileInfo';
 import ProfileActions from '@/components/profile/ProfileActions';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import ProfileGym from '@/components/profile/gym/ProfileGym';
+import ProfileLocation from '@/components/profile/location/ProfileLocation';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -27,6 +29,8 @@ export default function ProfileScreen() {
   const { 
     profile, 
     hobbies,
+    gyms,
+    gymSubscriptions,
     loading, 
     saving, 
     error, 
@@ -35,7 +39,9 @@ export default function ProfileScreen() {
     addUserHobby,
     removeUserHobby,
     toggleHighlightHobby,
-    updateProfile, 
+    updateProfile,
+    updateLocation,
+    loadGymSubscriptions,
     initialize,
     clearError 
   } = useProfile();
@@ -153,6 +159,30 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleUpdateGym = async (subscriptionId: string | null) => {
+    const updateData = {
+      id_gymsubscription: subscriptionId !== null ? subscriptionId : undefined,
+    };
+
+    const { error } = await updateProfile(updateData);
+    
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  const handleLoadGymSubscriptions = async () => {
+    await loadGymSubscriptions();
+  };
+
+  const handleUpdateLocation = async (locationData: { town: string; postal_code: number; latitude: number; longitude: number }) => {
+    const { error } = await updateLocation(locationData);
+    
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
   if (loading && !profile) {
     return (
       <View style={styles.loadingContainer}>
@@ -181,6 +211,21 @@ export default function ProfileScreen() {
         />
 
         {error && <ErrorMessage message={error} />}
+
+        <ProfileLocation
+          profile={profile}
+          saving={saving}
+          onUpdateLocation={handleUpdateLocation}
+        />
+
+        <ProfileGym
+          profile={profile}
+          gyms={gyms}
+          gymSubscriptions={gymSubscriptions}
+          saving={saving}
+          onUpdateGym={handleUpdateGym}
+          onLoadGymSubscriptions={handleLoadGymSubscriptions}
+        />
 
         <ProfileHobbies
           profile={profile}

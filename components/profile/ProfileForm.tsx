@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Platform, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { UserProfile } from '@/stores/profileStore';
+import { UserProfile } from '@/types/profile';
 
 interface ProfileFormProps {
   formData: {
@@ -80,39 +80,6 @@ export default function ProfileForm({ formData, profile, saving, onFieldChange }
             minimumDate={new Date(1900, 0, 1)}
           />
         )}
-      </View>
-
-      {/* Localisation (lecture seule) */}
-      <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Localisation</Text>
-        <View style={[styles.input, styles.inputReadonly]}>
-          <Text style={styles.inputTextReadonly}>
-            {profile?.location ? 
-              `${profile.location.town} (${profile.location.postal_code})` : 
-              'Non définie'
-            }
-          </Text>
-        </View>
-      </View>
-
-      {/* Salle de sport */}
-      <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Salle de sport</Text>
-        <View style={[styles.input, styles.inputReadonly]}>
-          <Text style={styles.inputTextReadonly}>
-            {profile?.gym?.name || 'Non définie'}
-          </Text>
-        </View>
-      </View>
-
-      {/* Abonnement salle */}
-      <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Type d'abonnement</Text>
-        <View style={[styles.input, styles.inputReadonly]}>
-          <Text style={styles.inputTextReadonly}>
-            {profile?.gymsubscription?.name || 'Non défini'}
-          </Text>
-        </View>
       </View>
 
       {/* Biographie */}

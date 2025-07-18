@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { UserProfile } from '@/stores/profileStore';
+import { UserProfile } from '@/types/profile';
 
 interface ProfileInfoProps {
   profile?: UserProfile | null;
