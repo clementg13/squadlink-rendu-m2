@@ -108,6 +108,7 @@ export default function SportPickerModal({
                   ]}
                   onPress={handleConfirm}
                   disabled={!selectedLevel}
+                  testID="confirm-button"
                 >
                   <Text style={styles.confirmButtonText}>Confirmer</Text>
                 </TouchableOpacity>
