@@ -94,6 +94,7 @@ export default function ProfileLocation({
           style={[styles.updateButton, (saving || updatingLocation) && styles.buttonDisabled]}
           onPress={handleUpdateLocation}
           disabled={saving || updatingLocation}
+          accessibilityRole="button"
         >
           {updatingLocation ? (
             <View style={styles.loadingContainer}>
