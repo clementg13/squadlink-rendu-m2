@@ -24,6 +24,7 @@ export default function ProfileActions({
           style={[styles.button, styles.buttonPrimary]} 
           onPress={onSave}
           disabled={saving || !hasChanges}
+          testID="save-button"
         >
           {saving ? (
             <ActivityIndicator color="#fff" size="small" />
