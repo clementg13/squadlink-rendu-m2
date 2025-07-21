@@ -22,10 +22,11 @@ export default function SportChip({
       
       <TouchableOpacity
         style={styles.removeButton}
-        onPress={() => onRemove(userSport.id_sport)}
+        testID="remove-sport"
         disabled={saving}
+        onPress={() => onRemove(userSport.id_sport)}
       >
-        <Text style={styles.removeButtonText}>✕</Text>
+        <Text>✕</Text>
       </TouchableOpacity>
     </View>
   );
