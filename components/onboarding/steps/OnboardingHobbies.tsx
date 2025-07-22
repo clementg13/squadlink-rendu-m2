@@ -16,11 +16,16 @@ interface OnboardingHobbiesProps {
   onBack: () => void;
 }
 
-export default function OnboardingHobbiesStep({ data, userId, onNext, onBack }: OnboardingHobbiesProps) {
+export default function OnboardingHobbiesStep({ 
+  data, 
+  userId, 
+  onNext, 
+  onBack 
+}: OnboardingHobbiesProps) {
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
-  const [selectedHobbies, setSelectedHobbies] = useState<string[]>(data?.hobbyIds || []);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [selectedHobbies, setSelectedHobbies] = useState<string[]>(data?.hobbyIds || []);
 
   useEffect(() => {
     loadHobbies();
@@ -28,13 +33,13 @@ export default function OnboardingHobbiesStep({ data, userId, onNext, onBack }: 
 
   const loadHobbies = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: hobbiesData, error } = await supabase
         .from('hobbie')
         .select('id, name')
         .order('name');
 
       if (error) throw error;
-      setHobbies(data || []);
+      setHobbies(hobbiesData || []);
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de charger les hobbies');
     } finally {
@@ -59,15 +64,25 @@ export default function OnboardingHobbiesStep({ data, userId, onNext, onBack }: 
     try {
       setSaving(true);
       const hobbiesData = { hobbyIds: selectedHobbies };
+      
+      // Sauvegarder les hobbies
       const result = await OnboardingService.updateUserHobbies(userId, hobbiesData);
       
       if (result.success) {
         onNext(hobbiesData);
       } else {
-        Alert.alert('Erreur', result.error || 'Impossible de sauvegarder les hobbies');
+        Alert.alert(
+          'Sauvegarde partielle',
+          'Vos hobbies seront sauvegardés plus tard. Vous pouvez continuer.',
+          [{ text: 'Continuer', onPress: () => onNext(hobbiesData) }]
+        );
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Une erreur inattendue est survenue');
+      Alert.alert(
+        'Erreur de sauvegarde',
+        'Vos hobbies seront sauvegardés plus tard.',
+        [{ text: 'Continuer', onPress: () => onNext({ hobbyIds: selectedHobbies }) }]
+      );
     } finally {
       setSaving(false);
     }
@@ -87,32 +102,38 @@ export default function OnboardingHobbiesStep({ data, userId, onNext, onBack }: 
       <View style={styles.content}>
         <Text style={styles.title}>Vos hobbies</Text>
         <Text style={styles.subtitle}>
-          Sélectionnez vos hobbies pour enrichir votre profil
+          Choisissez vos hobbies pour enrichir votre profil et trouver des personnes partageant vos intérêts
         </Text>
 
-        <FlatList
-          data={hobbies}
-          keyExtractor={item => item.id}
-          numColumns={2}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.hobbyChip,
-                selectedHobbies.includes(item.id) && styles.hobbyChipSelected
-              ]}
-              onPress={() => handleHobbyToggle(item.id)}
-            >
-              <Text style={[
-                styles.hobbyChipText,
-                selectedHobbies.includes(item.id) && styles.hobbyChipTextSelected
-              ]}>
-                {item.name}
-              </Text>
-            </TouchableOpacity>
-          )}
-          showsVerticalScrollIndicator={false}
-          style={styles.hobbiesList}
-        />
+        <View style={styles.hobbiesContainer}>
+          <Text style={styles.selectedCount}>
+            {selectedHobbies.length} hobby{selectedHobbies.length > 1 ? 's' : ''} sélectionné{selectedHobbies.length > 1 ? 's' : ''}
+          </Text>
+          
+          <FlatList
+            data={hobbies}
+            keyExtractor={item => item.id}
+            numColumns={2}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.hobbyChip,
+                  selectedHobbies.includes(item.id) && styles.hobbyChipSelected
+                ]}
+                onPress={() => handleHobbyToggle(item.id)}
+              >
+                <Text style={[
+                  styles.hobbyChipText,
+                  selectedHobbies.includes(item.id) && styles.hobbyChipTextSelected
+                ]}>
+                  {item.name}
+                </Text>
+              </TouchableOpacity>
+            )}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.hobbiesList}
+          />
+        </View>
       </View>
 
       <View style={styles.buttons}>
@@ -128,7 +149,7 @@ export default function OnboardingHobbiesStep({ data, userId, onNext, onBack }: 
           {saving ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.nextButtonText}>Terminer le profil</Text>
+            <Text style={styles.nextButtonText}>Terminer l'inscription</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -156,19 +177,30 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     lineHeight: 22,
   },
-  hobbiesList: {
+  hobbiesContainer: {
     flex: 1,
+  },
+  selectedCount: {
+    fontSize: 14,
+    color: '#007AFF',
+    marginBottom: 16,
+    fontWeight: '500',
+  },
+  hobbiesList: {
+    paddingBottom: 20,
   },
   hobbyChip: {
     flex: 1,
     margin: 4,
     paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#ddd',
     backgroundColor: '#fff',
     alignItems: 'center',
+    minHeight: 40,
+    justifyContent: 'center',
   },
   hobbyChipSelected: {
     borderColor: '#007AFF',
@@ -181,6 +213,7 @@ const styles = StyleSheet.create({
   },
   hobbyChipTextSelected: {
     color: '#fff',
+    fontWeight: '500',
   },
   loadingContainer: {
     flex: 1,

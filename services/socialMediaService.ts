@@ -3,6 +3,7 @@ import { SocialMedia, ProfileSocialMedia } from '@/types/profile';
 
 export class SocialMediaService {
 
+  // === Reference Data ===
   async getAllSocialMedias(): Promise<SocialMedia[]> {
     const { data, error } = await supabase
       .from('socialmedia')
@@ -13,26 +14,16 @@ export class SocialMediaService {
     return data || [];
   }
 
+  // === User Social Media Management ===
   async getUserSocialMedias(userId: string): Promise<ProfileSocialMedia[]> {
     try {
-      // D'abord récupérer l'ID du profil
-      const { data: profileData, error: profileError } = await supabase
-        .from('profile')
-        .select('id')
-        .eq('id_user', userId)
-        .single();
-
-      if (profileError || !profileData) {
-        return [];
-      }
+      const profileId = await this.getProfileId(userId);
+      if (!profileId) return [];
 
       const { data, error } = await supabase
         .from('profilesocialmedia')
-        .select(`
-          *,
-          socialmedia!inner(*)
-        `)
-        .eq('id_profile', profileData.id);
+        .select(`*, socialmedia!inner(*)`)
+        .eq('id_profile', profileId);
 
       if (error) {
         console.error('❌ SocialMediaService: Error loading social medias:', error);
@@ -40,47 +31,26 @@ export class SocialMediaService {
       }
       return data || [];
     } catch (error) {
-      console.error('❌ SocialMediaService: Exception lors de getUserSocialMedias:', error);
+      console.error('❌ SocialMediaService: Exception in getUserSocialMedias:', error);
       return [];
     }
   }
 
   async addUserSocialMedia(userId: string, socialMediaId: string, username: string): Promise<ProfileSocialMedia> {
-    // Récupérer l'ID du profil
-    const { data: profileData, error: profileError } = await supabase
-      .from('profile')
-      .select('id')
-      .eq('id_user', userId)
-      .single();
+    const profileId = await this.getProfileId(userId);
+    if (!profileId) throw new Error('Impossible de récupérer l\'ID du profil');
 
-    if (profileError || !profileData) {
-      throw new Error('Impossible de récupérer l\'ID du profil');
-    }
-
-    // Vérifier si l'utilisateur a déjà ce réseau social
-    const { data: existingData, error: existingError } = await supabase
-      .from('profilesocialmedia')
-      .select('*')
-      .eq('id_profile', profileData.id)
-      .eq('id_social_media', socialMediaId);
-
-    if (existingError) throw existingError;
-
-    if (existingData && existingData.length > 0) {
-      throw new Error('Vous avez déjà ajouté ce réseau social');
-    }
+    // Check if already exists
+    await this.checkSocialMediaExists(profileId, socialMediaId);
 
     const { data, error } = await supabase
       .from('profilesocialmedia')
       .insert([{
-        id_profile: profileData.id,
+        id_profile: profileId,
         id_social_media: socialMediaId,
         username: username.trim()
       }])
-      .select(`
-        *,
-        socialmedia!inner(*)
-      `)
+      .select(`*, socialmedia!inner(*)`)
       .single();
 
     if (error) throw error;
@@ -88,45 +58,53 @@ export class SocialMediaService {
   }
 
   async updateUserSocialMedia(userId: string, socialMediaId: string, username: string): Promise<void> {
-    // Récupérer l'ID du profil
-    const { data: profileData, error: profileError } = await supabase
-      .from('profile')
-      .select('id')
-      .eq('id_user', userId)
-      .single();
-
-    if (profileError || !profileData) {
-      throw new Error('Impossible de récupérer l\'ID du profil');
-    }
+    const profileId = await this.getProfileId(userId);
+    if (!profileId) throw new Error('Impossible de récupérer l\'ID du profil');
 
     const { error } = await supabase
       .from('profilesocialmedia')
       .update({ username: username.trim() })
-      .eq('id_profile', profileData.id)
+      .eq('id_profile', profileId)
       .eq('id_social_media', socialMediaId);
 
     if (error) throw error;
   }
 
   async removeUserSocialMedia(userId: string, socialMediaId: string): Promise<void> {
-    // Récupérer l'ID du profil
-    const { data: profileData, error: profileError } = await supabase
+    const profileId = await this.getProfileId(userId);
+    if (!profileId) throw new Error('Impossible de récupérer l\'ID du profil');
+
+    const { error } = await supabase
+      .from('profilesocialmedia')
+      .delete()
+      .eq('id_profile', profileId)
+      .eq('id_social_media', socialMediaId);
+
+    if (error) throw error;
+  }
+
+  // === Helper Methods ===
+  private async getProfileId(userId: string): Promise<string | null> {
+    const { data, error } = await supabase
       .from('profile')
       .select('id')
       .eq('id_user', userId)
       .single();
 
-    if (profileError || !profileData) {
-      throw new Error('Impossible de récupérer l\'ID du profil');
-    }
+    return (error || !data) ? null : data.id;
+  }
 
-    const { error } = await supabase
+  private async checkSocialMediaExists(profileId: string, socialMediaId: string): Promise<void> {
+    const { data, error } = await supabase
       .from('profilesocialmedia')
-      .delete()
-      .eq('id_profile', profileData.id)
+      .select('*')
+      .eq('id_profile', profileId)
       .eq('id_social_media', socialMediaId);
 
     if (error) throw error;
+    if (data && data.length > 0) {
+      throw new Error('Vous avez déjà ajouté ce réseau social');
+    }
   }
 }
 

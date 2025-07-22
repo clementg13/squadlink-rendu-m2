@@ -98,7 +98,7 @@ describe('SocialMediaService', () => {
             })
           })
         } as any)
-        // Mock social media insertion
+        // Mock social media insertion - vérifier le trim du username
         .mockReturnValueOnce({
           insert: jest.fn().mockReturnValue({
             select: jest.fn().mockReturnValue({
@@ -110,8 +110,11 @@ describe('SocialMediaService', () => {
           })
         } as any);
 
-      const result = await socialMediaService.addUserSocialMedia('user1', 'sm1', 'john_doe');
+      const result = await socialMediaService.addUserSocialMedia('user1', 'sm1', '  john_doe  ');
       expect(result).toEqual(mockNewSocialMedia);
+      
+      // Vérifier que les paramètres sont corrects
+      expect(mockSupabase.from).toHaveBeenCalledWith('profilesocialmedia');
     });
 
     it('should throw error when social media already exists', async () => {
@@ -163,7 +166,7 @@ describe('SocialMediaService', () => {
             })
           })
         } as any)
-        // Mock update
+        // Mock update - vérifier le trim du username
         .mockReturnValueOnce({
           update: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
@@ -174,8 +177,11 @@ describe('SocialMediaService', () => {
           })
         } as any);
 
-      await expect(socialMediaService.updateUserSocialMedia('user1', 'sm1', 'new_username'))
+      await expect(socialMediaService.updateUserSocialMedia('user1', 'sm1', '  new_username  '))
         .resolves.toBeUndefined();
+        
+      // Vérifier que l'update utilise les bons paramètres
+      expect(mockSupabase.from).toHaveBeenCalledWith('profilesocialmedia');
     });
   });
 

@@ -1,8 +1,9 @@
 import { supabase } from '@/lib/supabase';
-import { UserProfile, Location, Gym, GymSubscription, Hobbie, ProfileHobby } from '@/types/profile';
+import { UserProfile, Location, Gym, GymSubscription, Hobbie } from '@/types/profile';
 
 export class ProfileService {
   
+  // === Profile Management ===
   async getProfile(userId: string): Promise<UserProfile | null> {
     const { data, error } = await supabase
       .from('profile')
@@ -10,24 +11,19 @@ export class ProfileService {
       .eq('id_user', userId)
       .single();
 
-    if (error && error.code !== 'PGRST116') {
-      throw error;
-    }
-
+    if (error && error.code !== 'PGRST116') throw error;
     return data;
   }
 
   async createProfile(userId: string): Promise<UserProfile> {
-    const newProfile = {
-      id_user: userId,
-      score: 0,
-      fully_completed: false,
-      created_at: new Date().toISOString(),
-    };
-
     const { data, error } = await supabase
       .from('profile')
-      .insert([newProfile])
+      .insert([{
+        id_user: userId,
+        score: 0,
+        fully_completed: false,
+        created_at: new Date().toISOString(),
+      }])
       .select('*')
       .single();
 
@@ -47,6 +43,7 @@ export class ProfileService {
     return data;
   }
 
+  // === Related Data Fetchers ===
   async getLocationDetails(locationId: string): Promise<Location | null> {
     const { data, error } = await supabase
       .from('location')
@@ -54,8 +51,7 @@ export class ProfileService {
       .eq('id', locationId)
       .single();
 
-    if (error) return null;
-    return data;
+    return error ? null : data;
   }
 
   async getGymDetails(gymId: string): Promise<Gym | null> {
@@ -65,8 +61,7 @@ export class ProfileService {
       .eq('id', gymId)
       .single();
 
-    if (error) return null;
-    return data;
+    return error ? null : data;
   }
 
   async getGymSubscriptionDetails(subscriptionId: string): Promise<GymSubscription | null> {
@@ -76,10 +71,10 @@ export class ProfileService {
       .eq('id', subscriptionId)
       .single();
 
-    if (error) return null;
-    return data;
+    return error ? null : data;
   }
 
+  // === Reference Data ===
   async getAllGyms(): Promise<Gym[]> {
     const { data, error } = await supabase
       .from('gym')
@@ -92,13 +87,9 @@ export class ProfileService {
 
   async getGymSubscriptions(gymId?: string): Promise<GymSubscription[]> {
     let query = supabase.from('gymsubscription').select('*');
-    
-    if (gymId) {
-      query = query.eq('id_gym', gymId);
-    }
+    if (gymId) query = query.eq('id_gym', gymId);
     
     const { data, error } = await query.order('name');
-
     if (error) throw error;
     return data || [];
   }
