@@ -8,6 +8,7 @@ import {
   Platform,
   StyleSheet,
   Text,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/stores/authStore';
@@ -27,7 +28,7 @@ import ProfileSocialMedias from '@/components/profile/socialMedias/ProfileSocial
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { 
     profile, 
     hobbies,
@@ -134,24 +135,15 @@ export default function ProfileScreen() {
     clearError();
   };
 
-  const handleSignOut = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Déconnexion', 
-          style: 'destructive',
-          onPress: async () => {
-            const { error } = await signOut();
-            if (error) {
-              Alert.alert('Erreur', error.message);
-            }
-          }
-        },
-      ]
-    );
+  const handleSignOut = async () => {
+    try {
+      console.log('🚪 ProfileScreen: Initiating sign out');
+      await signOut();
+      // La redirection est gérée dans le store authStore
+    } catch (error) {
+      console.error('❌ ProfileScreen: Sign out error:', error);
+      Alert.alert('Erreur', 'Erreur lors de la déconnexion');
+    }
   };
 
   const handleAddHobby = async (hobbyId: string) => {
@@ -244,78 +236,79 @@ export default function ProfileScreen() {
   }
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <ProfileHeader 
-          firstname={formData.firstname}
-          lastname={formData.lastname}
-        />
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <ProfileHeader 
+            firstname={formData.firstname}
+            lastname={formData.lastname}
+          />
 
-        <ProfileForm
-          formData={formData}
-          profile={profile}
-          saving={saving}
-          onFieldChange={handleFieldChange}
-        />
+          <ProfileForm
+            formData={formData}
+            saving={saving}
+            onFieldChange={handleFieldChange}
+          />
 
-        {error && <ErrorMessage message={error} />}
+          {error && <ErrorMessage message={error} />}
 
-        <ProfileLocation
-          profile={profile}
-          saving={saving}
-          onUpdateLocation={handleUpdateLocation}
-        />
+          <ProfileLocation
+            profile={profile}
+            saving={saving}
+            onUpdateLocation={handleUpdateLocation}
+          />
 
-        <ProfileGym
-          profile={profile}
-          gyms={gyms}
-          gymSubscriptions={gymSubscriptions}
-          saving={saving}
-          onUpdateGym={handleUpdateGym}
-          onLoadGymSubscriptions={handleLoadGymSubscriptions}
-        />
+          <ProfileGym
+            profile={profile}
+            gyms={gyms}
+            gymSubscriptions={gymSubscriptions}
+            saving={saving}
+            onUpdateGym={handleUpdateGym}
+            onLoadGymSubscriptions={handleLoadGymSubscriptions}
+          />
 
-        <ProfileSports
-          profile={profile}
-          sports={sports}
-          sportLevels={sportLevels}
-          saving={saving}
-          onAddSport={handleAddSport}
-          onRemoveSport={handleRemoveSport}
-        />
+          <ProfileSports
+            profile={profile}
+            sports={sports}
+            sportLevels={sportLevels}
+            saving={saving}
+            onAddSport={handleAddSport}
+            onRemoveSport={handleRemoveSport}
+          />
 
-        <ProfileSocialMedias
-          profile={profile}
-          socialMedias={socialMedias}
-          saving={saving}
-          onAddSocialMedia={handleAddSocialMedia}
-          onUpdateSocialMedia={handleUpdateSocialMedia}
-          onRemoveSocialMedia={handleRemoveSocialMedia}
-        />
+          <ProfileSocialMedias
+            profile={profile}
+            socialMedias={socialMedias}
+            saving={saving}
+            onAddSocialMedia={handleAddSocialMedia}
+            onUpdateSocialMedia={handleUpdateSocialMedia}
+            onRemoveSocialMedia={handleRemoveSocialMedia}
+          />
 
-        <ProfileHobbies
-          profile={profile}
-          hobbies={hobbies}
-          saving={saving}
-          onAddHobby={handleAddHobby}
-          onRemoveHobby={handleRemoveHobby}
-          onToggleHighlight={handleToggleHighlight}
-        />
+          <ProfileHobbies
+            profile={profile}
+            hobbies={hobbies}
+            saving={saving}
+            onAddHobby={handleAddHobby}
+            onRemoveHobby={handleRemoveHobby}
+            onToggleHighlight={handleToggleHighlight}
+          />
 
-        <ProfileInfo profile={profile} />
+          <ProfileInfo profile={profile} />
 
-        <ProfileActions
-          hasChanges={hasChanges}
-          saving={saving}
-          onSave={handleSave}
-          onCancel={handleCancel}
-          onSignOut={handleSignOut}
-        />
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <ProfileActions
+            hasChanges={hasChanges}
+            saving={saving}
+            onSave={handleSave}
+            onCancel={handleCancel}
+            onSignOut={handleSignOut}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { useAuth } from '@/stores/authStore';
 
 interface ProfileActionsProps {
   hasChanges: boolean;
@@ -16,6 +17,18 @@ export default function ProfileActions({
   onCancel, 
   onSignOut 
 }: ProfileActionsProps) {
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      // La redirection est gérée dans le store
+    } catch (error) {
+      console.error('❌ ProfileActions: Sign out error:', error);
+      // Optionnel: afficher une erreur à l'utilisateur
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.actionButtons}>
@@ -50,7 +63,7 @@ export default function ProfileActions({
 
       <TouchableOpacity 
         style={[styles.signOutButton, saving && styles.signOutButtonDisabled]}
-        onPress={onSignOut}
+        onPress={onSignOut || handleSignOut}
         disabled={saving}
       >
         <Text style={styles.signOutButtonText}>Se déconnecter</Text>

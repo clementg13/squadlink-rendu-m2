@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Session, User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { useRouter } from 'expo-router';
 
 // Types pour le store d'authentification
 interface AuthState {
@@ -123,20 +124,35 @@ export const useAuthStore = create<AuthState>()(
 
       // Déconnexion
       signOut: async () => {
+        const router = useRouter();
         try {
-          console.log('🚪 Store: Tentative de déconnexion');
-          set({ loading: true });
+          console.log('🚪 AuthStore: Signing out user');
+          
           const { error } = await supabase.auth.signOut();
-          if (!error) {
-            console.log('🚪 Store: Déconnexion réussie, nettoyage de l\'état');
-            set({ user: null, session: null });
+          if (error) {
+            console.error('❌ AuthStore: Sign out error:', error);
+            set({ loading: false });
+            return { error };
           }
-          return { error };
+
+          // Clear store state
+          set({ 
+            user: null, 
+            session: null, 
+            loading: false,
+            isOnboarding: false 
+          });
+
+          console.log('✅ AuthStore: User signed out successfully');
+          
+          // Rediriger vers la nouvelle page de connexion
+          router.replace('/(public)/auth');
+          
+          return { error: null };
         } catch (error) {
-          console.error('❌ Store: Erreur lors de la déconnexion:', error);
-          return { error: error as AuthError };
-        } finally {
+          console.error('❌ AuthStore: Sign out failed:', error);
           set({ loading: false });
+          return { error: error as AuthError };
         }
       },
 

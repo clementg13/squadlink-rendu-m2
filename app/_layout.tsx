@@ -24,7 +24,7 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { user, loading, initialized } = useAuth();
+  const { user, session, loading, initialize } = useAuth();
   const [navigationReady, setNavigationReady] = useState(false);
   const segments = useSegments();
   const router = useRouter();
@@ -47,7 +47,7 @@ export default function RootLayout() {
 
   // Gérer la redirection basée sur l'authentification
   useEffect(() => {
-    if (!navigationReady || !initialized || loading) return;
+    if (!navigationReady || loading) return;
 
     const currentPath = `/${segments.join('/')}`;
     console.log('🔄 RootLayout: Current path:', currentPath);
@@ -73,7 +73,26 @@ export default function RootLayout() {
         router.replace('/(auth)/login');
       }
     }
-  }, [user, segments, navigationReady, initialized, loading]);
+  }, [user, segments, navigationReady, initialize, loading]);
+
+  useEffect(() => {
+    console.log('🎯 RootLayout: Initializing auth');
+    initialize();
+  }, [initialize]);
+
+  useEffect(() => {
+    if (!loading) {
+      console.log('🎯 RootLayout: Auth state changed - User:', user ? 'authenticated' : 'not authenticated');
+      
+      if (user && session) {
+        console.log('🎯 RootLayout: User authenticated, redirecting to protected area');
+        router.replace('/(protected)/(tabs)');
+      } else {
+        console.log('🎯 RootLayout: User not authenticated, redirecting to auth');
+        router.replace('/(public)/auth');
+      }
+    }
+  }, [user, session, loading]);
 
   if (!loaded) {
     return null;

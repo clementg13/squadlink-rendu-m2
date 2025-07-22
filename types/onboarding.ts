@@ -25,17 +25,11 @@ export interface OnboardingHobbies {
   hobbyIds: string[];
 }
 
-export interface OnboardingData {
-  credentials: OnboardingCredentials;
-  profile: OnboardingProfile;
-  sports: OnboardingSport[];
-  hobbies: OnboardingHobbies;
-}
+export type OnboardingStep = 'welcome' | 'credentials' | 'profile' | 'sports' | 'hobbies' | 'completion';
 
-export type OnboardingStep = 
-  | 'welcome'
-  | 'credentials' 
-  | 'profile'
-  | 'sports'
-  | 'hobbies'
-  | 'completion';
+export interface OnboardingData {
+  credentials?: OnboardingCredentials;
+  profile?: OnboardingProfile;
+  sports?: OnboardingSport[];
+  hobbies?: OnboardingHobbies;
+}

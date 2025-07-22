@@ -17,10 +17,10 @@ export default function OnboardingCredentialsStep({ data, onNext }: OnboardingCr
     password: data?.password || '',
     confirmPassword: data?.confirmPassword || '',
   });
-  const [isCreating, setIsCreating] = useState(false);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const { signUp } = useAuth();
 
-  const handleNext = async () => {
+  const handleCreateAccount = async () => {
     const errors = OnboardingService.validateCredentials(credentials);
     
     if (errors.length > 0) {
@@ -29,7 +29,7 @@ export default function OnboardingCredentialsStep({ data, onNext }: OnboardingCr
     }
 
     try {
-      setIsCreating(true);
+      setIsCreatingAccount(true);
       console.log('📝 OnboardingCredentials: Creating account for:', credentials.email);
       
       // Utiliser le store d'authentification pour l'inscription
@@ -97,16 +97,16 @@ export default function OnboardingCredentialsStep({ data, onNext }: OnboardingCr
       console.error('❌ OnboardingCredentials: Unexpected error:', error);
       Alert.alert('Erreur', 'Une erreur inattendue est survenue');
     } finally {
-      setIsCreating(false);
+      setIsCreatingAccount(false);
     }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Créons votre compte</Text>
+        <Text style={styles.title}>Créez votre compte</Text>
         <Text style={styles.subtitle}>
-          Commençons par créer votre compte SquadLink
+          Rejoignez la communauté SquadLink pour trouver vos partenaires sportifs
         </Text>
 
         <View style={styles.form}>
@@ -120,7 +120,7 @@ export default function OnboardingCredentialsStep({ data, onNext }: OnboardingCr
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
-              editable={!isCreating}
+              editable={!isCreatingAccount}
             />
           </View>
 
@@ -133,7 +133,7 @@ export default function OnboardingCredentialsStep({ data, onNext }: OnboardingCr
               placeholder="Minimum 6 caractères"
               secureTextEntry
               autoComplete="new-password"
-              editable={!isCreating}
+              editable={!isCreatingAccount}
             />
           </View>
 
@@ -146,23 +146,37 @@ export default function OnboardingCredentialsStep({ data, onNext }: OnboardingCr
               placeholder="Confirmez votre mot de passe"
               secureTextEntry
               autoComplete="new-password"
-              editable={!isCreating}
+              editable={!isCreatingAccount}
             />
           </View>
         </View>
-      </View>
 
-      <TouchableOpacity 
-        style={[styles.nextButton, isCreating && styles.nextButtonDisabled]} 
-        onPress={handleNext}
-        disabled={isCreating}
-      >
-        {isCreating ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.nextButtonText}>Créer mon compte</Text>
-        )}
-      </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.signupButton, isCreatingAccount && styles.signupButtonDisabled]} 
+          onPress={handleCreateAccount}
+          disabled={isCreatingAccount}
+        >
+          {isCreatingAccount ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.signupButtonText}>Créer mon compte</Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Lien de connexion avec espacement */}
+        <View style={styles.loginLinkContainer}>
+          <Text style={styles.loginLinkText}>Vous avez déjà un compte ? </Text>
+          <TouchableOpacity 
+            onPress={() => router.replace('/(public)/auth')}
+            disabled={isCreatingAccount}
+          >
+            <Text style={styles.loginLink}>Se connecter</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Espacement supplémentaire */}
+        <View style={styles.bottomSpacer} />
+      </View>
     </View>
   );
 }
@@ -171,9 +185,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    paddingBottom: 40, // Espacement supplémentaire en bas
   },
   content: {
     flex: 1,
+    justifyContent: 'center',
   },
   title: {
     fontSize: 24,
@@ -208,19 +224,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#fff',
   },
-  nextButton: {
+  signupButton: {
     backgroundColor: '#007AFF',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 20,
   },
-  nextButtonDisabled: {
+  signupButtonDisabled: {
     backgroundColor: '#999',
   },
-  nextButtonText: {
+  signupButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loginLinkContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16, // Réduit l'espacement
+    marginBottom: 20, // Ajout d'espace en bas
+  },
+  loginLinkText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  loginLink: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  bottomSpacer: {
+    height: 20, // Espacement supplémentaire
   },
 });
