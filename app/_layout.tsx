@@ -3,11 +3,12 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
+import { useSegments, useRouter } from 'expo-router';
 import { useColorScheme } from '@/components/useColorScheme';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -23,6 +24,11 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const { user, loading, initialized } = useAuth();
+  const [navigationReady, setNavigationReady] = useState(false);
+  const segments = useSegments();
+  const router = useRouter();
+
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
@@ -38,6 +44,36 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  // Gérer la redirection basée sur l'authentification
+  useEffect(() => {
+    if (!navigationReady || !initialized || loading) return;
+
+    const currentPath = `/${segments.join('/')}`;
+    console.log('🔄 RootLayout: Current path:', currentPath);
+    console.log('🔄 RootLayout: User authenticated:', !!user);
+
+    // Ne pas rediriger si on est déjà dans l'onboarding
+    if (currentPath.includes('onboarding')) {
+      console.log('📋 RootLayout: In onboarding, not redirecting');
+      return;
+    }
+
+    const inAuthGroup = segments[0] === '(public)';
+    const inProtectedGroup = segments[0] === '(protected)';
+
+    if (user) {
+      if (inAuthGroup) {
+        console.log('🔄 RootLayout: User authenticated, redirecting to protected area');
+        router.replace('/(protected)/(tabs)');
+      }
+    } else {
+      if (inProtectedGroup) {
+        console.log('🔄 RootLayout: User not authenticated, redirecting to login');
+        router.replace('/(auth)/login');
+      }
+    }
+  }, [user, segments, navigationReady, initialized, loading]);
 
   if (!loaded) {
     return null;

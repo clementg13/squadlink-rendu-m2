@@ -1,21 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { OnboardingData, OnboardingStep } from '@/types/onboarding';
-import OnboardingWelcome from './steps/OnboardingWelcome';
-import OnboardingCredentials from './steps/OnboardingCredentials';
-import OnboardingProfile from './steps/OnboardingProfile';
+import { useAuth } from '@/stores/authStore';
+import OnboardingCredentialsStep from './steps/OnboardingCredentials';
+import OnboardingProfileStep from './steps/OnboardingProfile';
 import OnboardingSports from './steps/OnboardingSports';
-import OnboardingGymOrHobbies from './steps/OnboardingGymOrHobbies';
+import OnboardingHobbiesStep from './steps/OnboardingHobbies';
 import OnboardingCompletion from './steps/OnboardingCompletion';
 import OnboardingProgress from './OnboardingProgress';
-
-
+import OnboardingWelcome from './steps/OnboardingWelcome';
 
 export default function OnboardingContainer() {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
   const [onboardingData, setOnboardingData] = useState<Partial<OnboardingData>>({});
+  const [userId, setUserId] = useState<string | null>(null);
+  const { setIsOnboarding } = useAuth();
 
-  const steps: OnboardingStep[] = ['welcome', 'credentials', 'profile', 'sports', 'gym-or-hobbies', 'completion'];
+  // Indiquer qu'on est en onboarding
+  useEffect(() => {
+    console.log('📋 OnboardingContainer: Setting onboarding mode');
+    setIsOnboarding(true);
+    
+    // Nettoyer quand le composant est démonté
+    return () => {
+      console.log('📋 OnboardingContainer: Cleaning onboarding mode');
+      setIsOnboarding(false);
+    };
+  }, [setIsOnboarding]);
+
+  const steps: OnboardingStep[] = ['welcome', 'credentials', 'profile', 'sports', 'hobbies', 'completion'];
   const currentStepIndex = steps.indexOf(currentStep);
 
   const updateOnboardingData = (stepData: Partial<OnboardingData>) => {
@@ -37,31 +50,49 @@ export default function OnboardingContainer() {
   };
 
   const renderCurrentStep = () => {
+    console.log('🔄 OnboardingContainer: Rendering step:', currentStep);
+    
     switch (currentStep) {
       case 'welcome':
-        return <OnboardingWelcome onNext={goToNextStep} />;
-      
-      case 'credentials':
         return (
-          <OnboardingCredentials
-            data={onboardingData.credentials}
-            onNext={(credentialsData: OnboardingData['credentials']) => {
-              updateOnboardingData({ credentials: credentialsData });
+          <OnboardingWelcome
+            onNext={() => {
+              console.log('👋 OnboardingContainer: Welcome completed, proceeding to credentials');
               goToNextStep();
             }}
-            onBack={goToPreviousStep as () => void}
+          />
+        );
+
+      case 'credentials':
+        return (
+          <OnboardingCredentialsStep
+            data={onboardingData.credentials}
+            onNext={(credentialsData: OnboardingData['credentials'], createdUserId: string) => {
+              console.log('📝 OnboardingContainer: Credentials completed, proceeding to profile');
+              console.log('📝 OnboardingContainer: User ID received:', createdUserId);
+              updateOnboardingData({ credentials: credentialsData });
+              setUserId(createdUserId);
+              goToNextStep();
+            }}
           />
         );
       
       case 'profile':
+        console.log('👤 OnboardingContainer: Rendering profile step with userId:', userId);
+        if (!userId) {
+          console.error('❌ OnboardingContainer: No userId for profile step');
+          return null;
+        }
         return (
-          <OnboardingProfile
+          <OnboardingProfileStep 
             data={onboardingData.profile}
+            userId={userId}
             onNext={(profile: OnboardingData['profile']) => {
+              console.log('📝 OnboardingContainer: Profile completed, proceeding to sports');
               updateOnboardingData({ profile });
               goToNextStep();
             }}
-            onBack={goToPreviousStep as () => void}
+            onBack={goToPreviousStep}
           />
         );
       
@@ -69,22 +100,24 @@ export default function OnboardingContainer() {
         return (
           <OnboardingSports
             data={onboardingData.sports}
+            userId={userId!}
             onNext={(sports: OnboardingData['sports']) => {
+              console.log('🏃 OnboardingContainer: Sports completed, proceeding to hobbies');
               updateOnboardingData({ sports });
               goToNextStep();
             }}
-            onBack={goToPreviousStep as () => void}
+            onBack={goToPreviousStep}
           />
         );
       
-      case 'gym-or-hobbies':
+      case 'hobbies':
         return (
-          <OnboardingGymOrHobbies
-            sports={onboardingData.sports || []}
-            gymData={onboardingData.gym}
-            hobbiesData={onboardingData.hobbies}
-            onNext={(gymAndHobbies: { gym?: OnboardingData['gym']; hobbies?: OnboardingData['hobbies'] }) => {
-              updateOnboardingData(gymAndHobbies);
+          <OnboardingHobbiesStep
+            data={onboardingData.hobbies}
+            userId={userId!}
+            onNext={(hobbies: OnboardingData['hobbies']) => {
+              console.log('🎯 OnboardingContainer: Hobbies completed, proceeding to completion');
+              updateOnboardingData({ hobbies });
               goToNextStep();
             }}
             onBack={goToPreviousStep}
@@ -92,23 +125,28 @@ export default function OnboardingContainer() {
         );
       
       case 'completion':
-        return (
-          <OnboardingCompletion
-            onboardingData={onboardingData as OnboardingData}
-          />
-        );
+        return <OnboardingCompletion />;
       
       default:
-        return <OnboardingWelcome onNext={goToNextStep} />;
+        return (
+          <OnboardingCredentialsStep
+            data={onboardingData.credentials}
+            onNext={(credentialsData: OnboardingData['credentials'], createdUserId: string) => {
+              updateOnboardingData({ credentials: credentialsData });
+              setUserId(createdUserId);
+              goToNextStep();
+            }}
+          />
+        );
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {currentStep !== 'welcome' && currentStep !== 'completion' && (
+      {currentStep !== 'completion' && currentStep !== 'welcome' && (
         <OnboardingProgress 
           currentStep={currentStepIndex} 
-          totalSteps={steps.length - 2} // Exclude welcome and completion
+          totalSteps={steps.length - 2} // Exclude completion and welcome
         />
       )}
       <View style={styles.content}>

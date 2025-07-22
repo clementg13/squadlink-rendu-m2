@@ -193,27 +193,36 @@ class LocationService {
     locationData: LocationData, 
     existingLocationId?: string
   ): Promise<string> {
+    console.log('📍 LocationService: Updating location in database for user:', userId);
+    
+    // Créer le payload avec postal_code comme integer et location comme geography
     const locationPayload = {
       town: locationData.town,
       postal_code: locationData.postal_code,
-      location: `POINT(${locationData.longitude} ${locationData.latitude})`
+      location: `POINT(${locationData.longitude} ${locationData.latitude})` // Format WKT pour PostGIS
     };
 
+    console.log('📍 LocationService: Location payload:', locationPayload);
+
     let locationId: string;
-    let shouldUpdateProfile = false;
 
     if (existingLocationId) {
       // Essayer de mettre à jour la localisation existante
+      console.log('📍 LocationService: Updating existing location:', existingLocationId);
       const { data, error } = await supabase
         .from('location')
         .update(locationPayload)
         .eq('id', existingLocationId)
         .select('*');
 
-      if (error) throw error;
+      if (error) {
+        console.warn('⚠️ LocationService: Could not update existing location:', error);
+        throw error;
+      }
 
       if (!data || data.length === 0) {
         // La localisation n'existe pas, créer une nouvelle
+        console.log('📍 LocationService: Creating new location (existing not found)');
         const { data: newLocationData, error: createError } = await supabase
           .from('location')
           .insert([locationPayload])
@@ -223,36 +232,32 @@ class LocationService {
         if (createError) throw createError;
 
         locationId = newLocationData.id;
-        shouldUpdateProfile = true;
       } else {
         locationId = data[0].id;
+        console.log('✅ LocationService: Location updated successfully:', locationId);
       }
     } else {
       // Créer une nouvelle localisation
+      console.log('📍 LocationService: Creating new location');
       const { data, error } = await supabase
         .from('location')
         .insert([locationPayload])
         .select('*')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ LocationService: Failed to create location:', error);
+        throw error;
+      }
 
       locationId = data.id;
-      shouldUpdateProfile = true;
-    }
-
-    // Mettre à jour le profil si nécessaire
-    if (shouldUpdateProfile) {
-      const { error: profileError } = await supabase
-        .from('profile')
-        .update({ id_location: locationId })
-        .eq('id_user', userId);
-
-      if (profileError) throw profileError;
+      console.log('✅ LocationService: Location created successfully:', locationId);
     }
 
     return locationId;
   }
 }
+
+
 
 export const locationService = new LocationService();

@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { OnboardingCredentials } from '@/types/onboarding';
 import { OnboardingService } from '@/services/onboardingService';
+import { useAuth } from '@/stores/authStore';
+import { supabase } from '@/lib/supabase';
+import { router } from 'expo-router';
 
 interface OnboardingCredentialsProps {
   data?: OnboardingCredentials;
-  onNext: (credentials: OnboardingCredentials) => void;
-  onBack: () => void;
+  onNext: (credentials: OnboardingCredentials, userId: string) => void;
 }
 
-export default function OnboardingCredentials({ data, onNext, onBack }: OnboardingCredentialsProps) {
+export default function OnboardingCredentialsStep({ data, onNext }: OnboardingCredentialsProps) {
   const [credentials, setCredentials] = useState<OnboardingCredentials>({
     email: data?.email || '',
     password: data?.password || '',
     confirmPassword: data?.confirmPassword || '',
   });
+  const [isCreating, setIsCreating] = useState(false);
+  const { signUp } = useAuth();
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const errors = OnboardingService.validateCredentials(credentials);
     
     if (errors.length > 0) {
@@ -24,7 +28,77 @@ export default function OnboardingCredentials({ data, onNext, onBack }: Onboardi
       return;
     }
 
-    onNext(credentials);
+    try {
+      setIsCreating(true);
+      console.log('📝 OnboardingCredentials: Creating account for:', credentials.email);
+      
+      // Utiliser le store d'authentification pour l'inscription
+      const { error } = await signUp(credentials.email, credentials.password);
+      
+      if (error) {
+        console.error('❌ OnboardingCredentials: Signup failed:', error);
+        let errorMessage = 'Impossible de créer le compte';
+        
+        if (error.message.includes('Email address') && error.message.includes('invalid')) {
+          errorMessage = 'L\'adresse email n\'est pas valide';
+        } else if (error.message.includes('already registered')) {
+          errorMessage = 'Cette adresse email est déjà utilisée';
+        } else if (error.message.includes('Password')) {
+          errorMessage = 'Le mot de passe ne respecte pas les critères requis';
+        }
+        
+        Alert.alert('Erreur', errorMessage);
+        return;
+      }
+
+      console.log('✅ OnboardingCredentials: Account created, retrieving user ID...');
+      
+      // Tenter de récupérer l'userId plusieurs fois
+      let userId = null;
+      let attempts = 0;
+      const maxAttempts = 5;
+
+      while (!userId && attempts < maxAttempts) {
+        attempts++;
+        console.log(`🔍 OnboardingCredentials: Attempt ${attempts} to get user ID`);
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          userId = session.user.id;
+          console.log('✅ OnboardingCredentials: User ID found:', userId);
+          break;
+        }
+        
+        console.warn(`⚠️ OnboardingCredentials: No session found on attempt ${attempts}`);
+      }
+      
+      if (userId) {
+        console.log('✅ OnboardingCredentials: Proceeding to profile step with userId:', userId);
+        onNext(credentials, userId);
+      } else {
+        console.error('❌ OnboardingCredentials: Could not retrieve user ID after signup');
+        Alert.alert(
+          'Erreur', 
+          'Le compte a été créé mais nous ne pouvons pas continuer. Veuillez vous connecter manuellement.',
+          [{ 
+            text: 'OK', 
+            onPress: () => {
+              // Rediriger vers la page de connexion
+              router.replace('/(auth)/login');
+            }
+          }]
+        );
+      }
+      
+    } catch (error) {
+      console.error('❌ OnboardingCredentials: Unexpected error:', error);
+      Alert.alert('Erreur', 'Une erreur inattendue est survenue');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -32,7 +106,7 @@ export default function OnboardingCredentials({ data, onNext, onBack }: Onboardi
       <View style={styles.content}>
         <Text style={styles.title}>Créons votre compte</Text>
         <Text style={styles.subtitle}>
-          Entrez vos identifiants de connexion
+          Commençons par créer votre compte SquadLink
         </Text>
 
         <View style={styles.form}>
@@ -46,6 +120,7 @@ export default function OnboardingCredentials({ data, onNext, onBack }: Onboardi
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
+              editable={!isCreating}
             />
           </View>
 
@@ -58,6 +133,7 @@ export default function OnboardingCredentials({ data, onNext, onBack }: Onboardi
               placeholder="Minimum 6 caractères"
               secureTextEntry
               autoComplete="new-password"
+              editable={!isCreating}
             />
           </View>
 
@@ -70,20 +146,23 @@ export default function OnboardingCredentials({ data, onNext, onBack }: Onboardi
               placeholder="Confirmez votre mot de passe"
               secureTextEntry
               autoComplete="new-password"
+              editable={!isCreating}
             />
           </View>
         </View>
       </View>
 
-      <View style={styles.buttons}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>Retour</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>Suivant</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity 
+        style={[styles.nextButton, isCreating && styles.nextButtonDisabled]} 
+        onPress={handleNext}
+        disabled={isCreating}
+      >
+        {isCreating ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.nextButtonText}>Créer mon compte</Text>
+        )}
+      </TouchableOpacity>
     </View>
   );
 }
@@ -129,29 +208,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#fff',
   },
-  buttons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  backButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#007AFF',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  backButtonText: {
-    color: '#007AFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   nextButton: {
-    flex: 1,
     backgroundColor: '#007AFF',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
+    marginBottom: 20,
+  },
+  nextButtonDisabled: {
+    backgroundColor: '#999',
   },
   nextButtonText: {
     color: '#fff',

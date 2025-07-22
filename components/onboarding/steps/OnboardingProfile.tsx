@@ -4,14 +4,16 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { OnboardingProfile } from '@/types/onboarding';
 import { OnboardingService } from '@/services/onboardingService';
 import { locationService } from '@/services/locationService';
+import { supabase } from '@/lib/supabase';
 
 interface OnboardingProfileProps {
   data?: OnboardingProfile;
+  userId: string;
   onNext: (profile: OnboardingProfile) => void;
   onBack: () => void;
 }
 
-export default function OnboardingProfile({ data, onNext, onBack }: OnboardingProfileProps) {
+export default function OnboardingProfileStep({ data, userId, onNext, onBack }: OnboardingProfileProps) {
   const [profile, setProfile] = useState<OnboardingProfile>({
     lastname: data?.lastname || '',
     firstname: data?.firstname || '',
@@ -21,17 +23,20 @@ export default function OnboardingProfile({ data, onNext, onBack }: OnboardingPr
   
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const handleLocationUpdate = async () => {
     try {
       setGettingLocation(true);
 
+      // Montrer l'explication avant de demander la permission
       const userAccepted = await locationService.showLocationExplanation();
       if (!userAccepted) {
         setGettingLocation(false);
         return;
       }
 
+      // Obtenir la localisation
       const result = await locationService.getCurrentLocation();
       
       if (!result.success || !result.data) {
@@ -40,17 +45,42 @@ export default function OnboardingProfile({ data, onNext, onBack }: OnboardingPr
         return;
       }
 
-      setProfile(prev => ({ ...prev, location: result.data! }));
-      setGettingLocation(false);
-      Alert.alert('Succès', 'Localisation mise à jour !');
+      console.log('📍 OnboardingProfile: Location data received:', result.data);
+
+      // Confirmer avec l'utilisateur
+      const confirmMessage = result.data.postal_code > 0 
+        ? `Nouvelle localisation détectée :\n${result.data.town} (${result.data.postal_code})\n\nVoulez-vous l'utiliser pour votre profil ?`
+        : `Nouvelle localisation détectée :\n${result.data.town}\n\nVoulez-vous l'utiliser pour votre profil ?`;
+
+      Alert.alert(
+        'Confirmer la localisation',
+        confirmMessage,
+        [
+          { 
+            text: 'Annuler', 
+            style: 'cancel',
+            onPress: () => setGettingLocation(false)
+          },
+          { 
+            text: 'Confirmer',
+            onPress: async () => {
+              console.log('📍 OnboardingProfile: Location confirmed, updating profile state');
+              setProfile(prev => ({ ...prev, location: result.data! }));
+              setGettingLocation(false);
+              Alert.alert('Succès', 'Localisation mise à jour !');
+            }
+          }
+        ]
+      );
 
     } catch (error) {
+      console.error('❌ OnboardingProfile: Location update error:', error);
       Alert.alert('Erreur', 'Une erreur inattendue s\'est produite');
       setGettingLocation(false);
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const errors = OnboardingService.validateProfile(profile);
     
     if (errors.length > 0) {
@@ -58,7 +88,40 @@ export default function OnboardingProfile({ data, onNext, onBack }: OnboardingPr
       return;
     }
 
-    onNext(profile);
+    try {
+      setSaving(true);
+      console.log('📝 OnboardingProfile: Updating profile for user:', userId);
+      
+      // Tenter de mettre à jour le profil
+      const result = await OnboardingService.updateUserProfile(userId, profile);
+      
+      if (result.success) {
+        console.log('✅ OnboardingProfile: Profile updated successfully, proceeding to sports');
+        onNext(profile);
+      } else {
+        console.warn('⚠️ OnboardingProfile: Profile update failed but proceeding:', result.error);
+        // Continuer quand même vers l'étape suivante
+        Alert.alert(
+          'Information', 
+          'Nous continuerons la configuration. Vous pourrez compléter votre profil plus tard.',
+          [
+            { text: 'Continuer', onPress: () => onNext(profile) }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('❌ OnboardingProfile: Profile save error:', error);
+      // Permettre de continuer même en cas d'erreur
+      Alert.alert(
+        'Configuration en cours', 
+        'Continuons la configuration de votre profil.',
+        [
+          { text: 'Continuer', onPress: () => onNext(profile) }
+        ]
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const formatDate = (date: Date) => {
@@ -111,23 +174,40 @@ export default function OnboardingProfile({ data, onNext, onBack }: OnboardingPr
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Localisation</Text>
             <View style={styles.locationContainer}>
-              <Text style={styles.locationText}>
-                {profile.location 
-                  ? `${profile.location.town} (${profile.location.postal_code})`
-                  : 'Non définie'
-                }
-              </Text>
+              <View style={styles.locationRow}>
+                <Text style={styles.locationLabel}>Ville actuelle :</Text>
+                <Text style={styles.locationValue}>
+                  {profile.location ? 
+                    (profile.location.postal_code && profile.location.postal_code !== 0 
+                      ? `${profile.location.town} (${profile.location.postal_code})`
+                      : profile.location.town
+                    ) : 
+                    'Non définie'
+                  }
+                </Text>
+              </View>
+              
               <TouchableOpacity 
-                style={styles.locationButton}
+                style={[styles.locationButton, gettingLocation && styles.locationButtonDisabled]}
                 onPress={handleLocationUpdate}
                 disabled={gettingLocation}
+                accessibilityRole="button"
               >
                 {gettingLocation ? (
-                  <ActivityIndicator size="small" color="#007AFF" />
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={styles.locationButtonText}>Localisation...</Text>
+                  </View>
                 ) : (
                   <Text style={styles.locationButtonText}>📍 Obtenir ma position</Text>
                 )}
               </TouchableOpacity>
+            </View>
+            
+            <View style={styles.infoBox}>
+              <Text style={styles.infoText}>
+                ℹ️ Votre localisation nous aide à vous connecter avec des personnes près de chez vous
+              </Text>
             </View>
           </View>
         </View>
@@ -153,8 +233,16 @@ export default function OnboardingProfile({ data, onNext, onBack }: OnboardingPr
           <Text style={styles.backButtonText}>Retour</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>Suivant</Text>
+        <TouchableOpacity 
+          style={[styles.nextButton, saving && styles.nextButtonDisabled]} 
+          onPress={handleNext}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.nextButtonText}>Suivant</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -224,22 +312,54 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
   },
-  locationText: {
+  locationRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  locationLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6c757d',
+  },
+  locationValue: {
     fontSize: 14,
     color: '#2c3e50',
-    marginBottom: 8,
+    fontWeight: '500',
   },
   locationButton: {
-    alignSelf: 'flex-start',
+    backgroundColor: '#28a745',
+    borderRadius: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#007AFF',
-    borderRadius: 6,
+    alignItems: 'center',
+  },
+  locationButtonDisabled: {
+    backgroundColor: '#6c757d',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   locationButtonText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '500',
+    marginLeft: 4,
+  },
+  infoBox: {
+    backgroundColor: '#e7f3ff',
+    borderRadius: 6,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#b3d9ff',
+    marginTop: 10,
+  },
+  infoText: {
+    fontSize: 12,
+    color: '#0066cc',
+    lineHeight: 16,
   },
   buttons: {
     flexDirection: 'row',
@@ -269,5 +389,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  nextButtonDisabled: {
+    backgroundColor: '#999',
   },
 });

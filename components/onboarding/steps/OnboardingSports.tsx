@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { OnboardingSport } from '@/types/onboarding';
+import { OnboardingService } from '@/services/onboardingService';
 
 interface Sport {
   id: string;
@@ -15,15 +16,17 @@ interface Level {
 
 interface OnboardingSportsProps {
   data?: OnboardingSport[];
+  userId: string;
   onNext: (sports: OnboardingSport[]) => void;
   onBack: () => void;
 }
 
-export default function OnboardingSports({ data, onNext, onBack }: OnboardingSportsProps) {
+export default function OnboardingSports({ data, userId, onNext, onBack }: OnboardingSportsProps) {
   const [sports, setSports] = useState<Sport[]>([]);
   const [levels, setLevels] = useState<Level[]>([]);
   const [selectedSports, setSelectedSports] = useState<OnboardingSport[]>(data || []);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadSportsAndLevels();
@@ -67,13 +70,26 @@ export default function OnboardingSports({ data, onNext, onBack }: OnboardingSpo
     );
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (selectedSports.length === 0) {
       Alert.alert('Sport requis', 'Veuillez sélectionner au moins un sport');
       return;
     }
 
-    onNext(selectedSports);
+    try {
+      setSaving(true);
+      const result = await OnboardingService.updateUserSports(userId, selectedSports);
+      
+      if (result.success) {
+        onNext(selectedSports);
+      } else {
+        Alert.alert('Erreur', result.error || 'Impossible de sauvegarder les sports');
+      }
+    } catch (error) {
+      Alert.alert('Erreur', 'Une erreur inattendue est survenue');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const renderSport = ({ item }: { item: Sport }) => {
@@ -150,8 +166,16 @@ export default function OnboardingSports({ data, onNext, onBack }: OnboardingSpo
           <Text style={styles.backButtonText}>Retour</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>Suivant</Text>
+        <TouchableOpacity 
+          style={[styles.nextButton, saving && styles.nextButtonDisabled]} 
+          onPress={handleNext}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.nextButtonText}>Suivant</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -270,6 +294,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
+  },
+  nextButtonDisabled: {
+    backgroundColor: '#999',
   },
   nextButtonText: {
     color: '#fff',

@@ -24,7 +24,10 @@ export class HobbyService {
         `)
         .eq('id_profile', profileData.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ HobbyService: Error loading hobbies:', error);
+        return [];
+      }
       return data || [];
     } catch (error) {
       console.error('❌ HobbyService: Exception lors de getUserHobbies:', error);

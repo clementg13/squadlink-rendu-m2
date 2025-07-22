@@ -34,7 +34,10 @@ export class SocialMediaService {
         `)
         .eq('id_profile', profileData.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ SocialMediaService: Error loading social medias:', error);
+        return [];
+      }
       return data || [];
     } catch (error) {
       console.error('❌ SocialMediaService: Exception lors de getUserSocialMedias:', error);

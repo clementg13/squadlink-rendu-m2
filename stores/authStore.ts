@@ -11,19 +11,21 @@ interface AuthState {
   session: Session | null;
   loading: boolean;
   initialized: boolean;
+  isOnboarding: boolean;
   
   // Actions
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
   setInitialized: (initialized: boolean) => void;
+  setIsOnboarding: (isOnboarding: boolean) => void;
   
   // Méthodes d'authentification
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
-  
+
   // Méthodes utilitaires
   initialize: () => Promise<void>;
   cleanup: () => void;
@@ -42,17 +44,20 @@ export const useAuthStore = create<AuthState>()(
       session: null,
       loading: true,
       initialized: false,
+      isOnboarding: false,
 
       // Actions de base
       setUser: (user) => {
         console.log('👤 Store: Mise à jour utilisateur:', user ? 'Connecté' : 'Déconnecté');
         set({ user });
         
-        // Appeler le callback de redirection si défini
-        const { onAuthChange } = get();
-        if (onAuthChange) {
+        // Ne pas appeler le callback de redirection si on est en onboarding
+        const { onAuthChange, isOnboarding } = get();
+        if (onAuthChange && !isOnboarding) {
           console.log('🔄 Store: Appel du callback de redirection');
           onAuthChange(user);
+        } else if (isOnboarding) {
+          console.log('📋 Store: En onboarding, pas de redirection');
         }
       },
       setSession: (session) => {
@@ -66,6 +71,10 @@ export const useAuthStore = create<AuthState>()(
       setInitialized: (initialized) => {
         console.log('🚀 Store: Mise à jour initialized:', initialized);
         set({ initialized });
+      },
+      setIsOnboarding: (isOnboarding) => {
+        console.log('📋 Store: Mise à jour onboarding:', isOnboarding);
+        set({ isOnboarding });
       },
 
       // Callback de redirection
@@ -205,6 +214,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         session: state.session,
         initialized: state.initialized,
+        // Ne pas persister isOnboarding et onAuthChange
       }),
     }
   )
@@ -218,12 +228,15 @@ export const useAuth = () => {
     session: store.session,
     loading: store.loading,
     initialized: store.initialized,
+    isOnboarding: store.isOnboarding,
     signUp: store.signUp,
     signIn: store.signIn,
     signOut: store.signOut,
     resetPassword: store.resetPassword,
     initialize: store.initialize,
     cleanup: store.cleanup,
+    setIsOnboarding: store.setIsOnboarding,
+    setOnAuthChange: store.setOnAuthChange,
   };
 };
 
@@ -242,4 +255,4 @@ export const useAuthSession = () => {
 
 export const useAuthLoading = () => {
   return useAuthStore((state) => state.loading);
-}; 
+};

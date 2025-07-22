@@ -21,11 +21,6 @@ export interface OnboardingSport {
   levelId: string;
 }
 
-export interface OnboardingGym {
-  gymId?: string;
-  subscriptionId?: string;
-}
-
 export interface OnboardingHobbies {
   hobbyIds: string[];
 }
@@ -34,8 +29,7 @@ export interface OnboardingData {
   credentials: OnboardingCredentials;
   profile: OnboardingProfile;
   sports: OnboardingSport[];
-  gym?: OnboardingGym;
-  hobbies?: OnboardingHobbies;
+  hobbies: OnboardingHobbies;
 }
 
 export type OnboardingStep = 
@@ -43,5 +37,5 @@ export type OnboardingStep =
   | 'credentials' 
   | 'profile'
   | 'sports'
-  | 'gym-or-hobbies'
+  | 'hobbies'
   | 'completion';

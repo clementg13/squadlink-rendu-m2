@@ -45,7 +45,10 @@ export class SportService {
         `)
         .eq('id_profile', profileData.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ SportService: Error loading sports:', error);
+        return [];
+      }
       return data || [];
     } catch (error) {
       console.error('❌ SportService: Exception lors de getUserSports:', error);
