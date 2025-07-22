@@ -92,7 +92,7 @@ export default function OnboardingProfileStep({ data, userId, onNext, onBack }: 
       setSaving(true);
       console.log('📝 OnboardingProfile: Updating profile for user:', userId);
       
-      // Tenter de mettre à jour le profil
+      // Mettre à jour le profil créé par le trigger
       const result = await OnboardingService.updateUserProfile(userId, profile);
       
       if (result.success) {
@@ -103,7 +103,7 @@ export default function OnboardingProfileStep({ data, userId, onNext, onBack }: 
         // Continuer quand même vers l'étape suivante
         Alert.alert(
           'Information', 
-          'Nous continuerons la configuration. Vous pourrez compléter votre profil plus tard.',
+          'Nous continuerons la configuration. Votre profil sera mis à jour plus tard.',
           [
             { text: 'Continuer', onPress: () => onNext(profile) }
           ]

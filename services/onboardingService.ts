@@ -3,6 +3,7 @@ import { locationService } from './locationService';
 import { supabase } from '@/lib/supabase';
 
 export class OnboardingService {
+  // === Profile Management ===
   static async updateUserProfile(userId: string, profileData: OnboardingProfile) {
     try {
       console.log('📝 OnboardingService: Updating profile for user:', userId);
@@ -16,10 +17,8 @@ export class OnboardingService {
           const locationPayload = {
             town: profileData.location.town,
             postal_code: profileData.location.postal_code,
-            location: `POINT(${profileData.location.longitude} ${profileData.location.latitude})` // Format WKT pour PostGIS
+            location: `POINT(${profileData.location.longitude} ${profileData.location.latitude})`
           };
-
-          console.log('📍 OnboardingService: Location payload:', locationPayload);
 
           const { data: locationData, error: locationError } = await supabase
             .from('location')
@@ -42,65 +41,27 @@ export class OnboardingService {
         }
       }
 
-      // 2. Vérifier si le profil existe
-      const { data: existingProfile, error: checkError } = await supabase
+      // 2. Mettre à jour le profil existant (créé par le trigger)
+      const updatePayload = {
+        lastname: profileData.lastname,
+        firstname: profileData.firstname,
+        birthdate: profileData.birthdate?.toISOString().split('T')[0],
+        ...(locationId && { id_location: locationId })
+      };
+
+      console.log('📝 OnboardingService: Updating profile with payload:', updatePayload);
+
+      const { error: updateError } = await supabase
         .from('profile')
-        .select('id')
-        .eq('id_user', userId)
-        .single();
+        .update(updatePayload)
+        .eq('id_user', userId);
 
-      if (checkError && checkError.code === 'PGRST116') {
-        // Profil n'existe pas, le créer
-        const profilePayload = {
-          id_user: userId,
-          lastname: profileData.lastname,
-          firstname: profileData.firstname,
-          birthdate: profileData.birthdate?.toISOString().split('T')[0],
-          score: 0,
-          fully_completed: false,
-          ...(locationId && { id_location: locationId })
-        };
-
-        console.log('📝 OnboardingService: Creating profile with payload:', profilePayload);
-
-        const { data: newProfile, error: createError } = await supabase
-          .from('profile')
-          .insert(profilePayload)
-          .select()
-          .single();
-
-        if (createError) {
-          console.error('❌ OnboardingService: Profile creation failed:', createError);
-          throw createError;
-        }
-        
-        console.log('✅ OnboardingService: Profile created successfully');
-      } else if (existingProfile) {
-        // Profil existe, le mettre à jour
-        const updatePayload = {
-          lastname: profileData.lastname,
-          firstname: profileData.firstname,
-          birthdate: profileData.birthdate?.toISOString().split('T')[0],
-          ...(locationId && { id_location: locationId })
-        };
-
-        console.log('📝 OnboardingService: Updating existing profile with payload:', updatePayload);
-
-        const { error: updateError } = await supabase
-          .from('profile')
-          .update(updatePayload)
-          .eq('id_user', userId);
-
-        if (updateError) {
-          console.error('❌ OnboardingService: Profile update failed:', updateError);
-          throw updateError;
-        }
-        
-        console.log('✅ OnboardingService: Profile updated successfully');
-      } else {
-        throw checkError;
+      if (updateError) {
+        console.error('❌ OnboardingService: Profile update failed:', updateError);
+        throw updateError;
       }
-
+      
+      console.log('✅ OnboardingService: Profile updated successfully');
       return { success: true };
     } catch (error) {
       console.error('❌ OnboardingService: Profile update error:', error);
@@ -111,24 +72,19 @@ export class OnboardingService {
     }
   }
 
+  // === Sports Management ===
   static async updateUserSports(userId: string, sports: OnboardingSport[]) {
     try {
       console.log('🏃 OnboardingService: Updating sports for user:', userId);
 
-      // Récupérer l'ID du profil
-      const { data: profileData, error: profileError } = await supabase
-        .from('profile')
-        .select('id')
-        .eq('id_user', userId)
-        .single();
-
-      if (profileError || !profileData) {
+      const profileId = await this.getProfileId(userId);
+      if (!profileId) {
         throw new Error('Impossible de récupérer le profil');
       }
 
       // Insérer les sports
       const sportsData = sports.map(sport => ({
-        id_profile: profileData.id,
+        id_profile: profileId,
         id_sport: parseInt(sport.sportId),
         id_sport_level: parseInt(sport.levelId),
       }));
@@ -150,24 +106,19 @@ export class OnboardingService {
     }
   }
 
+  // === Hobbies Management ===
   static async updateUserHobbies(userId: string, hobbies: OnboardingHobbies) {
     try {
       console.log('🎯 OnboardingService: Updating hobbies for user:', userId);
 
-      // Récupérer l'ID du profil
-      const { data: profileData, error: profileError } = await supabase
-        .from('profile')
-        .select('id')
-        .eq('id_user', userId)
-        .single();
-
-      if (profileError || !profileData) {
+      const profileId = await this.getProfileId(userId);
+      if (!profileId) {
         throw new Error('Impossible de récupérer le profil');
       }
 
       // Insérer les hobbies
       const hobbiesData = hobbies.hobbyIds.map(hobbyId => ({
-        id_profile: profileData.id,
+        id_profile: profileId,
         id_hobbie: parseInt(hobbyId),
         is_highlighted: false,
       }));
@@ -199,6 +150,18 @@ export class OnboardingService {
     }
   }
 
+  // === Helper Methods ===
+  private static async getProfileId(userId: string): Promise<string | null> {
+    const { data, error } = await supabase
+      .from('profile')
+      .select('id')
+      .eq('id_user', userId)
+      .single();
+
+    return (error || !data) ? null : data.id;
+  }
+
+  // === Validation Methods ===
   static validateCredentials(credentials: OnboardingCredentials) {
     const errors: string[] = [];
 

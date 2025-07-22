@@ -63,25 +63,30 @@ export default function OnboardingHobbiesStep({
 
     try {
       setSaving(true);
+      console.log('🎯 OnboardingHobbies: Saving hobbies for user:', userId);
+      
       const hobbiesData = { hobbyIds: selectedHobbies };
       
-      // Sauvegarder les hobbies
+      // Sauvegarder les hobbies et finaliser le profil
       const result = await OnboardingService.updateUserHobbies(userId, hobbiesData);
       
       if (result.success) {
+        console.log('✅ OnboardingHobbies: Hobbies saved and profile completed');
         onNext(hobbiesData);
       } else {
+        console.warn('⚠️ OnboardingHobbies: Hobbies save failed but proceeding:', result.error);
         Alert.alert(
-          'Sauvegarde partielle',
-          'Vos hobbies seront sauvegardés plus tard. Vous pouvez continuer.',
-          [{ text: 'Continuer', onPress: () => onNext(hobbiesData) }]
+          'Finalisation',
+          'Votre inscription est terminée ! Vos hobbies seront sauvegardés plus tard.',
+          [{ text: 'Terminer', onPress: () => onNext(hobbiesData) }]
         );
       }
     } catch (error) {
+      console.error('❌ OnboardingHobbies: Hobbies save error:', error);
       Alert.alert(
-        'Erreur de sauvegarde',
-        'Vos hobbies seront sauvegardés plus tard.',
-        [{ text: 'Continuer', onPress: () => onNext({ hobbyIds: selectedHobbies }) }]
+        'Inscription terminée',
+        'Votre inscription est terminée ! Vos hobbies seront sauvegardés plus tard.',
+        [{ text: 'Terminer', onPress: () => onNext({ hobbyIds: selectedHobbies }) }]
       );
     } finally {
       setSaving(false);

@@ -78,15 +78,28 @@ export default function OnboardingSports({ data, userId, onNext, onBack }: Onboa
 
     try {
       setSaving(true);
+      console.log('🏃 OnboardingSports: Saving sports for user:', userId);
+      
       const result = await OnboardingService.updateUserSports(userId, selectedSports);
       
       if (result.success) {
+        console.log('✅ OnboardingSports: Sports saved successfully');
         onNext(selectedSports);
       } else {
-        Alert.alert('Erreur', result.error || 'Impossible de sauvegarder les sports');
+        console.warn('⚠️ OnboardingSports: Sports save failed but proceeding:', result.error);
+        Alert.alert(
+          'Sauvegarde partielle',
+          'Vos sports seront sauvegardés plus tard. Vous pouvez continuer.',
+          [{ text: 'Continuer', onPress: () => onNext(selectedSports) }]
+        );
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Une erreur inattendue est survenue');
+      console.error('❌ OnboardingSports: Sports save error:', error);
+      Alert.alert(
+        'Erreur de sauvegarde',
+        'Vos sports seront sauvegardés plus tard.',
+        [{ text: 'Continuer', onPress: () => onNext(selectedSports) }]
+      );
     } finally {
       setSaving(false);
     }
