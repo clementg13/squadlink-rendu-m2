@@ -1,137 +1,137 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { OnboardingProfile } from '@/types/onboarding';
-import { OnboardingService } from '@/services/onboardingService';
+import { Platform } from 'react-native';
 import { locationService } from '@/services/locationService';
-import { supabase } from '@/lib/supabase';
 
 interface OnboardingProfileProps {
-  data?: OnboardingProfile;
   userId: string;
-  onNext: (profile: OnboardingProfile) => void;
+  onNext: (profileData: ProfileData) => void;
   onBack: () => void;
 }
 
-export default function OnboardingProfileStep({ data, userId, onNext, onBack }: OnboardingProfileProps) {
-  const [profile, setProfile] = useState<OnboardingProfile>({
-    lastname: data?.lastname || '',
-    firstname: data?.firstname || '',
-    birthdate: data?.birthdate || null,
-    location: data?.location,
-  });
+interface ProfileData {
+  firstname: string;
+  lastname: string;
+  birthdate: Date;
+  location?: {
+    town: string;
+    postal_code: number;
+    latitude: number;
+    longitude: number;
+  };
+}
+
+export default function OnboardingProfile({ userId, onNext, onBack }: OnboardingProfileProps) {
+  const [firstname, setFirstname] = useState('');
+  const [lastname, setLastname] = useState('');
   
+  // Initialiser avec une date par défaut (18 ans)
+  const getDefaultDate = () => {
+    const today = new Date();
+    const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+    return eighteenYearsAgo;
+  };
+  
+  const [birthdate, setBirthdate] = useState<Date>(getDefaultDate());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [gettingLocation, setGettingLocation] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [location, setLocation] = useState<ProfileData['location'] | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLocationUpdate = async () => {
-    try {
-      setGettingLocation(true);
+  const validateForm = () => {
+    const errors = [];
 
-      // Montrer l'explication avant de demander la permission
-      const userAccepted = await locationService.showLocationExplanation();
-      if (!userAccepted) {
-        setGettingLocation(false);
-        return;
-      }
+    if (!firstname.trim()) {
+      errors.push('Le prénom est requis');
+    }
 
-      // Obtenir la localisation
-      const result = await locationService.getCurrentLocation();
+    if (!lastname.trim()) {
+      errors.push('Le nom est requis');
+    }
+
+    if (!birthdate) {
+      errors.push('La date de naissance est requise');
+    } else {
+      const today = new Date();
+      const age = today.getFullYear() - birthdate.getFullYear();
+      const monthDiff = today.getMonth() - birthdate.getMonth();
+      const dayDiff = today.getDate() - birthdate.getDate();
       
-      if (!result.success || !result.data) {
-        Alert.alert('Erreur', result.error || 'Impossible d\'obtenir la localisation');
-        setGettingLocation(false);
-        return;
+      // Calcul précis de l'âge
+      const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
+      
+      if (actualAge < 16) {
+        errors.push('Vous devez avoir au moins 16 ans');
       }
+      if (actualAge > 100) {
+        errors.push('Veuillez vérifier votre date de naissance');
+      }
+    }
 
-      console.log('📍 OnboardingProfile: Location data received:', result.data);
+    return errors;
+  };
 
-      // Confirmer avec l'utilisateur
-      const confirmMessage = result.data.postal_code > 0 
-        ? `Nouvelle localisation détectée :\n${result.data.town} (${result.data.postal_code})\n\nVoulez-vous l'utiliser pour votre profil ?`
-        : `Nouvelle localisation détectée :\n${result.data.town}\n\nVoulez-vous l'utiliser pour votre profil ?`;
+  const handleGetLocation = async () => {
+    const userWantsLocation = await locationService.showLocationExplanation();
+    if (!userWantsLocation) return;
 
-      Alert.alert(
-        'Confirmer la localisation',
-        confirmMessage,
-        [
-          { 
-            text: 'Annuler', 
-            style: 'cancel',
-            onPress: () => setGettingLocation(false)
-          },
-          { 
-            text: 'Confirmer',
-            onPress: async () => {
-              console.log('📍 OnboardingProfile: Location confirmed, updating profile state');
-              setProfile(prev => ({ ...prev, location: result.data! }));
-              setGettingLocation(false);
-              Alert.alert('Succès', 'Localisation mise à jour !');
-            }
-          }
-        ]
-      );
-
+    setIsLoadingLocation(true);
+    try {
+      const result = await locationService.getCurrentLocation();
+      if (result.success && result.data) {
+        setLocation(result.data);
+        Alert.alert('Succès', `Localisation définie : ${result.data.town}`);
+      } else {
+        Alert.alert('Erreur', result.error || 'Impossible d\'obtenir la localisation');
+      }
     } catch (error) {
-      console.error('❌ OnboardingProfile: Location update error:', error);
-      Alert.alert('Erreur', 'Une erreur inattendue s\'est produite');
-      setGettingLocation(false);
+      console.error('Location error:', error);
+      Alert.alert('Erreur', 'Une erreur est survenue lors de la géolocalisation');
+    } finally {
+      setIsLoadingLocation(false);
     }
   };
 
-  const handleNext = async () => {
-    const errors = OnboardingService.validateProfile(profile);
-    
+  const handleNext = () => {
+    const errors = validateForm();
     if (errors.length > 0) {
       Alert.alert('Erreur de validation', errors.join('\n'));
       return;
     }
 
-    try {
-      setSaving(true);
-      console.log('📝 OnboardingProfile: Updating profile for user:', userId);
-      
-      // Mettre à jour le profil créé par le trigger
-      const result = await OnboardingService.updateUserProfile(userId, profile);
-      
-      if (result.success) {
-        console.log('✅ OnboardingProfile: Profile updated successfully, proceeding to sports');
-        onNext(profile);
-      } else {
-        console.warn('⚠️ OnboardingProfile: Profile update failed but proceeding:', result.error);
-        // Continuer quand même vers l'étape suivante
-        Alert.alert(
-          'Information', 
-          'Nous continuerons la configuration. Votre profil sera mis à jour plus tard.',
-          [
-            { text: 'Continuer', onPress: () => onNext(profile) }
-          ]
-        );
-      }
-    } catch (error) {
-      console.error('❌ OnboardingProfile: Profile save error:', error);
-      // Permettre de continuer même en cas d'erreur
-      Alert.alert(
-        'Configuration en cours', 
-        'Continuons la configuration de votre profil.',
-        [
-          { text: 'Continuer', onPress: () => onNext(profile) }
-        ]
-      );
-    } finally {
-      setSaving(false);
+    const profileData: ProfileData = {
+      firstname: firstname.trim(),
+      lastname: lastname.trim(),
+      birthdate: birthdate, // birthdate est maintenant toujours défini
+      location: location || undefined,
+    };
+
+    console.log('📝 OnboardingProfile: Profile data prepared:', profileData);
+    onNext(profileData);
+  };
+
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setBirthdate(selectedDate);
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('fr-FR');
+  const getMaximumDate = () => {
+    const today = new Date();
+    const sixteenYearsAgo = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
+    return sixteenYearsAgo;
+  };
+
+  const getMinimumDate = () => {
+    return new Date(1920, 0, 1);
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Créons votre profil</Text>
+        <Text style={styles.title}>Créez votre profil</Text>
         <Text style={styles.subtitle}>
           Partagez quelques informations sur vous
         </Text>
@@ -141,10 +141,11 @@ export default function OnboardingProfileStep({ data, userId, onNext, onBack }: 
             <Text style={styles.label}>Prénom *</Text>
             <TextInput
               style={styles.input}
-              value={profile.firstname}
-              onChangeText={(text) => setProfile(prev => ({ ...prev, firstname: text }))}
+              value={firstname}
+              onChangeText={setFirstname}
               placeholder="Votre prénom"
               autoCapitalize="words"
+              editable={!isLoading}
             />
           </View>
 
@@ -152,98 +153,94 @@ export default function OnboardingProfileStep({ data, userId, onNext, onBack }: 
             <Text style={styles.label}>Nom *</Text>
             <TextInput
               style={styles.input}
-              value={profile.lastname}
-              onChangeText={(text) => setProfile(prev => ({ ...prev, lastname: text }))}
+              value={lastname}
+              onChangeText={setLastname}
               placeholder="Votre nom"
               autoCapitalize="words"
+              editable={!isLoading}
             />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Date de naissance *</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.dateButton}
               onPress={() => setShowDatePicker(true)}
+              disabled={isLoading}
             >
-              <Text style={[styles.dateButtonText, !profile.birthdate && styles.placeholder]}>
-                {profile.birthdate ? formatDate(profile.birthdate) : 'Sélectionnez votre date de naissance'}
+              <Text style={styles.dateText}>
+                {birthdate.toLocaleDateString('fr-FR')}
               </Text>
             </TouchableOpacity>
+            <Text style={styles.dateHint}>
+              Vous devez avoir au moins 16 ans pour utiliser l'application
+            </Text>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={birthdate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={onDateChange}
+                maximumDate={getMaximumDate()}
+                minimumDate={getMinimumDate()}
+                locale="fr-FR"
+              />
+            )}
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Localisation</Text>
-            <View style={styles.locationContainer}>
-              <View style={styles.locationRow}>
-                <Text style={styles.locationLabel}>Ville actuelle :</Text>
-                <Text style={styles.locationValue}>
-                  {profile.location ? 
-                    (profile.location.postal_code && profile.location.postal_code !== 0 
-                      ? `${profile.location.town} (${profile.location.postal_code})`
-                      : profile.location.town
-                    ) : 
-                    'Non définie'
-                  }
-                </Text>
+            <Text style={styles.label}>Localisation (optionnel)</Text>
+            {location ? (
+              <View style={styles.locationContainer}>
+                <Text style={styles.locationText}>📍 {location.town}</Text>
+                <TouchableOpacity
+                  style={styles.changeLocationButton}
+                  onPress={handleGetLocation}
+                  disabled={isLoadingLocation}
+                >
+                  <Text style={styles.changeLocationText}>Modifier</Text>
+                </TouchableOpacity>
               </View>
-              
-              <TouchableOpacity 
-                style={[styles.locationButton, gettingLocation && styles.locationButtonDisabled]}
-                onPress={handleLocationUpdate}
-                disabled={gettingLocation}
-                accessibilityRole="button"
+            ) : (
+              <TouchableOpacity
+                style={styles.locationButton}
+                onPress={handleGetLocation}
+                disabled={isLoadingLocation}
               >
-                {gettingLocation ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color="#fff" />
-                    <Text style={styles.locationButtonText}>Localisation...</Text>
-                  </View>
+                {isLoadingLocation ? (
+                  <ActivityIndicator size="small" color="#007AFF" />
                 ) : (
-                  <Text style={styles.locationButtonText}>📍 Obtenir ma position</Text>
+                  <Text style={styles.locationButtonText}>📍 Ajouter ma localisation</Text>
                 )}
               </TouchableOpacity>
-            </View>
-            
-            <View style={styles.infoBox}>
-              <Text style={styles.infoText}>
-                ℹ️ Votre localisation nous aide à vous connecter avec des personnes près de chez vous
-              </Text>
-            </View>
+            )}
           </View>
         </View>
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={profile.birthdate || new Date()}
-            mode="date"
-            display="default"
-            maximumDate={new Date()}
-            onChange={(event, selectedDate) => {
-              setShowDatePicker(false);
-              if (selectedDate) {
-                setProfile(prev => ({ ...prev, birthdate: selectedDate }));
-              }
-            }}
-          />
-        )}
       </View>
 
-      <View style={styles.buttons}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>Retour</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.nextButton, saving && styles.nextButtonDisabled]} 
-          onPress={handleNext}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.nextButtonText}>Suivant</Text>
-          )}
-        </TouchableOpacity>
+      <View style={styles.footer}>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onBack}
+            disabled={isLoading}
+          >
+            <Text style={styles.backButtonText}>Retour</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.nextButton, isLoading && styles.nextButtonDisabled]}
+            onPress={handleNext}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.nextButtonText}>Continuer</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -262,18 +259,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#2c3e50',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#7f8c8d',
     marginBottom: 32,
     lineHeight: 22,
+    textAlign: 'center',
   },
   form: {
     flex: 1,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   label: {
     fontSize: 16,
@@ -298,70 +297,61 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#fff',
   },
-  dateButtonText: {
+  dateText: {
+    fontSize: 16,
+    color: '#2c3e50',
+    fontWeight: '500',
+  },
+  dateHint: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#f8f9fa',
+  },
+  locationText: {
     fontSize: 16,
     color: '#2c3e50',
   },
-  placeholder: {
-    color: '#999',
+  changeLocationButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#007AFF',
+    borderRadius: 6,
   },
-  locationContainer: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  locationRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  locationLabel: {
+  changeLocationText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#6c757d',
-  },
-  locationValue: {
-    fontSize: 14,
-    color: '#2c3e50',
+    color: '#fff',
     fontWeight: '500',
   },
   locationButton: {
-    backgroundColor: '#28a745',
+    borderWidth: 1,
+    borderColor: '#007AFF',
     borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-  },
-  locationButtonDisabled: {
-    backgroundColor: '#6c757d',
-  },
-  loadingContainer: {
-    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
     alignItems: 'center',
   },
   locationButtonText: {
-    color: '#fff',
-    fontSize: 14,
+    fontSize: 16,
+    color: '#007AFF',
     fontWeight: '500',
-    marginLeft: 4,
   },
-  infoBox: {
-    backgroundColor: '#e7f3ff',
-    borderRadius: 6,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#b3d9ff',
-    marginTop: 10,
+  footer: {
+    paddingTop: 20,
   },
-  infoText: {
-    fontSize: 12,
-    color: '#0066cc',
-    lineHeight: 16,
-  },
-  buttons: {
+  buttonRow: {
     flexDirection: 'row',
     gap: 12,
   },
@@ -379,18 +369,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   nextButton: {
-    flex: 1,
+    flex: 2,
     backgroundColor: '#007AFF',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
+  nextButtonDisabled: {
+    backgroundColor: '#999',
+  },
   nextButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  nextButtonDisabled: {
-    backgroundColor: '#999',
   },
 });

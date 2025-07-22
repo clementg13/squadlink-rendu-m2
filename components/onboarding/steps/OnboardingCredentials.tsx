@@ -1,48 +1,67 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native';
-import { OnboardingCredentials } from '@/types/onboarding';
-import { OnboardingService } from '@/services/onboardingService';
-import { useAuth } from '@/stores/authStore';
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
 
 interface OnboardingCredentialsProps {
-  data?: OnboardingCredentials;
-  onNext: (credentials: OnboardingCredentials, userId: string) => void;
+  onNext: (userId: string) => void;
 }
 
-export default function OnboardingCredentialsStep({ data, onNext }: OnboardingCredentialsProps) {
-  const [credentials, setCredentials] = useState<OnboardingCredentials>({
-    email: data?.email || '',
-    password: data?.password || '',
-    confirmPassword: data?.confirmPassword || '',
-  });
-  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
-  const { signUp } = useAuth();
+export default function OnboardingCredentials({ onNext }: OnboardingCredentialsProps) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const validateForm = () => {
+    const errors = [];
+
+    if (!email.trim()) {
+      errors.push('L\'email est requis');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.push('L\'email n\'est pas valide');
+    }
+
+    if (!password) {
+      errors.push('Le mot de passe est requis');
+    } else if (password.length < 6) {
+      errors.push('Le mot de passe doit contenir au moins 6 caractères');
+    }
+
+    if (!confirmPassword) {
+      errors.push('La confirmation du mot de passe est requise');
+    } else if (password !== confirmPassword) {
+      errors.push('Les mots de passe ne correspondent pas');
+    }
+
+    return errors;
+  };
 
   const handleCreateAccount = async () => {
-    const errors = OnboardingService.validateCredentials(credentials);
-    
+    const errors = validateForm();
     if (errors.length > 0) {
       Alert.alert('Erreur de validation', errors.join('\n'));
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      setIsCreatingAccount(true);
-      console.log('📝 OnboardingCredentials: Creating account for:', credentials.email);
-      
-      // Utiliser le store d'authentification pour l'inscription
-      const { error } = await signUp(credentials.email, credentials.password);
-      
+      console.log('📝 OnboardingCredentials: Creating account for:', email);
+
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password,
+      });
+
       if (error) {
         console.error('❌ OnboardingCredentials: Signup failed:', error);
         let errorMessage = 'Impossible de créer le compte';
         
-        if (error.message.includes('Email address') && error.message.includes('invalid')) {
-          errorMessage = 'L\'adresse email n\'est pas valide';
-        } else if (error.message.includes('already registered')) {
+        if (error.message.includes('User already registered')) {
           errorMessage = 'Cette adresse email est déjà utilisée';
+        } else if (error.message.includes('Invalid email')) {
+          errorMessage = 'L\'adresse email n\'est pas valide';
         } else if (error.message.includes('Password')) {
           errorMessage = 'Le mot de passe ne respecte pas les critères requis';
         }
@@ -51,53 +70,32 @@ export default function OnboardingCredentialsStep({ data, onNext }: OnboardingCr
         return;
       }
 
-      console.log('✅ OnboardingCredentials: Account created, retrieving user ID...');
-      
-      // Tenter de récupérer l'userId plusieurs fois
-      let userId = null;
-      let attempts = 0;
-      const maxAttempts = 5;
+      if (!data.user?.id) {
+        console.error('❌ OnboardingCredentials: No user ID received');
+        Alert.alert('Erreur', 'Impossible de créer le compte. Veuillez réessayer.');
+        return;
+      }
 
-      while (!userId && attempts < maxAttempts) {
-        attempts++;
-        console.log(`🔍 OnboardingCredentials: Attempt ${attempts} to get user ID`);
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          userId = session.user.id;
-          console.log('✅ OnboardingCredentials: User ID found:', userId);
-          break;
-        }
-        
-        console.warn(`⚠️ OnboardingCredentials: No session found on attempt ${attempts}`);
-      }
+      // Attendre un peu pour que la session soit bien établie
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Vérifier que l'utilisateur est bien authentifié
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      if (userId) {
-        console.log('✅ OnboardingCredentials: Proceeding to profile step with userId:', userId);
-        onNext(credentials, userId);
-      } else {
-        console.error('❌ OnboardingCredentials: Could not retrieve user ID after signup');
-        Alert.alert(
-          'Erreur', 
-          'Le compte a été créé mais nous ne pouvons pas continuer. Veuillez vous connecter manuellement.',
-          [{ 
-            text: 'OK', 
-            onPress: () => {
-              // Rediriger vers la page de connexion
-              router.replace('/(auth)/login');
-            }
-          }]
-        );
+      if (userError || !user) {
+        console.error('❌ OnboardingCredentials: User not authenticated after signup');
+        Alert.alert('Erreur', 'Problème d\'authentification. Veuillez réessayer.');
+        return;
       }
-      
+
+      console.log('✅ OnboardingCredentials: Account created and authenticated, user ID:', user.id);
+      onNext(user.id);
+
     } catch (error) {
       console.error('❌ OnboardingCredentials: Unexpected error:', error);
       Alert.alert('Erreur', 'Une erreur inattendue est survenue');
     } finally {
-      setIsCreatingAccount(false);
+      setIsLoading(false);
     }
   };
 
@@ -114,13 +112,13 @@ export default function OnboardingCredentialsStep({ data, onNext }: OnboardingCr
             <Text style={styles.label}>Email</Text>
             <TextInput
               style={styles.input}
-              value={credentials.email}
-              onChangeText={(text) => setCredentials(prev => ({ ...prev, email: text }))}
+              value={email}
+              onChangeText={setEmail}
               placeholder="votre@email.com"
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
-              editable={!isCreatingAccount}
+              editable={!isLoading}
             />
           </View>
 
@@ -128,12 +126,12 @@ export default function OnboardingCredentialsStep({ data, onNext }: OnboardingCr
             <Text style={styles.label}>Mot de passe</Text>
             <TextInput
               style={styles.input}
-              value={credentials.password}
-              onChangeText={(text) => setCredentials(prev => ({ ...prev, password: text }))}
+              value={password}
+              onChangeText={setPassword}
               placeholder="Minimum 6 caractères"
               secureTextEntry
               autoComplete="new-password"
-              editable={!isCreatingAccount}
+              editable={!isLoading}
             />
           </View>
 
@@ -141,41 +139,36 @@ export default function OnboardingCredentialsStep({ data, onNext }: OnboardingCr
             <Text style={styles.label}>Confirmer le mot de passe</Text>
             <TextInput
               style={styles.input}
-              value={credentials.confirmPassword}
-              onChangeText={(text) => setCredentials(prev => ({ ...prev, confirmPassword: text }))}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
               placeholder="Confirmez votre mot de passe"
               secureTextEntry
-              autoComplete="new-password"
-              editable={!isCreatingAccount}
+              editable={!isLoading}
             />
           </View>
         </View>
 
         <TouchableOpacity 
-          style={[styles.signupButton, isCreatingAccount && styles.signupButtonDisabled]} 
+          style={[styles.signupButton, isLoading && styles.signupButtonDisabled]} 
           onPress={handleCreateAccount}
-          disabled={isCreatingAccount}
+          disabled={isLoading}
         >
-          {isCreatingAccount ? (
+          {isLoading ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
             <Text style={styles.signupButtonText}>Créer mon compte</Text>
           )}
         </TouchableOpacity>
 
-        {/* Lien de connexion avec espacement */}
         <View style={styles.loginLinkContainer}>
           <Text style={styles.loginLinkText}>Vous avez déjà un compte ? </Text>
           <TouchableOpacity 
             onPress={() => router.replace('/(public)/auth')}
-            disabled={isCreatingAccount}
+            disabled={isLoading}
           >
             <Text style={styles.loginLink}>Se connecter</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Espacement supplémentaire */}
-        <View style={styles.bottomSpacer} />
       </View>
     </View>
   );
@@ -185,7 +178,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    paddingBottom: 40, // Espacement supplémentaire en bas
   },
   content: {
     flex: 1,
@@ -196,15 +188,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#2c3e50',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#7f8c8d',
     marginBottom: 32,
     lineHeight: 22,
+    textAlign: 'center',
   },
   form: {
-    flex: 1,
+    marginBottom: 24,
   },
   inputGroup: {
     marginBottom: 20,
@@ -243,8 +237,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16, // Réduit l'espacement
-    marginBottom: 20, // Ajout d'espace en bas
   },
   loginLinkText: {
     fontSize: 14,
@@ -254,8 +246,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#007AFF',
     fontWeight: '600',
-  },
-  bottomSpacer: {
-    height: 20, // Espacement supplémentaire
   },
 });

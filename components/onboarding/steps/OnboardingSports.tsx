@@ -1,141 +1,142 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { OnboardingSport } from '@/types/onboarding';
-import { OnboardingService } from '@/services/onboardingService';
+
+interface OnboardingSportsProps {
+  userId: string;
+  onNext: (sportsData: SportSelection[]) => void;
+  onBack: () => void;
+}
 
 interface Sport {
   id: string;
   name: string;
 }
 
-interface Level {
+interface SportLevel {
   id: string;
   name: string;
 }
 
-interface OnboardingSportsProps {
-  data?: OnboardingSport[];
-  userId: string;
-  onNext: (sports: OnboardingSport[]) => void;
-  onBack: () => void;
+interface SportSelection {
+  sportId: string;
+  levelId: string;
+  sportName: string;
+  levelName: string;
 }
 
-export default function OnboardingSports({ data, userId, onNext, onBack }: OnboardingSportsProps) {
+export default function OnboardingSports({ userId, onNext, onBack }: OnboardingSportsProps) {
   const [sports, setSports] = useState<Sport[]>([]);
-  const [levels, setLevels] = useState<Level[]>([]);
-  const [selectedSports, setSelectedSports] = useState<OnboardingSport[]>(data || []);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [sportLevels, setSportLevels] = useState<SportLevel[]>([]);
+  const [selectedSports, setSelectedSports] = useState<SportSelection[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadSportsAndLevels();
+    loadSportsData();
   }, []);
 
-  const loadSportsAndLevels = async () => {
+  const loadSportsData = async () => {
     try {
-      const [sportsResult, levelsResult] = await Promise.all([
-        supabase.from('sport').select('id, name').order('name'),
-        supabase.from('sportlevel').select('id, name').order('id')
+      const [sportsResponse, levelsResponse] = await Promise.all([
+        supabase.from('sport').select('*').order('name'),
+        supabase.from('sportlevel').select('*').order('name')
       ]);
 
-      if (sportsResult.error) throw sportsResult.error;
-      if (levelsResult.error) throw levelsResult.error;
+      if (sportsResponse.error) throw sportsResponse.error;
+      if (levelsResponse.error) throw levelsResponse.error;
 
-      setSports(sportsResult.data || []);
-      setLevels(levelsResult.data || []);
+      setSports(sportsResponse.data || []);
+      setSportLevels(levelsResponse.data || []);
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de charger les données');
+      console.error('Error loading sports data:', error);
+      Alert.alert('Erreur', 'Impossible de charger les sports disponibles');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleSportSelect = (sportId: string) => {
-    const isSelected = selectedSports.some(s => s.sportId === sportId);
+  const handleSportSelect = (sport: Sport) => {
+    const isSelected = selectedSports.find(s => s.sportId === sport.id);
     
     if (isSelected) {
-      setSelectedSports(prev => prev.filter(s => s.sportId !== sportId));
+      // Retirer le sport
+      setSelectedSports(prev => prev.filter(s => s.sportId !== sport.id));
+    } else if (selectedSports.length < 5) {
+      // Ajouter le sport avec le niveau débutant par défaut
+      const beginnerLevel = sportLevels.find(level => level.name.toLowerCase().includes('débutant')) || sportLevels[0];
+      if (beginnerLevel) {
+        setSelectedSports(prev => [...prev, {
+          sportId: sport.id,
+          levelId: beginnerLevel.id,
+          sportName: sport.name,
+          levelName: beginnerLevel.name,
+        }]);
+      }
     } else {
-      // Add sport with default level
-      setSelectedSports(prev => [...prev, { sportId, levelId: levels[0]?.id || '1' }]);
+      Alert.alert('Limite atteinte', 'Vous pouvez sélectionner maximum 5 sports');
     }
   };
 
   const handleLevelChange = (sportId: string, levelId: string) => {
+    const level = sportLevels.find(l => l.id === levelId);
+    if (!level) return;
+
     setSelectedSports(prev => 
       prev.map(sport => 
-        sport.sportId === sportId ? { ...sport, levelId } : sport
+        sport.sportId === sportId 
+          ? { ...sport, levelId, levelName: level.name }
+          : sport
       )
     );
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (selectedSports.length === 0) {
-      Alert.alert('Sport requis', 'Veuillez sélectionner au moins un sport');
+      Alert.alert('Sélection requise', 'Veuillez sélectionner au moins un sport');
       return;
     }
 
-    try {
-      setSaving(true);
-      console.log('🏃 OnboardingSports: Saving sports for user:', userId);
-      
-      const result = await OnboardingService.updateUserSports(userId, selectedSports);
-      
-      if (result.success) {
-        console.log('✅ OnboardingSports: Sports saved successfully');
-        onNext(selectedSports);
-      } else {
-        console.warn('⚠️ OnboardingSports: Sports save failed but proceeding:', result.error);
-        Alert.alert(
-          'Sauvegarde partielle',
-          'Vos sports seront sauvegardés plus tard. Vous pouvez continuer.',
-          [{ text: 'Continuer', onPress: () => onNext(selectedSports) }]
-        );
-      }
-    } catch (error) {
-      console.error('❌ OnboardingSports: Sports save error:', error);
-      Alert.alert(
-        'Erreur de sauvegarde',
-        'Vos sports seront sauvegardés plus tard.',
-        [{ text: 'Continuer', onPress: () => onNext(selectedSports) }]
-      );
-    } finally {
-      setSaving(false);
-    }
+    console.log('🏃 OnboardingSports: Sports selected:', selectedSports);
+    onNext(selectedSports);
   };
 
-  const renderSport = ({ item }: { item: Sport }) => {
+  const renderSportItem = ({ item }: { item: Sport }) => {
+    const isSelected = selectedSports.find(s => s.sportId === item.id);
     const selectedSport = selectedSports.find(s => s.sportId === item.id);
-    const isSelected = !!selectedSport;
 
     return (
       <View style={styles.sportItem}>
         <TouchableOpacity
-          style={[styles.sportButton, isSelected && styles.sportButtonSelected]}
-          onPress={() => handleSportSelect(item.id)}
+          style={[
+            styles.sportButton,
+            isSelected && styles.sportButtonSelected
+          ]}
+          onPress={() => handleSportSelect(item)}
         >
-          <Text style={[styles.sportButtonText, isSelected && styles.sportButtonTextSelected]}>
+          <Text style={[
+            styles.sportButtonText,
+            isSelected && styles.sportButtonTextSelected
+          ]}>
             {item.name}
           </Text>
         </TouchableOpacity>
 
-        {isSelected && (
+        {isSelected && selectedSport && (
           <View style={styles.levelSelector}>
             <Text style={styles.levelLabel}>Niveau :</Text>
             <View style={styles.levelButtons}>
-              {levels.map(level => (
+              {sportLevels.map(level => (
                 <TouchableOpacity
                   key={level.id}
                   style={[
                     styles.levelButton,
-                    selectedSport?.levelId === level.id && styles.levelButtonSelected
+                    selectedSport.levelId === level.id && styles.levelButtonSelected
                   ]}
                   onPress={() => handleLevelChange(item.id, level.id)}
                 >
                   <Text style={[
                     styles.levelButtonText,
-                    selectedSport?.levelId === level.id && styles.levelButtonTextSelected
+                    selectedSport.levelId === level.id && styles.levelButtonTextSelected
                   ]}>
                     {level.name}
                   </Text>
@@ -148,7 +149,7 @@ export default function OnboardingSports({ data, userId, onNext, onBack }: Onboa
     );
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -160,36 +161,43 @@ export default function OnboardingSports({ data, userId, onNext, onBack }: Onboa
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Choisissez vos sports</Text>
+        <Text style={styles.title}>Vos sports</Text>
         <Text style={styles.subtitle}>
-          Sélectionnez les sports que vous pratiquez et votre niveau
+          Sélectionnez les sports que vous pratiquez (max 5)
+        </Text>
+        <Text style={styles.counter}>
+          {selectedSports.length}/5 sports sélectionnés
         </Text>
 
         <FlatList
           data={sports}
-          renderItem={renderSport}
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id}
+          renderItem={renderSportItem}
           showsVerticalScrollIndicator={false}
           style={styles.sportsList}
         />
       </View>
 
-      <View style={styles.buttons}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>Retour</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.nextButton, saving && styles.nextButtonDisabled]} 
-          onPress={handleNext}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.nextButtonText}>Suivant</Text>
-          )}
-        </TouchableOpacity>
+      <View style={styles.footer}>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onBack}
+          >
+            <Text style={styles.backButtonText}>Retour</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.nextButton,
+              selectedSports.length === 0 && styles.nextButtonDisabled
+            ]}
+            onPress={handleNext}
+            disabled={selectedSports.length === 0}
+          >
+            <Text style={styles.nextButtonText}>Continuer</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -200,6 +208,16 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
   content: {
     flex: 1,
   },
@@ -208,12 +226,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#2c3e50',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#7f8c8d',
-    marginBottom: 24,
+    marginBottom: 16,
     lineHeight: 22,
+    textAlign: 'center',
+  },
+  counter: {
+    fontSize: 14,
+    color: '#007AFF',
+    marginBottom: 20,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   sportsList: {
     flex: 1,
@@ -222,11 +249,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sportButton: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     backgroundColor: '#fff',
   },
   sportButtonSelected: {
@@ -237,30 +264,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#2c3e50',
     textAlign: 'center',
+    fontWeight: '500',
   },
   sportButtonTextSelected: {
     color: '#007AFF',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   levelSelector: {
-    marginTop: 8,
+    marginTop: 12,
     paddingLeft: 16,
   },
   levelLabel: {
     fontSize: 14,
-    color: '#7f8c8d',
+    color: '#666',
     marginBottom: 8,
+    fontWeight: '500',
   },
   levelButtons: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   levelButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#ddd',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     backgroundColor: '#fff',
   },
   levelButtonSelected: {
@@ -268,23 +298,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
   },
   levelButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#666',
   },
   levelButtonTextSelected: {
     color: '#fff',
+    fontWeight: '500',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  footer: {
+    paddingTop: 20,
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#7f8c8d',
-  },
-  buttons: {
+  buttonRow: {
     flexDirection: 'row',
     gap: 12,
   },
@@ -302,14 +326,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   nextButton: {
-    flex: 1,
+    flex: 2,
     backgroundColor: '#007AFF',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
   nextButtonDisabled: {
-    backgroundColor: '#999',
+    backgroundColor: '#ccc',
   },
   nextButtonText: {
     color: '#fff',

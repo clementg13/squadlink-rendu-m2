@@ -1,10 +1,20 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { useAuth } from '@/stores/authStore';
 
 export default function OnboardingCompletion() {
+  const { setIsOnboarding } = useAuth();
+
   const handleContinue = () => {
-    router.replace('/(protected)/(tabs)');
+    console.log('🎉 OnboardingCompletion: Onboarding completed, disabling onboarding mode');
+    // Désactiver le mode onboarding avant de naviguer
+    setIsOnboarding(false);
+    
+    // Petit délai pour s'assurer que le state est mis à jour
+    setTimeout(() => {
+      router.replace('/(protected)/(tabs)');
+    }, 100);
   };
 
   return (
@@ -74,16 +84,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#7f8c8d',
     textAlign: 'center',
+    lineHeight: 24,
     marginBottom: 40,
   },
   features: {
     width: '100%',
-    alignItems: 'center',
+    marginTop: 20,
   },
   featuresTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#2c3e50',
+    textAlign: 'center',
     marginBottom: 24,
   },
   feature: {
@@ -91,7 +103,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
     paddingHorizontal: 20,
-    width: '100%',
   },
   featureEmoji: {
     fontSize: 24,

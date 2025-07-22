@@ -1,31 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { OnboardingHobbies } from '@/types/onboarding';
-import { OnboardingService } from '@/services/onboardingService';
+
+interface OnboardingHobbiesProps {
+  userId: string;
+  onNext: (hobbiesData: string[]) => void;
+  onBack: () => void;
+}
 
 interface Hobby {
   id: string;
   name: string;
+  emoji?: string;
 }
 
-interface OnboardingHobbiesProps {
-  data?: OnboardingHobbies;
-  userId: string;
-  onNext: (hobbies: OnboardingHobbies) => void;
-  onBack: () => void;
-}
-
-export default function OnboardingHobbiesStep({ 
-  data, 
-  userId, 
-  onNext, 
-  onBack 
-}: OnboardingHobbiesProps) {
+export default function OnboardingHobbies({ userId, onNext, onBack }: OnboardingHobbiesProps) {
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [selectedHobbies, setSelectedHobbies] = useState<string[]>(data?.hobbyIds || []);
+  const [selectedHobbies, setSelectedHobbies] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadHobbies();
@@ -33,67 +25,58 @@ export default function OnboardingHobbiesStep({
 
   const loadHobbies = async () => {
     try {
-      const { data: hobbiesData, error } = await supabase
+      const { data, error } = await supabase
         .from('hobbie')
-        .select('id, name')
+        .select('*')
         .order('name');
 
       if (error) throw error;
-      setHobbies(hobbiesData || []);
+      setHobbies(data || []);
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de charger les hobbies');
+      console.error('Error loading hobbies:', error);
+      Alert.alert('Erreur', 'Impossible de charger les hobbies disponibles');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleHobbyToggle = (hobbyId: string) => {
-    setSelectedHobbies(prev => 
-      prev.includes(hobbyId) 
-        ? prev.filter(id => id !== hobbyId)
-        : [...prev, hobbyId]
+    if (selectedHobbies.includes(hobbyId)) {
+      setSelectedHobbies(prev => prev.filter(id => id !== hobbyId));
+    } else if (selectedHobbies.length < 10) {
+      setSelectedHobbies(prev => [...prev, hobbyId]);
+    } else {
+      Alert.alert('Limite atteinte', 'Vous pouvez sélectionner maximum 10 hobbies');
+    }
+  };
+
+  const handleNext = () => {
+    console.log('🎯 OnboardingHobbies: Hobbies selected:', selectedHobbies);
+    onNext(selectedHobbies);
+  };
+
+  const renderHobbyItem = ({ item }: { item: Hobby }) => {
+    const isSelected = selectedHobbies.includes(item.id);
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.hobbyButton,
+          isSelected && styles.hobbyButtonSelected
+        ]}
+        onPress={() => handleHobbyToggle(item.id)}
+      >
+        <Text style={[
+          styles.hobbyButtonText,
+          isSelected && styles.hobbyButtonTextSelected
+        ]}>
+          {item.emoji && `${item.emoji} `}{item.name}
+        </Text>
+      </TouchableOpacity>
     );
   };
 
-  const handleNext = async () => {
-    if (selectedHobbies.length === 0) {
-      Alert.alert('Sélection requise', 'Veuillez sélectionner au moins un hobby');
-      return;
-    }
-
-    try {
-      setSaving(true);
-      console.log('🎯 OnboardingHobbies: Saving hobbies for user:', userId);
-      
-      const hobbiesData = { hobbyIds: selectedHobbies };
-      
-      // Sauvegarder les hobbies et finaliser le profil
-      const result = await OnboardingService.updateUserHobbies(userId, hobbiesData);
-      
-      if (result.success) {
-        console.log('✅ OnboardingHobbies: Hobbies saved and profile completed');
-        onNext(hobbiesData);
-      } else {
-        console.warn('⚠️ OnboardingHobbies: Hobbies save failed but proceeding:', result.error);
-        Alert.alert(
-          'Finalisation',
-          'Votre inscription est terminée ! Vos hobbies seront sauvegardés plus tard.',
-          [{ text: 'Terminer', onPress: () => onNext(hobbiesData) }]
-        );
-      }
-    } catch (error) {
-      console.error('❌ OnboardingHobbies: Hobbies save error:', error);
-      Alert.alert(
-        'Inscription terminée',
-        'Votre inscription est terminée ! Vos hobbies seront sauvegardés plus tard.',
-        [{ text: 'Terminer', onPress: () => onNext({ hobbyIds: selectedHobbies }) }]
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -105,58 +88,43 @@ export default function OnboardingHobbiesStep({
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Vos hobbies</Text>
+        <Text style={styles.title}>Vos centres d'intérêt</Text>
         <Text style={styles.subtitle}>
-          Choisissez vos hobbies pour enrichir votre profil et trouver des personnes partageant vos intérêts
+          Sélectionnez vos hobbies pour trouver des personnes avec des intérêts similaires (optionnel)
+        </Text>
+        <Text style={styles.counter}>
+          {selectedHobbies.length}/10 hobbies sélectionnés
         </Text>
 
-        <View style={styles.hobbiesContainer}>
-          <Text style={styles.selectedCount}>
-            {selectedHobbies.length} hobby{selectedHobbies.length > 1 ? 's' : ''} sélectionné{selectedHobbies.length > 1 ? 's' : ''}
-          </Text>
-          
-          <FlatList
-            data={hobbies}
-            keyExtractor={item => item.id}
-            numColumns={2}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[
-                  styles.hobbyChip,
-                  selectedHobbies.includes(item.id) && styles.hobbyChipSelected
-                ]}
-                onPress={() => handleHobbyToggle(item.id)}
-              >
-                <Text style={[
-                  styles.hobbyChipText,
-                  selectedHobbies.includes(item.id) && styles.hobbyChipTextSelected
-                ]}>
-                  {item.name}
-                </Text>
-              </TouchableOpacity>
-            )}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.hobbiesList}
-          />
-        </View>
+        <FlatList
+          data={hobbies}
+          keyExtractor={(item) => item.id}
+          renderItem={renderHobbyItem}
+          numColumns={2}
+          showsVerticalScrollIndicator={false}
+          style={styles.hobbiesList}
+          columnWrapperStyle={styles.row}
+        />
       </View>
 
-      <View style={styles.buttons}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>Retour</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.nextButton, saving && styles.nextButtonDisabled]} 
-          onPress={handleNext}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.nextButtonText}>Terminer l'inscription</Text>
-          )}
-        </TouchableOpacity>
+      <View style={styles.footer}>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onBack}
+          >
+            <Text style={styles.backButtonText}>Retour</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.nextButton}
+            onPress={handleNext}
+          >
+            <Text style={styles.nextButtonText}>
+              {selectedHobbies.length > 0 ? 'Continuer' : 'Passer cette étape'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -167,59 +135,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  content: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#7f8c8d',
-    marginBottom: 24,
-    lineHeight: 22,
-  },
-  hobbiesContainer: {
-    flex: 1,
-  },
-  selectedCount: {
-    fontSize: 14,
-    color: '#007AFF',
-    marginBottom: 16,
-    fontWeight: '500',
-  },
-  hobbiesList: {
-    paddingBottom: 20,
-  },
-  hobbyChip: {
-    flex: 1,
-    margin: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    minHeight: 40,
-    justifyContent: 'center',
-  },
-  hobbyChipSelected: {
-    borderColor: '#007AFF',
-    backgroundColor: '#007AFF',
-  },
-  hobbyChipText: {
-    fontSize: 14,
-    color: '#2c3e50',
-    textAlign: 'center',
-  },
-  hobbyChipTextSelected: {
-    color: '#fff',
-    fontWeight: '500',
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -228,9 +143,66 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#7f8c8d',
+    color: '#666',
   },
-  buttons: {
+  content: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#7f8c8d',
+    marginBottom: 16,
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+  counter: {
+    fontSize: 14,
+    color: '#007AFF',
+    marginBottom: 20,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  hobbiesList: {
+    flex: 1,
+  },
+  row: {
+    justifyContent: 'space-between',
+  },
+  hobbyButton: {
+    flex: 0.48,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    backgroundColor: '#fff',
+    marginBottom: 12,
+  },
+  hobbyButtonSelected: {
+    borderColor: '#007AFF',
+    backgroundColor: '#f0f8ff',
+  },
+  hobbyButtonText: {
+    fontSize: 14,
+    color: '#2c3e50',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  hobbyButtonTextSelected: {
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  footer: {
+    paddingTop: 20,
+  },
+  buttonRow: {
     flexDirection: 'row',
     gap: 12,
   },
@@ -248,14 +220,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   nextButton: {
-    flex: 1,
+    flex: 2,
     backgroundColor: '#007AFF',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
-  },
-  nextButtonDisabled: {
-    backgroundColor: '#999',
   },
   nextButtonText: {
     color: '#fff',

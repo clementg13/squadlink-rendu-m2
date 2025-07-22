@@ -7,16 +7,25 @@ interface OnboardingProgressProps {
 }
 
 export default function OnboardingProgress({ currentStep, totalSteps }: OnboardingProgressProps) {
-  const progress = (currentStep / totalSteps) * 100;
+  const progressPercentage = Math.min((currentStep / totalSteps) * 100, 100);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.progressBar}>
-        <View style={[styles.progressFill, { width: `${progress}%` }]} />
+    <View style={styles.container} testID="progress-bar">
+      <View style={styles.header}>
+        <Text style={styles.stepText}>
+          {currentStep} / {totalSteps}
+        </Text>
       </View>
-      <Text style={styles.progressText}>
-        Étape {currentStep} sur {totalSteps}
-      </Text>
+      <View style={styles.progressBarContainer}>
+        <View style={styles.progressBarBackground}>
+          <View
+            style={[
+              styles.progressBarFill,
+              { width: `${progressPercentage}%` },
+            ]}
+          />
+        </View>
+      </View>
     </View>
   );
 }
@@ -24,23 +33,33 @@ export default function OnboardingProgress({ currentStep, totalSteps }: Onboardi
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 16,
     backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
-  progressBar: {
+  header: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  stepText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  progressBarContainer: {
+    alignItems: 'center',
+  },
+  progressBarBackground: {
+    width: '100%',
     height: 4,
     backgroundColor: '#e0e0e0',
     borderRadius: 2,
-    marginBottom: 8,
+    overflow: 'hidden',
   },
-  progressFill: {
+  progressBarFill: {
     height: '100%',
     backgroundColor: '#007AFF',
     borderRadius: 2,
-  },
-  progressText: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
   },
 });

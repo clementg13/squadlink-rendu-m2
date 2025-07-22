@@ -10,25 +10,25 @@ export default function OnboardingWelcome({ onNext }: OnboardingWelcomeProps) {
     <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.emoji}>🏋️‍♂️</Text>
-        <Text style={styles.title}>Bienvenue sur SquadLink !</Text>
+        <Text style={styles.title}>Bienvenue sur SquadLink</Text>
         <Text style={styles.subtitle}>
-          Trouvez votre partenaire sportif idéal et atteignez vos objectifs ensemble
+          L'application qui vous connecte avec des partenaires sportifs près de chez vous
         </Text>
         
         <View style={styles.features}>
           <View style={styles.feature}>
             <Text style={styles.featureEmoji}>🤝</Text>
-            <Text style={styles.featureText}>Connectez-vous avec des sportifs près de chez vous</Text>
+            <Text style={styles.featureText}>Trouvez des partenaires d'entraînement</Text>
           </View>
           
           <View style={styles.feature}>
             <Text style={styles.featureEmoji}>🎯</Text>
-            <Text style={styles.featureText}>Trouvez des partenaires de votre niveau</Text>
+            <Text style={styles.featureText}>Partagez vos objectifs sportifs</Text>
           </View>
           
           <View style={styles.feature}>
-            <Text style={styles.featureEmoji}>🏆</Text>
-            <Text style={styles.featureText}>Atteignez vos objectifs sportifs ensemble</Text>
+            <Text style={styles.featureEmoji}>📍</Text>
+            <Text style={styles.featureText}>Découvrez des salles près de chez vous</Text>
           </View>
         </View>
       </View>
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emoji: {
-    fontSize: 64,
+    fontSize: 80,
     marginBottom: 24,
   },
   title: {
@@ -68,16 +68,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 40,
+    paddingHorizontal: 20,
   },
   features: {
     width: '100%',
-    marginTop: 20,
+    paddingHorizontal: 20,
   },
   feature: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
-    paddingHorizontal: 20,
   },
   featureEmoji: {
     fontSize: 24,
