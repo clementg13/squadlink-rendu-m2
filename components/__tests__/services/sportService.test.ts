@@ -109,7 +109,7 @@ describe('SportService', () => {
             })
           })
         } as any)
-        // Mock sport insertion
+        // Mock sport insertion - mise à jour pour les nouveaux types
         .mockReturnValueOnce({
           insert: jest.fn().mockReturnValue({
             select: jest.fn().mockReturnValue({
@@ -123,6 +123,9 @@ describe('SportService', () => {
 
       const result = await sportService.addUserSport('user1', 'sport1', 'level1');
       expect(result).toEqual(mockNewSport);
+      
+      // Vérifier que les paramètres sont corrects (string au lieu de parseInt)
+      expect(mockSupabase.from).toHaveBeenCalledWith('profilesport');
     });
 
     it('should throw error when profile not found', async () => {
@@ -170,6 +173,9 @@ describe('SportService', () => {
         } as any);
 
       await expect(sportService.removeUserSport('user1', 'sport1')).resolves.toBeUndefined();
+      
+      // Vérifier que la suppression utilise les bons paramètres
+      expect(mockSupabase.from).toHaveBeenCalledWith('profilesport');
     });
   });
 
