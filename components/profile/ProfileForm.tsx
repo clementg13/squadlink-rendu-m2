@@ -5,17 +5,16 @@ import { UserProfile } from '@/types/profile';
 
 interface ProfileFormProps {
   formData: {
-    lastname: string;
     firstname: string;
+    lastname: string;
     birthdate: string;
-    biography: string;
+    biography?: string;
   };
-  profile?: UserProfile | null;
   saving: boolean;
   onFieldChange: (field: string, value: string) => void;
 }
 
-export default function ProfileForm({ formData, profile, saving, onFieldChange }: ProfileFormProps) {
+export default function ProfileForm({ formData, saving, onFieldChange }: ProfileFormProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -28,67 +27,58 @@ export default function ProfileForm({ formData, profile, saving, onFieldChange }
     }
   };
 
+  const handleFieldChange = (field: string, value: string) => {
+    // Nettoyer la valeur avant de l'envoyer
+    const cleanValue = value ? value.trim() : '';
+    onFieldChange(field, cleanValue);
+  };
+
   return (
     <View style={styles.container}>
-      {/* Prénom */}
-      <View style={styles.fieldGroup}>
+      <View style={styles.inputGroup}>
         <Text style={styles.label}>Prénom</Text>
         <TextInput
-          style={styles.input}
-          value={formData.firstname}
-          onChangeText={(value) => onFieldChange('firstname', value)}
+          style={[styles.input, saving && styles.inputDisabled]}
+          value={formData.firstname || ''}
+          onChangeText={(value) => handleFieldChange('firstname', value)}
           placeholder="Votre prénom"
+          autoCapitalize="words"
           editable={!saving}
         />
       </View>
 
-      {/* Nom */}
-      <View style={styles.fieldGroup}>
+      <View style={styles.inputGroup}>
         <Text style={styles.label}>Nom</Text>
         <TextInput
-          style={styles.input}
-          value={formData.lastname}
-          onChangeText={(value) => onFieldChange('lastname', value)}
+          style={[styles.input, saving && styles.inputDisabled]}
+          value={formData.lastname || ''}
+          onChangeText={(value) => handleFieldChange('lastname', value)}
           placeholder="Votre nom"
+          autoCapitalize="words"
           editable={!saving}
         />
       </View>
 
-      {/* Date de naissance */}
-      <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Date de naissance</Text>
-        <TouchableOpacity 
-          style={[styles.input, styles.datePickerButton]}
-          onPress={() => setShowDatePicker(true)}
-          disabled={saving}
-        >
-          <Text style={formData.birthdate ? styles.dateText : styles.placeholderText}>
-            {formData.birthdate ? 
-              new Date(formData.birthdate).toLocaleDateString('fr-FR') : 
-              'Sélectionnez votre date de naissance'
-            }
-          </Text>
-        </TouchableOpacity>
-        
-        {showDatePicker && (
-          <DateTimePicker
-            value={selectedDate}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={handleDateChange}
-            maximumDate={new Date()}
-            minimumDate={new Date(1900, 0, 1)}
-          />
-        )}
-      </View>
+      {formData.birthdate && (
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Date de naissance</Text>
+          <View style={styles.dateContainer}>
+            <Text style={styles.dateText}>
+              {new Date(formData.birthdate).toLocaleDateString('fr-FR')}
+            </Text>
+            <Text style={styles.dateHint}>
+              Pour modifier votre date de naissance, contactez le support
+            </Text>
+          </View>
+        </View>
+      )}
 
-      {/* Biographie */}
-      <View style={styles.fieldGroup}>
+      <View style={styles.inputGroup}>
         <Text style={styles.label}>Biographie</Text>
         <TextInput
-          style={[styles.input, styles.textArea]}
-          value={formData.biography}
-          onChangeText={(value) => onFieldChange('biography', value)}
+          style={[styles.textArea, saving && styles.inputDisabled]}
+          value={formData.biography || ''}
+          onChangeText={(value) => handleFieldChange('biography', value)}
           placeholder="Parlez-nous de vous..."
           multiline
           numberOfLines={4}
@@ -106,7 +96,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginTop: 10,
   },
-  fieldGroup: {
+  inputGroup: {
     marginBottom: 20,
   },
   label: {
@@ -123,26 +113,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#fff',
   },
-  inputReadonly: {
+  inputDisabled: {
     backgroundColor: '#f8f9fa',
-  },
-  inputTextReadonly: {
-    fontSize: 16,
-    color: '#6c757d',
   },
   textArea: {
     height: 100,
     textAlignVertical: 'top',
   },
-  datePickerButton: {
-    justifyContent: 'center',
+  dateContainer: {
+    flexDirection: 'column',
   },
   dateText: {
     fontSize: 16,
     color: '#2c3e50',
   },
-  placeholderText: {
-    fontSize: 16,
+  dateHint: {
+    fontSize: 14,
     color: '#6c757d',
+    marginTop: 4,
   },
 });

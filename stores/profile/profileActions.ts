@@ -77,69 +77,93 @@ export const createProfileActions = (set: any, get: any): ProfileActions => ({
   updateProfile: async (updates: Partial<UserProfile>) => {
     try {
       set({ saving: true, error: null });
-
+      
       const { profile } = get();
       if (!profile) {
         throw new Error('Profil non chargé');
       }
 
-      const updatedData = await profileService.updateProfile(profile.id_user, updates);
+      // Valider et nettoyer les données avant envoi
+      const cleanUpdates = { ...updates };
+      
+      // Valider la date de naissance spécifiquement
+      if ('birthdate' in cleanUpdates) {
+        if (!cleanUpdates.birthdate || cleanUpdates.birthdate === '') {
+          // Supprimer les dates vides
+          delete cleanUpdates.birthdate;
+        }
+      }
+
+      // Valider les champs texte
+      ['firstname', 'lastname', 'biography'].forEach(field => {
+        if (field in cleanUpdates && typeof cleanUpdates[field as keyof UserProfile] === 'string') {
+          const value = cleanUpdates[field as keyof UserProfile] as string;
+          if (value.trim() === '') {
+            delete cleanUpdates[field as keyof UserProfile];
+          } else {
+            // Nettoyer les espaces
+            (cleanUpdates as any)[field] = value.trim();
+          }
+        }
+      });
+
+      console.log('📝 ProfileActions: Updating profile with cleaned data:', cleanUpdates);
+      
+      const updatedProfile = await profileService.updateProfile(profile.id_user, cleanUpdates);
       
       set({ 
-        profile: { ...profile, ...updatedData }, 
+        profile: updatedProfile,
         saving: false 
       });
 
       return { error: null };
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la mise à jour du profil';
-      console.error('❌ ProfileStore - updateProfile:', errorMessage);
-      set({ error: errorMessage, saving: false });
-      return { error: error as Error };
+      return get().handleError('updateProfile', error, 'Erreur lors de la mise à jour du profil');
     }
   },
 
-  updateLocation: async (locationData) => {
+  updateLocation: async (locationData: { town: string; postal_code: number; latitude: number; longitude: number }) => {
     try {
       set({ saving: true, error: null });
-
+      
       const { profile } = get();
       if (!profile) {
         throw new Error('Profil non chargé');
       }
 
-      const locationId = await locationService.updateLocationInDatabase(
-        profile.id_user,
-        locationData,
-        profile.id_location
-      );
-
-      const updatedLocation = await profileService.getLocationDetails(locationId);
-
-      set({ 
-        profile: { 
-          ...profile, 
-          id_location: locationId,
-          location: updatedLocation || undefined 
-        }, 
-        saving: false 
-      });
-
+      console.log('📍 ProfileActions: Updating location with:', locationData);
+      
+      await profileService.updateLocation(profile.id_user, locationData);
+      
+      // Recharger le profil pour récupérer la nouvelle localisation
+      await get().loadProfile(profile.id_user);
+      
+      set({ saving: false });
       return { error: null };
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la mise à jour de la localisation';
-      console.error('❌ ProfileStore - updateLocation:', errorMessage);
-      set({ error: errorMessage, saving: false });
-      return { error: error as Error };
+      return get().handleError('updateLocation', error, 'Erreur lors de la mise à jour de la localisation');
     }
   },
 
   handleError: (action: string, error: unknown, defaultMessage: string) => {
-    const errorMessage = error instanceof Error ? error.message : defaultMessage;
-    console.error(`❌ ProfileStore - ${action}:`, errorMessage);
-    set({ error: errorMessage, saving: false });
-    return { error: error as Error };
-  }
+    console.error(`❌ ProfileActions: ${action} error:`, error);
+    
+    let errorMessage = defaultMessage;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
+    set({ 
+      saving: false, 
+      loading: false,
+      error: errorMessage 
+    });
+
+    return { 
+      success: false, 
+      error: new Error(errorMessage) 
+    };
+  },
 });

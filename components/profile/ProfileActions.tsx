@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 
 interface ProfileActionsProps {
   hasChanges: boolean;
@@ -17,86 +17,101 @@ export default function ProfileActions({
   onSignOut 
 }: ProfileActionsProps) {
   return (
-    <View>
-      {/* Boutons d'action */}
-      <View style={styles.actionSection}>
+    <View style={styles.container}>
+      <View style={styles.actionButtons}>
         <TouchableOpacity 
-          style={[styles.button, styles.buttonPrimary]} 
+          style={[
+            styles.saveButton, 
+            (!hasChanges || saving) && styles.saveButtonDisabled
+          ]}
           onPress={onSave}
-          disabled={saving || !hasChanges}
+          disabled={!hasChanges || saving}
           testID="save-button"
         >
           {saving ? (
-            <ActivityIndicator color="#fff" size="small" />
+            <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.buttonTextPrimary}>Modifier profil</Text>
+            <Text style={styles.saveButtonText}>
+              {hasChanges ? 'Enregistrer' : 'Modifier profil'}
+            </Text>
           )}
         </TouchableOpacity>
 
         {hasChanges && (
           <TouchableOpacity 
-            style={[styles.button, styles.buttonSecondary]} 
+            style={[styles.cancelButton, saving && styles.cancelButtonDisabled]}
             onPress={onCancel}
             disabled={saving}
           >
-            <Text style={styles.buttonTextSecondary}>Annuler</Text>
+            <Text style={styles.cancelButtonText}>Annuler</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Bouton de déconnexion */}
-      <View style={styles.signOutSection}>
-        <TouchableOpacity 
-          style={styles.signOutButton} 
-          onPress={onSignOut}
-          disabled={saving}
-        >
-          <Text style={styles.signOutButtonText}>Se déconnecter</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity 
+        style={[styles.signOutButton, saving && styles.signOutButtonDisabled]}
+        onPress={onSignOut}
+        disabled={saving}
+      >
+        <Text style={styles.signOutButtonText}>Se déconnecter</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  actionSection: {
+  container: {
     padding: 20,
     backgroundColor: '#fff',
     marginTop: 10,
   },
-  button: {
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  saveButton: {
     flex: 1,
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 5,
-  },
-  buttonPrimary: {
+    marginRight: 10,
     backgroundColor: '#007AFF',
   },
-  buttonSecondary: {
+  saveButtonDisabled: {
+    backgroundColor: '#007AFF80',
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
     backgroundColor: '#6c757d',
   },
-  buttonTextPrimary: {
+  cancelButtonDisabled: {
+    backgroundColor: '#6c757d80',
+  },
+  saveButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
-  buttonTextSecondary: {
+  cancelButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  signOutSection: {
-    padding: 20,
-    marginTop: 10,
   },
   signOutButton: {
     backgroundColor: '#dc3545',
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',
+  },
+  signOutButtonDisabled: {
+    backgroundColor: '#dc354580',
   },
   signOutButtonText: {
     color: '#fff',
