@@ -17,7 +17,7 @@ import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuthUser } from '@/stores/authStore';
 import { useConversations } from '@/hooks/useMessages';
-import { Conversation, ImprovedMessageService } from '@/lib/index';
+import { Conversation, ImprovedMessageService } from '@/services/messagingInterface';
 
 export default function MessagesScreen() {
   const router = useRouter();
