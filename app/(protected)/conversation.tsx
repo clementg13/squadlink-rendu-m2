@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -58,9 +59,12 @@ export default function ConversationScreen() {
   // Auto-scroll vers le bas quand de nouveaux messages arrivent
   useEffect(() => {
     if (messages.length > 0) {
-      setTimeout(() => {
+      // Délai plus long pour s'assurer que le rendu est terminé
+      const timer = setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      }, 300);
+      
+      return () => clearTimeout(timer);
     }
   }, [messages]);
 
@@ -73,6 +77,10 @@ export default function ConversationScreen() {
 
     try {
       await sendMessage(messageText);
+      // Scroll vers le bas après l'envoi
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     } catch (error) {
       Alert.alert('Erreur', 'Impossible d\'envoyer le message');
       setInputText(messageText); // Restaurer le texte en cas d'erreur
@@ -85,11 +93,20 @@ export default function ConversationScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView 
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+    <>
+      {/* Gestion de la status bar selon la plateforme */}
+      <StatusBar 
+        barStyle="dark-content" 
+        backgroundColor="#fff" 
+        translucent={false}
+      />
+      
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView 
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity 
@@ -132,8 +149,25 @@ export default function ConversationScreen() {
           renderItem={renderMessage}
           keyExtractor={(item) => item.id.toString()}
           style={styles.messagesList}
-          contentContainerStyle={styles.messagesContent}
+          contentContainerStyle={[
+            styles.messagesContent,
+            messages.length === 0 && styles.emptyMessagesContent
+          ]}
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => {
+            // Auto-scroll après le redimensionnement du contenu
+            if (messages.length > 0) {
+              flatListRef.current?.scrollToEnd({ animated: false });
+            }
+          }}
+          onLayout={() => {
+            // Auto-scroll lors du premier rendu
+            if (messages.length > 0) {
+              setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: false });
+              }, 100);
+            }
+          }}
           ListEmptyComponent={() => (
             <View style={styles.emptyContainer}>
               <FontAwesome name="comments-o" size={48} color="#ccc" />
@@ -174,6 +208,7 @@ export default function ConversationScreen() {
       </View>
     </KeyboardAvoidingView>
     </SafeAreaView>
+    </>
   );
 }
 
@@ -181,6 +216,8 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    // Padding pour Android pour éviter la collision avec la status bar
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
@@ -255,6 +292,11 @@ const styles = StyleSheet.create({
   },
   messagesContent: {
     paddingVertical: 16,
+    flexGrow: 1,
+  },
+  emptyMessagesContent: {
+    flex: 1,
+    justifyContent: 'center',
   },
   messageContainer: {
     paddingHorizontal: 16,

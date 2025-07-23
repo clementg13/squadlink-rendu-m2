@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   FlatList, 
@@ -6,7 +6,11 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
-  Alert
+  Alert,
+  Animated,
+  StatusBar,
+  Platform,
+  SafeAreaView
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { useRouter } from 'expo-router';
@@ -18,11 +22,36 @@ import { Conversation, ImprovedMessageService } from '@/lib/index';
 export default function MessagesScreen() {
   const router = useRouter();
   const user = useAuthUser();
-  const { conversations, loading, error, refreshConversations } = useConversations(true); // Toujours utiliser le service amélioré
+  const { 
+    conversations, 
+    loading, 
+    error, 
+    refreshConversations, 
+    isRealtimeActive 
+  } = useConversations(true); // Toujours utiliser le service amélioré
   const [searchQuery, setSearchQuery] = useState('');
+  const [newMessageAnimation] = useState(new Animated.Value(0));
+
+  // Animation pour indiquer de nouveaux messages
+  useEffect(() => {
+    if (conversations.length > 0) {
+      Animated.sequence([
+        Animated.timing(newMessageAnimation, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(newMessageAnimation, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [conversations.length]);
 
   // Filtrer les conversations selon la recherche
-  const filteredConversations = conversations.filter(conv =>
+  const filteredConversations = conversations.filter((conv: Conversation) =>
     conv.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -77,8 +106,14 @@ export default function MessagesScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      {/* Header avec barre de recherche */}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar 
+        barStyle="dark-content" 
+        backgroundColor="#fff" 
+        translucent={false}
+      />
+      <View style={styles.container}>
+      {/* Header avec barre de recherche et indicateur temps réel */}
       <View style={styles.header}>
         <View style={styles.searchContainer}>
           <FontAwesome name="search" size={16} color="#666" style={styles.searchIcon} />
@@ -89,6 +124,20 @@ export default function MessagesScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
+        </View>
+        
+        {/* Indicateur de connexion temps réel */}
+        <View style={styles.realtimeIndicator}>
+          <View style={[
+            styles.realtimeDot, 
+            { backgroundColor: isRealtimeActive ? '#4CAF50' : '#ff6b6b' }
+          ]} />
+          <Text style={[
+            styles.realtimeText,
+            { color: isRealtimeActive ? '#4CAF50' : '#ff6b6b' }
+          ]}>
+            {isRealtimeActive ? 'En ligne' : 'Hors ligne'}
+          </Text>
         </View>
       </View>
 
@@ -134,10 +183,17 @@ export default function MessagesScreen() {
         />
       )}
     </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    // Padding pour Android pour éviter la collision avec la status bar
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
@@ -169,6 +225,24 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     fontSize: 16,
     color: '#333',
+  },
+  realtimeIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
+  },
+  realtimeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 4,
+  },
+  realtimeText: {
+    fontSize: 10,
+    fontWeight: '600',
   },
   newMessageButton: {
     padding: 8,

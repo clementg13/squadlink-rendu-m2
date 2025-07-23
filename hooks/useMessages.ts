@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Conversation, Message, ImprovedMessageService, ConversationService } from '@/lib/index';
 import { useAuthUser } from '@/stores/authStore';
+import { supabase } from '@/lib/supabase';
 
-// Hook pour gérer les conversations
+// Hook pour gérer les conversations avec temps réel
 export function useConversations(useImprovedService: boolean = false) {
   const user = useAuthUser();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const subscriptionRef = useRef<any>(null);
 
   // Charger les conversations
   const loadConversations = async () => {
@@ -22,18 +24,9 @@ export function useConversations(useImprovedService: boolean = false) {
       setLoading(true);
       setError(null);
       
-      if (useImprovedService) {
-        console.log('🚀 Utilisation du service amélioré avec table group');
-        const data = await ImprovedMessageService.getUserConversations(user.id);
-        console.log('📋 Conversations du service amélioré:', data);
-        setConversations(data);
-      } else {
-        // Utiliser aussi le service amélioré par défaut
-        console.log('🚀 Utilisation du service amélioré par défaut');
-        const data = await ImprovedMessageService.getUserConversations(user.id);
-        console.log('📋 Conversations reçues:', data);
-        setConversations(data);
-      }
+      const data = await ImprovedMessageService.getUserConversations(user.id);
+      console.log('📋 Conversations reçues:', data);
+      setConversations(data);
       
     } catch (err) {
       console.error('❌ Erreur lors du chargement des conversations:', err);
@@ -48,9 +41,77 @@ export function useConversations(useImprovedService: boolean = false) {
     loadConversations();
   };
 
+  // Configurer l'abonnement en temps réel pour les nouveaux messages
+  const setupRealtimeSubscription = () => {
+    if (!user?.id) return;
+
+    console.log('🔔 Configuration de l\'abonnement temps réel pour les messages');
+
+    // S'abonner aux changements dans la table message avec throttling
+    let updateTimeout: any;
+    
+    subscriptionRef.current = supabase
+      .channel('messages_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'musclemeet',
+          table: 'message'
+        },
+        async (payload) => {
+          console.log('🔔 Changement de message détecté:', payload);
+          
+          // Éviter les mises à jour trop fréquentes avec un debounce
+          if (updateTimeout) {
+            clearTimeout(updateTimeout);
+          }
+          
+          updateTimeout = setTimeout(async () => {
+            try {
+              const updatedConversations = await ImprovedMessageService.getUserConversations(user.id);
+              setConversations(updatedConversations);
+              console.log('✅ Conversations mises à jour en temps réel');
+            } catch (error) {
+              console.error('❌ Erreur lors de la mise à jour des conversations:', error);
+            }
+          }, 500); // Attendre 500ms avant de mettre à jour
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Statut de l\'abonnement messages:', status);
+      });
+  };
+
+  // Nettoyer l'abonnement
+  const cleanupSubscription = () => {
+    if (subscriptionRef.current) {
+      console.log('🧹 Nettoyage de l\'abonnement temps réel');
+      supabase.removeChannel(subscriptionRef.current);
+      subscriptionRef.current = null;
+    }
+  };
+
   // Charger au montage et quand l'utilisateur change
   useEffect(() => {
     loadConversations();
+  }, [user?.id]);
+
+  // Log des changements de conversations
+  useEffect(() => {
+    console.log(`💬 Nombre de conversations: ${conversations.length}`);
+  }, [conversations]);
+
+  // Configurer l'abonnement temps réel
+  useEffect(() => {
+    if (user?.id) {
+      console.log('👤 Utilisateur connecté, configuration de l\'abonnement temps réel');
+      setupRealtimeSubscription();
+    }
+
+    return () => {
+      cleanupSubscription();
+    };
   }, [user?.id]);
 
   return {
@@ -58,10 +119,11 @@ export function useConversations(useImprovedService: boolean = false) {
     loading,
     error,
     refreshConversations,
+    isRealtimeActive: !!subscriptionRef.current,
   };
 }
 
-// Hook pour gérer une conversation spécifique (groupId au lieu de conversationId)
+// Hook pour gérer une conversation spécifique
 export function useConversation(groupId: number) {
   const user = useAuthUser();
   const [messages, setMessages] = useState<Message[]>([]);
