@@ -17,6 +17,7 @@
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "^8.4.2",
     "@react-navigation/native": "^7.1.6",
+    "@sentry/react-native": "^6.18.0",
     "@supabase/supabase-js": "2.50.5",
     "core-js": "^3.44.0",
     "dotenv": "^17.2.0",

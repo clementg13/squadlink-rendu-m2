@@ -7,6 +7,8 @@ import { Text, View } from '@/components/Themed';
 import { useAuthUser, useAuthLoading } from '@/stores/authStore';
 import CompatibleProfilesList from '@/components/profile/CompatibleProfilesList';
 import { CompatibleProfile } from '@/types/profile';
+import * as Sentry from '@sentry/react-native';
+import { Button } from 'react-native';
 
 export default function HomeScreen() {
   const user = useAuthUser();
@@ -32,6 +34,7 @@ export default function HomeScreen() {
   // Interface principale - laissons CompatibleProfilesList gérer son propre header et états
   return (
     <View style={styles.container}>
+      <Button title='Try!' onPress={ () => { Sentry.captureException(new Error('First error')) }}/>
       <CompatibleProfilesList 
         onProfilePress={handleProfilePress}
         showWelcomeHeader={true}
