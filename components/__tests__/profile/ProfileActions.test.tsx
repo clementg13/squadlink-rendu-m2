@@ -1,5 +1,40 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+
+// Mock AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+}));
+
+// Mock authStore
+jest.mock('../../../stores/authStore', () => ({
+  useAuth: jest.fn(() => ({
+    user: null,
+    session: null,
+    signOut: jest.fn(),
+  })),
+}));
+
+// Mock useRouter
+jest.mock('expo-router', () => ({
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+  })),
+}));
+
+// Mock supabase
+jest.mock('../../../lib/supabase', () => ({
+  supabase: {
+    auth: {
+      signOut: jest.fn(),
+    },
+  },
+}));
+
 import ProfileActions from '../../profile/ProfileActions';
 
 const mockOnSave = jest.fn();
@@ -66,7 +101,7 @@ describe('ProfileActions', () => {
       />
     );
 
-    fireEvent.press(getByText('Modifier profil'));
+    fireEvent.press(getByText('Enregistrer'));
     expect(mockOnSave).toHaveBeenCalled();
   });
 
@@ -82,6 +117,7 @@ describe('ProfileActions', () => {
     );
 
     const saveButton = getByTestId('save-button');
+    // Check if the button is disabled via accessibilityState
     expect(saveButton.props.accessibilityState.disabled).toBe(true);
   });
 
