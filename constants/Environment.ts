@@ -20,6 +20,9 @@ const envSchema = z.object({
   // Exemple d'autres variables communes
   SENTRY_DSN: z.string().optional(),
   ANALYTICS_KEY: z.string().optional(),
+
+  // Sentry
+  SENTRY_AUTH_TOKEN: z.string().optional(),
 });
 
 // Type TypeScript généré automatiquement depuis le schéma
