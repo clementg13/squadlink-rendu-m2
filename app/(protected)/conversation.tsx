@@ -15,7 +15,7 @@ import { Text, View } from '@/components/Themed';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useConversation } from '@/hooks/useMessages';
-import { Message } from '@/services/messagingInterface';
+import { Message } from '@/types/messaging';
 
 // Composant pour un message individuel
 const MessageItem = ({ message }: { message: Message }) => (

@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Message } from './messagingInterface';
+import { Message } from '@/types/messaging';
 
 export class ConversationService {
   

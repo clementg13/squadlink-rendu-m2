@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Conversation, Message, ImprovedMessageService, ConversationService } from '@/services/messagingInterface';
+import { Conversation, Message } from '@/types/messaging';
+import { ImprovedMessageService } from '@/services/improvedMessagesService';
+import { ConversationService } from '@/services/conversationService';
 import { useAuthUser } from '@/stores/authStore';
 import { supabase } from '@/lib/supabase';
 
