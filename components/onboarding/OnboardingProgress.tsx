@@ -7,22 +7,23 @@ interface OnboardingProgressProps {
 }
 
 export default function OnboardingProgress({ currentStep, totalSteps }: OnboardingProgressProps) {
-  const progressPercentage = Math.min((currentStep / totalSteps) * 100, 100);
+  const progressPercentage = Math.min(((currentStep + 1) / totalSteps) * 100, 100);
 
   return (
     <View style={styles.container} testID="progress-bar">
       <View style={styles.header}>
         <Text style={styles.stepText}>
-          {currentStep} / {totalSteps}
+          {currentStep + 1} / {totalSteps}
         </Text>
       </View>
       <View style={styles.progressBarContainer}>
-        <View style={styles.progressBarBackground}>
+        <View style={styles.progressBarBackground} testID="progress-container">
           <View
             style={[
               styles.progressBarFill,
               { width: `${progressPercentage}%` },
             ]}
+            testID="progress-fill"
           />
         </View>
       </View>
