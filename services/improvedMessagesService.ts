@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { Conversation } from '@/types/messaging';
 
 export class ImprovedMessageService {
