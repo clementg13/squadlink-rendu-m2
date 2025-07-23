@@ -1,5 +1,5 @@
-import { supabase } from './supabase';
-import { Message } from './index';
+import { supabase } from '../lib/supabase';
+import { Message } from '../lib/index';
 
 export class ConversationService {
   

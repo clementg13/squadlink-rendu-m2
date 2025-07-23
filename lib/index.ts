@@ -29,5 +29,5 @@ export interface DatabaseMessage {
 }
 
 // Re-export des services principaux
-export { ImprovedMessageService } from './improvedMessages';
-export { ConversationService } from './conversationService';
+export { ImprovedMessageService } from '../services/improvedMessagesService';
+export { ConversationService } from '../services/conversationService';
