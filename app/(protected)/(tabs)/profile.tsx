@@ -103,14 +103,21 @@ export default function ProfileScreen() {
   };
 
   const handleSave = async () => {
+    // Validation des champs requis
+    if (!formData.firstname || !formData.lastname) {
+      Alert.alert('Erreur', 'Le prénom et le nom sont requis');
+      return;
+    }
+
     const updateData = {
-      lastname: formData.lastname,
-      firstname: formData.firstname,
+      lastname: formData.lastname.trim(),
+      firstname: formData.firstname.trim(),
       birthdate: formData.birthdate,
-      biography: formData.biography,
-      id_gym: profile?.id_gym,
-      id_gymsubscription: profile?.id_gymsubscription,
+      biography: formData.biography?.trim() || undefined,
+      // Ne pas inclure id_gym et id_gymsubscription ici car ils sont gérés séparément
     };
+
+    console.log('🔄 ProfileScreen: Saving profile data:', updateData);
 
     const { error } = await updateProfile(updateData);
     
@@ -119,31 +126,24 @@ export default function ProfileScreen() {
     } else {
       setHasChanges(false);
       Alert.alert('Succès', 'Profil mis à jour avec succès !');
+      // Recharger le profil pour s'assurer que les données sont à jour
+      await loadProfile();
     }
   };
 
   const handleCancel = () => {
     if (profile) {
-      setFormData({
+      const resetData = {
         lastname: profile.lastname || '',
         firstname: profile.firstname || '',
         birthdate: profile.birthdate || '',
         biography: profile.biography || '',
-      });
+      };
+      console.log('🔄 ProfileScreen: Resetting form data:', resetData);
+      setFormData(resetData);
     }
     setHasChanges(false);
     clearError();
-  };
-
-  const handleSignOut = async () => {
-    try {
-      console.log('🚪 ProfileScreen: Initiating sign out');
-      await signOut();
-      // La redirection est gérée dans le store authStore
-    } catch (error) {
-      console.error('❌ ProfileScreen: Sign out error:', error);
-      Alert.alert('Erreur', 'Erreur lors de la déconnexion');
-    }
   };
 
   const handleAddHobby = async (hobbyId: string) => {
@@ -202,15 +202,27 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleUpdateGym = async (subscriptionId: string | null) => {
-    const updateData = {
-      id_gymsubscription: subscriptionId !== null ? subscriptionId : undefined,
-    };
+  const handleUpdateGym = async (subscriptionId: string | null, gymId?: string | null) => {
+    const updateData: any = {};
+    
+    if (subscriptionId !== null) {
+      updateData.id_gymsubscription = subscriptionId;
+    } else {
+      updateData.id_gymsubscription = null;
+    }
+    
+    if (gymId !== undefined) {
+      updateData.id_gym = gymId;
+    }
+
+    console.log('🔄 ProfileScreen: Updating gym data:', updateData);
 
     const { error } = await updateProfile(updateData);
-    
     if (error) {
       Alert.alert('Erreur', error.message);
+    } else {
+      // Recharger le profil après mise à jour de la salle
+      await loadProfile();
     }
   };
 
@@ -304,7 +316,6 @@ export default function ProfileScreen() {
             saving={saving}
             onSave={handleSave}
             onCancel={handleCancel}
-            onSignOut={handleSignOut}
           />
         </ScrollView>
       </KeyboardAvoidingView>

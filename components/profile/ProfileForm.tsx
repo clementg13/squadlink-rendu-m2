@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Platform, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { UserProfile } from '@/types/profile';
@@ -18,8 +18,15 @@ export default function ProfileForm({ formData, saving, onFieldChange }: Profile
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  // Mettre à jour la date sélectionnée quand formData change
+  useEffect(() => {
+    if (formData.birthdate) {
+      setSelectedDate(new Date(formData.birthdate));
+    }
+  }, [formData.birthdate]);
+
   const handleDateChange = (event: any, date?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
+    setShowDatePicker(false);
     if (date) {
       setSelectedDate(date);
       const formattedDate = date.toISOString().split('T')[0];
@@ -28,15 +35,14 @@ export default function ProfileForm({ formData, saving, onFieldChange }: Profile
   };
 
   const handleFieldChange = (field: string, value: string) => {
-    // Nettoyer la valeur avant de l'envoyer
-    const cleanValue = value ? value.trim() : '';
-    onFieldChange(field, cleanValue);
+    // Ne pas nettoyer automatiquement, laisser l'utilisateur saisir
+    onFieldChange(field, value);
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Prénom</Text>
+        <Text style={styles.label}>Prénom *</Text>
         <TextInput
           style={[styles.input, saving && styles.inputDisabled]}
           value={formData.firstname || ''}
@@ -48,7 +54,7 @@ export default function ProfileForm({ formData, saving, onFieldChange }: Profile
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Nom</Text>
+        <Text style={styles.label}>Nom *</Text>
         <TextInput
           style={[styles.input, saving && styles.inputDisabled]}
           value={formData.lastname || ''}
@@ -59,19 +65,29 @@ export default function ProfileForm({ formData, saving, onFieldChange }: Profile
         />
       </View>
 
-      {formData.birthdate && (
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Date de naissance</Text>
-          <View style={styles.dateContainer}>
-            <Text style={styles.dateText}>
-              {new Date(formData.birthdate).toLocaleDateString('fr-FR')}
-            </Text>
-            <Text style={styles.dateHint}>
-              Pour modifier votre date de naissance, contactez le support
-            </Text>
-          </View>
-        </View>
-      )}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Date de naissance</Text>
+        <TouchableOpacity
+          style={[styles.datePickerButton, saving && styles.inputDisabled]}
+          onPress={() => setShowDatePicker(true)}
+          disabled={saving}
+        >
+          <Text style={[styles.dateText, !formData.birthdate && styles.placeholderText]}>
+            {formData.birthdate
+              ? new Date(formData.birthdate).toLocaleDateString('fr-FR')
+              : 'Sélectionner une date'}
+          </Text>
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={selectedDate}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+            maximumDate={new Date()}
+          />
+        )}
+      </View>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Biographie</Text>
@@ -116,20 +132,28 @@ const styles = StyleSheet.create({
   inputDisabled: {
     backgroundColor: '#f8f9fa',
   },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  dateContainer: {
-    flexDirection: 'column',
+  datePickerButton: {
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    borderRadius: 8,
+    padding: 15,
+    backgroundColor: '#fff',
   },
   dateText: {
     fontSize: 16,
     color: '#2c3e50',
   },
-  dateHint: {
-    fontSize: 14,
+  placeholderText: {
     color: '#6c757d',
-    marginTop: 4,
+  },
+  textArea: {
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    borderRadius: 8,
+    padding: 15,
+    fontSize: 16,
+    backgroundColor: '#fff',
+    height: 100,
+    textAlignVertical: 'top',
   },
 });

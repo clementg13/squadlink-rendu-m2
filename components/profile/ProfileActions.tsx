@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { useAuth } from '@/stores/authStore';
 
 interface ProfileActionsProps {
@@ -7,26 +7,38 @@ interface ProfileActionsProps {
   saving: boolean;
   onSave: () => Promise<void>;
   onCancel: () => void;
-  onSignOut: () => void;
 }
 
 export default function ProfileActions({ 
   hasChanges, 
   saving, 
   onSave, 
-  onCancel, 
-  onSignOut 
+  onCancel
 }: ProfileActionsProps) {
   const { signOut } = useAuth();
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      // La redirection est gérée dans le store
-    } catch (error) {
-      console.error('❌ ProfileActions: Sign out error:', error);
-      // Optionnel: afficher une erreur à l'utilisateur
-    }
+    Alert.alert(
+      'Déconnexion',
+      'Êtes-vous sûr de vouloir vous déconnecter ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Déconnecter',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              console.log('🚪 ProfileActions: Initiating sign out');
+              await signOut();
+              // La redirection est gérée dans le store
+            } catch (error) {
+              console.error('❌ ProfileActions: Sign out error:', error);
+              Alert.alert('Erreur', 'Une erreur s\'est produite lors de la déconnexion');
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -63,10 +75,10 @@ export default function ProfileActions({
 
       <TouchableOpacity 
         style={[styles.signOutButton, saving && styles.signOutButtonDisabled]}
-        onPress={onSignOut || handleSignOut}
+        onPress={handleSignOut}
         disabled={saving}
       >
-        <Text style={styles.signOutButtonText}>Se déconnecter</Text>
+        <Text style={styles.signOutButtonText}>🚪 Se déconnecter</Text>
       </TouchableOpacity>
     </View>
   );

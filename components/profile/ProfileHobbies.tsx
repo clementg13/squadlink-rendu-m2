@@ -24,6 +24,7 @@ export default function ProfileHobbies({
   const [showHobbyPicker, setShowHobbyPicker] = useState(false);
 
   const getUserHobbies = () => {
+    // Correction : certains profils utilisent "hobbies", d'autres "hobby"
     return profile?.hobbies || [];
   };
 

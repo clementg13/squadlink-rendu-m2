@@ -9,7 +9,7 @@ interface ProfileGymProps {
   gyms: Gym[];
   gymSubscriptions: GymSubscription[];
   saving: boolean;
-  onUpdateGym: (subscriptionId: string | null) => Promise<void>;
+  onUpdateGym: (subscriptionId: string | null, gymId?: string | null) => Promise<void>;
   onLoadGymSubscriptions: () => Promise<void>;
 }
 
@@ -42,18 +42,17 @@ export default function ProfileGym({
   const handleGymSelect = (gymId: string) => {
     setSelectedGymId(gymId);
     setShowGymPicker(false);
-    // Ouvrir directement le sélecteur d'abonnement
     setShowSubscriptionPicker(true);
   };
 
   const handleSubscriptionSelect = async (subscriptionId: string) => {
     setShowSubscriptionPicker(false);
-    await onUpdateGym(subscriptionId);
+    await onUpdateGym(subscriptionId, selectedGymId); // Pass gymId
   };
 
   const handleRemoveSubscription = async () => {
     setSelectedGymId(null);
-    await onUpdateGym(null);
+    await onUpdateGym(null, null); // Remove gymId
   };
 
   const getSelectedGym = () => {
