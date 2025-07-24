@@ -1,20 +1,21 @@
-import { useState, useEffect, useRef } from 'react';
-import { Conversation, Message } from '@/types/messaging';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Conversation, Message, DatabaseMessage, RealtimePayload } from '@/types/messaging';
 import { ImprovedMessageService } from '@/services/improvedMessagesService';
 import { ConversationService } from '@/services/conversationService';
 import { useAuthUser } from '@/stores/authStore';
 import { supabase } from '@/lib/supabase';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 // Hook pour gérer les conversations avec temps réel
-export function useConversations(useImprovedService: boolean = false) {
+export function useConversations(_useImprovedService: boolean = false) {
   const user = useAuthUser();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const subscriptionRef = useRef<any>(null);
+  const subscriptionRef = useRef<RealtimeChannel | null>(null);
 
   // Charger les conversations
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     if (!user?.id) {
       console.log('⚠️ Pas d\'utilisateur connecté');
       return;
@@ -36,7 +37,7 @@ export function useConversations(useImprovedService: boolean = false) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   // Rafraîchir les conversations
   const refreshConversations = () => {
@@ -44,13 +45,13 @@ export function useConversations(useImprovedService: boolean = false) {
   };
 
   // Configurer l'abonnement en temps réel pour les nouveaux messages
-  const setupRealtimeSubscription = () => {
+  const setupRealtimeSubscription = useCallback(() => {
     if (!user?.id) return;
 
     console.log('🔔 Configuration de l\'abonnement temps réel pour les messages');
 
     // S'abonner aux changements dans la table message avec throttling
-    let updateTimeout: any;
+    let updateTimeout: ReturnType<typeof setTimeout>;
     
     subscriptionRef.current = supabase
       .channel('messages_realtime')
@@ -83,7 +84,7 @@ export function useConversations(useImprovedService: boolean = false) {
       .subscribe((status) => {
         console.log('📡 Statut de l\'abonnement messages:', status);
       });
-  };
+  }, [user?.id]);
 
   // Nettoyer l'abonnement
   const cleanupSubscription = () => {
@@ -97,7 +98,7 @@ export function useConversations(useImprovedService: boolean = false) {
   // Charger au montage et quand l'utilisateur change
   useEffect(() => {
     loadConversations();
-  }, [user?.id]);
+  }, [user?.id, loadConversations]);
 
   // Log des changements de conversations
   useEffect(() => {
@@ -114,7 +115,7 @@ export function useConversations(useImprovedService: boolean = false) {
     return () => {
       cleanupSubscription();
     };
-  }, [user?.id]);
+  }, [user?.id, setupRealtimeSubscription]);
 
   return {
     conversations,
@@ -134,7 +135,7 @@ export function useConversation(groupId: number) {
   const [sending, setSending] = useState(false);
 
   // Charger les messages
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     if (!user?.id || !groupId) return;
 
     try {
@@ -152,7 +153,7 @@ export function useConversation(groupId: number) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, groupId]);
 
   // Envoyer un message
   const sendMessage = async (content: string): Promise<boolean> => {
@@ -183,13 +184,13 @@ export function useConversation(groupId: number) {
   useEffect(() => {
     if (!groupId || !user?.id) return;
 
-    let subscription: any;
+    let subscription: RealtimeChannel | null;
 
     const setupSubscription = async () => {
       try {
         subscription = ConversationService.subscribeToMessages(
           groupId,
-          (payload: any) => {
+          (payload: RealtimePayload<DatabaseMessage>) => {
             const newMessage = payload.new;
             
             // Éviter de dupliquer nos propres messages
@@ -226,7 +227,7 @@ export function useConversation(groupId: number) {
   // Charger au montage
   useEffect(() => {
     loadMessages();
-  }, [groupId, user?.id]);
+  }, [groupId, user?.id, loadMessages]);
 
   return {
     messages,

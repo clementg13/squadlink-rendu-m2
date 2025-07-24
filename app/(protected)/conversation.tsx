@@ -81,7 +81,7 @@ export default function ConversationScreen() {
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
-    } catch (error) {
+    } catch {
       Alert.alert('Erreur', 'Impossible d\'envoyer le message');
       setInputText(messageText); // Restaurer le texte en cas d'erreur
     }

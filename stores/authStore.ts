@@ -219,7 +219,7 @@ export const useAuthStore = create<AuthState>()(
           );
 
           // Stocker la subscription pour pouvoir la nettoyer
-          (get() as any)._subscription = subscription;
+          (get() as AuthState & { _subscription?: any })._subscription = subscription;
           
           console.log('✅ Store: Initialisation terminée');
         } catch (error) {
@@ -231,7 +231,7 @@ export const useAuthStore = create<AuthState>()(
       // Nettoyage
       cleanup: () => {
         console.log('🧹 Store: Nettoyage des subscriptions');
-        const subscription = (get() as any)._subscription;
+        const subscription = (get() as AuthState & { _subscription?: any })._subscription;
         if (subscription) {
           subscription.unsubscribe();
         }

@@ -28,6 +28,27 @@ export interface DatabaseMessage {
   is_read: boolean;
 }
 
+// Types pour les réponses Supabase
+export interface SupabaseError {
+  message: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+}
+
+export interface RealtimePayload<T = Record<string, unknown>> {
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+  new: T;
+  old: T;
+}
+
+export interface ConversationInsertData {
+  id_group: number;
+  id_sender: string;
+  content: string;
+  send_date?: string;
+}
+
 export interface DatabaseGroup {
   id: number;
   name: string;

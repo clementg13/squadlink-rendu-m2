@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { Message } from '@/types/messaging';
+import { RealtimePostgresInsertPayload } from '@supabase/supabase-js';
+import { Message, DatabaseMessage } from '@/types/messaging';
 
 export class ConversationService {
   
@@ -26,7 +27,7 @@ export class ConversationService {
       }
 
       // Convertir en format Message pour l'UI
-      const uiMessages: Message[] = messages.map(msg => ({
+      const uiMessages: Message[] = messages.map((msg: DatabaseMessage) => ({
         id: msg.id,
         text: msg.content,
         senderId: msg.id_sender,
@@ -108,7 +109,7 @@ export class ConversationService {
   }
 
   // S'abonner aux nouveaux messages en temps réel
-  static subscribeToMessages(groupId: number, callback: (payload: any) => void) {
+  static subscribeToMessages(groupId: number, callback: (payload: RealtimePostgresInsertPayload<Record<string, any>>) => void) {
     try {
       console.log('🔔 Abonnement aux messages du groupe:', groupId);
       
@@ -122,7 +123,7 @@ export class ConversationService {
             table: 'message',
             filter: `id_group=eq.${groupId}`
           },
-          (payload) => {
+          (payload: RealtimePostgresInsertPayload<Record<string, any>>) => {
             console.log('🔔 Nouveau message reçu:', payload);
             callback(payload);
           }
