@@ -1,5 +1,19 @@
 import { supabase } from '@/lib/supabase';
-import { Conversation } from '@/types/messaging';
+import { Conversation, DatabaseMessage } from '@/types/messaging';
+
+interface GroupInfo {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+interface ConversationData {
+  groupId: number;
+  groupInfo?: GroupInfo;
+  messages: DatabaseMessage[];
+  lastMessage?: DatabaseMessage;
+  participants: Set<string>;
+}
 
 export class ImprovedMessageService {
   
@@ -25,13 +39,7 @@ export class ImprovedMessageService {
       console.log('📊 Messages trouvés:', messages?.length || 0);
       
       // 3. Créer une map des conversations avec TOUS les groupes
-      const conversationsMap = new Map<number, {
-        groupId: number;
-        groupInfo?: any;
-        messages: any[];
-        lastMessage?: any;
-        participants: Set<string>;
-      }>();
+      const conversationsMap = new Map<number, ConversationData>();
       
       // Ajouter tous les groupes d'abord (même sans messages)
       allGroups.forEach(group => {
@@ -71,7 +79,7 @@ export class ImprovedMessageService {
       // 4. Convertir en format Conversation
       const conversations: Conversation[] = Array.from(conversationsMap.values()).map(conv => {
         const otherParticipants = Array.from(conv.participants).filter(p => p !== userId);
-        const isGroup = conv.participants.size > 2 || (conv.groupInfo && conv.groupInfo.name);
+        const isGroup = conv.participants.size > 2 || Boolean(conv.groupInfo && conv.groupInfo.name);
         
         // Déterminer le nom de la conversation
         let conversationName = '';

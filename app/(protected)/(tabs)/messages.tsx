@@ -6,7 +6,6 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   Animated,
   StatusBar,
   Platform,
@@ -15,14 +14,11 @@ import {
 import { Text, View } from '@/components/Themed';
 import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
-import { useAuthUser } from '@/stores/authStore';
 import { useConversations } from '@/hooks/useMessages';
 import { Conversation } from '@/types/messaging';
-import { ImprovedMessageService } from '@/services/improvedMessagesService';
 
 export default function MessagesScreen() {
   const router = useRouter();
-  const user = useAuthUser();
   const { 
     conversations, 
     loading, 
@@ -49,7 +45,7 @@ export default function MessagesScreen() {
         }),
       ]).start();
     }
-  }, [conversations.length]);
+  }, [conversations.length, newMessageAnimation]);
 
   // Filtrer les conversations selon la recherche
   const filteredConversations = conversations.filter((conv: Conversation) =>
@@ -58,7 +54,7 @@ export default function MessagesScreen() {
 
   // Navigation vers une conversation
   const handleConversationPress = (groupId: number, conversationName: string) => {
-    router.push(`/(protected)/conversation?groupId=${groupId}&name=${encodeURIComponent(conversationName)}`);
+    router.push(`/(protected)/conversation?groupId=${groupId}&name=${encodeURIComponent(conversationName)}` as any);
   };
 
   // Rendu d'une conversation
@@ -244,9 +240,6 @@ const styles = StyleSheet.create({
   realtimeText: {
     fontSize: 10,
     fontWeight: '600',
-  },
-  newMessageButton: {
-    padding: 8,
   },
   loadingContainer: {
     flex: 1,

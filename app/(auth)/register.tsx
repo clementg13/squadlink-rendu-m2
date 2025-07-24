@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
-import { useRouter, Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/stores/authStore';
 import { StatusBar } from 'expo-status-bar';
 

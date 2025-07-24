@@ -1,12 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   Alert,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
