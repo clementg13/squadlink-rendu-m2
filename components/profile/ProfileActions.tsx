@@ -77,6 +77,7 @@ export default function ProfileActions({
         style={[styles.signOutButton, saving && styles.signOutButtonDisabled]}
         onPress={handleSignOut}
         disabled={saving}
+        testID="sign-out-button"
       >
         <Text style={styles.signOutButtonText}>🚪 Se déconnecter</Text>
       </TouchableOpacity>
