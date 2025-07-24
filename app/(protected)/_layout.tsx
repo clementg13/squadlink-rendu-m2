@@ -34,5 +34,5 @@ export default function ProtectedLayout() {
   }
 
   console.log('🔒 ProtectedLayout: Utilisateur authentifié, rendu du contenu protégé');
-  return <Stack />;
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
