@@ -64,10 +64,6 @@ export default function HomeScreen() {
         <Text style={styles.envText}>URL: {env.EXPO_PUBLIC_SUPABASE_URL}</Text>
         <Text style={styles.envText}>Environnement: {env.NODE_ENV}</Text>
       </View>
-
-      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-        <Text style={styles.signOutButtonText}>Se déconnecter</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -149,17 +145,4 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     color: '#666',
   },
-  signOutButton: {
-    backgroundColor: '#FF3B30',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 40,
-  },
-  signOutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-}); 
+});
