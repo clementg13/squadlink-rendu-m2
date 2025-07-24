@@ -6,15 +6,28 @@ module.exports = {
     'plugin:react-hooks/recommended',
     'plugin:react-native/all',
   ],
-  parser: '@typescript-eslint/parser',
-  parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
+  overrides: [
+    {
+      files: ['**/*.ts', '**/*.tsx'],
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+        ecmaVersion: 2021,
+        sourceType: 'module',
+        project: './tsconfig.json',
+      },
     },
-    ecmaVersion: 2021,
-    sourceType: 'module',
-    project: './tsconfig.json',
-  },
+    {
+      files: ['**/*.js'],
+      parser: 'espree',
+      parserOptions: {
+        ecmaVersion: 2021,
+        sourceType: 'module',
+      },
+    },
+  ],
   plugins: [
     '@typescript-eslint',
     'react',

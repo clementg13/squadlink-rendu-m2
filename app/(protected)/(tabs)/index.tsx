@@ -1,29 +1,16 @@
 import React from 'react';
 import {
   StyleSheet,
-  TouchableOpacity,
-  Alert,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
-import { useAuth, useAuthUser, useAuthLoading } from '@/stores/authStore';
+import { useAuthUser, useAuthLoading } from '@/stores/authStore';
 import { env } from '@/constants/Environment';
 
 export default function HomeScreen() {
   const user = useAuthUser();
   const loading = useAuthLoading();
-  const { signOut } = useAuth();
-
-  // Fonction pour gérer la déconnexion
-  const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (error) {
-      Alert.alert('Erreur', error.message);
-    } else {
-      Alert.alert('Succès', 'Déconnexion réussie !');
-    }
-  };
 
   // Affichage pendant le chargement initial
   if (loading) {

@@ -57,7 +57,7 @@ export default function ProfileLocation({
                 await onUpdateLocation(result.data!);
                 setUpdatingLocation(false);
                 Alert.alert('Succès', 'Votre localisation a été mise à jour !');
-              } catch (error) {
+              } catch {
                 setUpdatingLocation(false);
                 Alert.alert('Erreur', 'Une erreur s\'est produite lors de la mise à jour');
               }
@@ -66,7 +66,7 @@ export default function ProfileLocation({
         ]
       );
 
-    } catch (error) {
+    } catch {
       Alert.alert('Erreur', 'Une erreur inattendue s\'est produite');
       setUpdatingLocation(false);
     }

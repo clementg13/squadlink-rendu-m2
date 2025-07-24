@@ -2,7 +2,6 @@ import { profileService } from '@/services/profileService';
 import { sportService } from '@/services/sportService';
 import { socialMediaService } from '@/services/socialMediaService';
 import { useAuthStore } from '../authStore';
-import { Sport, SportLevel, SocialMedia } from '@/types/profile';
 
 export interface DataActions {
   loadAllGyms: () => Promise<{ error: Error | null }>;

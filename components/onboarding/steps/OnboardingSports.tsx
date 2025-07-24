@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, FlatList, Alert, ActivityIndicator, Style
 import { supabase } from '@/lib/supabase';
 
 interface OnboardingSportsProps {
-  userId: string;
   onNext: (sportsData: SportSelection[]) => void;
   onBack: () => void;
 }
@@ -25,7 +24,7 @@ interface SportSelection {
   levelName: string;
 }
 
-export default function OnboardingSports({ userId, onNext, onBack }: OnboardingSportsProps) {
+export default function OnboardingSports({ onNext, onBack }: OnboardingSportsProps) {
   const [sports, setSports] = useState<Sport[]>([]);
   const [sportLevels, setSportLevels] = useState<SportLevel[]>([]);
   const [selectedSports, setSelectedSports] = useState<SportSelection[]>([]);

@@ -5,7 +5,6 @@ import { Platform } from 'react-native';
 import { locationService } from '@/services/locationService';
 
 interface OnboardingProfileProps {
-  userId: string;
   onNext: (profileData: ProfileData) => void;
   onBack: () => void;
 }
@@ -22,7 +21,7 @@ interface ProfileData {
   };
 }
 
-export default function OnboardingProfile({ userId, onNext, onBack }: OnboardingProfileProps) {
+export default function OnboardingProfile({ onNext, onBack }: OnboardingProfileProps) {
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
   
@@ -37,7 +36,7 @@ export default function OnboardingProfile({ userId, onNext, onBack }: Onboarding
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [location, setLocation] = useState<ProfileData['location'] | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
 
   const validateForm = () => {
     const errors = [];
@@ -111,7 +110,7 @@ export default function OnboardingProfile({ userId, onNext, onBack }: Onboarding
     onNext(profileData);
   };
 
-  const onDateChange = (event: any, selectedDate?: Date) => {
+  const onDateChange = (_event: unknown, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
     if (selectedDate) {
       setBirthdate(selectedDate);
