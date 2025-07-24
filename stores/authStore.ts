@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Session, User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { useRouter } from 'expo-router';
 
 // Types pour le store d'authentification
 interface AuthState {
@@ -11,19 +12,21 @@ interface AuthState {
   session: Session | null;
   loading: boolean;
   initialized: boolean;
+  isOnboarding: boolean;
   
   // Actions
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
   setInitialized: (initialized: boolean) => void;
+  setIsOnboarding: (isOnboarding: boolean) => void;
   
   // Méthodes d'authentification
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
-  
+
   // Méthodes utilitaires
   initialize: () => Promise<void>;
   cleanup: () => void;
@@ -42,18 +45,15 @@ export const useAuthStore = create<AuthState>()(
       session: null,
       loading: true,
       initialized: false,
+      isOnboarding: false,
 
       // Actions de base
       setUser: (user) => {
         console.log('👤 Store: Mise à jour utilisateur:', user ? 'Connecté' : 'Déconnecté');
         set({ user });
         
-        // Appeler le callback de redirection si défini
-        const { onAuthChange } = get();
-        if (onAuthChange) {
-          console.log('🔄 Store: Appel du callback de redirection');
-          onAuthChange(user);
-        }
+        // Supprimer le callback automatique qui cause la boucle
+        // La navigation sera gérée par _layout.tsx
       },
       setSession: (session) => {
         console.log('🔐 Store: Mise à jour session:', session ? 'Active' : 'Inactive');
@@ -67,6 +67,10 @@ export const useAuthStore = create<AuthState>()(
         console.log('🚀 Store: Mise à jour initialized:', initialized);
         set({ initialized });
       },
+      setIsOnboarding: (isOnboarding) => {
+        console.log('📋 Store: Mise à jour onboarding:', isOnboarding);
+        set({ isOnboarding });
+      },
 
       // Callback de redirection
       setOnAuthChange: (callback) => {
@@ -77,19 +81,43 @@ export const useAuthStore = create<AuthState>()(
       // Inscription
       signUp: async (email: string, password: string) => {
         try {
-          console.log('📝 Store: Tentative d\'inscription pour:', email);
+          console.log('📝 AuthStore: Tentative d\'inscription pour:', email);
           set({ loading: true });
-          const { error } = await supabase.auth.signUp({
+
+          const { data, error } = await supabase.auth.signUp({
             email,
             password,
           });
-          console.log('📝 Store: Résultat inscription:', error ? 'Erreur' : 'Succès');
-          return { error };
+
+          if (error) {
+            console.error('❌ AuthStore: Erreur d\'inscription:', error);
+            set({ loading: false });
+            return { error };
+          }
+
+          console.log('✅ AuthStore: Inscription réussie, utilisateur créé:', data.user?.id);
+          
+          // Attendre que la session soit bien établie
+          if (data.user && data.session) {
+            // Attendre un peu pour que Supabase établisse bien la session
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            set({ 
+              user: data.user, 
+              session: data.session,
+              loading: false
+            });
+            
+            console.log('✅ AuthStore: Session établie pour l\'onboarding');
+          } else {
+            set({ loading: false });
+          }
+          
+          return { data, error: null };
         } catch (error) {
-          console.error('❌ Store: Erreur lors de l\'inscription:', error);
-          return { error: error as AuthError };
-        } finally {
+          console.error('❌ AuthStore: Exception lors de l\'inscription:', error);
           set({ loading: false });
+          return { error: error as AuthError };
         }
       },
 
@@ -115,19 +143,30 @@ export const useAuthStore = create<AuthState>()(
       // Déconnexion
       signOut: async () => {
         try {
-          console.log('🚪 Store: Tentative de déconnexion');
-          set({ loading: true });
+          console.log('🚪 AuthStore: Signing out user');
+          
           const { error } = await supabase.auth.signOut();
-          if (!error) {
-            console.log('🚪 Store: Déconnexion réussie, nettoyage de l\'état');
-            set({ user: null, session: null });
+          if (error) {
+            console.error('❌ AuthStore: Sign out error:', error);
+            set({ loading: false });
+            return { error };
           }
-          return { error };
+
+          // Clear store state
+          set({ 
+            user: null, 
+            session: null, 
+            loading: false,
+            isOnboarding: false 
+          });
+
+          console.log('✅ AuthStore: User signed out successfully');
+          
+          return { error: null };
         } catch (error) {
-          console.error('❌ Store: Erreur lors de la déconnexion:', error);
-          return { error: error as AuthError };
-        } finally {
+          console.error('❌ AuthStore: Sign out failed:', error);
           set({ loading: false });
+          return { error: error as AuthError };
         }
       },
 
@@ -159,20 +198,23 @@ export const useAuthStore = create<AuthState>()(
             console.log('📋 Store: Session récupérée:', session ? 'Trouvée' : 'Aucune');
             set({ 
               session, 
-              user: session?.user ?? null 
+              user: session?.user ?? null,
+              loading: false,
+              initialized: true
             });
           }
 
           // Écouter les changements d'authentification
           const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event: string, session: Session | null) => {
-              console.log('🔄 Store: Changement d\'état d\'authentification:', event, session ? 'Session active' : 'Pas de session');
+              console.log('🔄 Store: Changement d\'état d\'authentification:', event);
               
-              // Utiliser setUser et setSession pour déclencher les callbacks
-              const { setUser, setSession, setLoading } = get();
-              setSession(session);
-              setUser(session?.user ?? null);
-              setLoading(false);
+              // Mise à jour simple sans callback
+              set({
+                session,
+                user: session?.user ?? null,
+                loading: false
+              });
             }
           );
 
@@ -180,11 +222,9 @@ export const useAuthStore = create<AuthState>()(
           (get() as any)._subscription = subscription;
           
           console.log('✅ Store: Initialisation terminée');
-          set({ initialized: true });
         } catch (error) {
           console.error('❌ Store: Erreur lors de l\'initialisation:', error);
-        } finally {
-          set({ loading: false });
+          set({ loading: false, initialized: true });
         }
       },
 
@@ -205,6 +245,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         session: state.session,
         initialized: state.initialized,
+        // Ne pas persister isOnboarding et onAuthChange
       }),
     }
   )
@@ -218,12 +259,15 @@ export const useAuth = () => {
     session: store.session,
     loading: store.loading,
     initialized: store.initialized,
+    isOnboarding: store.isOnboarding,
     signUp: store.signUp,
     signIn: store.signIn,
     signOut: store.signOut,
     resetPassword: store.resetPassword,
     initialize: store.initialize,
     cleanup: store.cleanup,
+    setIsOnboarding: store.setIsOnboarding,
+    setOnAuthChange: store.setOnAuthChange,
   };
 };
 
@@ -242,4 +286,4 @@ export const useAuthSession = () => {
 
 export const useAuthLoading = () => {
   return useAuthStore((state) => state.loading);
-}; 
+};
