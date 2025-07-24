@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { Alert, Linking, Platform } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import { supabase } from '@/lib/supabase';
 
 export interface LocationData {

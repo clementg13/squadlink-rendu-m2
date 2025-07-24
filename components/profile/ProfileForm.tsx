@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Platform, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { UserProfile } from '@/types/profile';
 
 interface ProfileFormProps {
   formData: {
@@ -25,7 +24,7 @@ export default function ProfileForm({ formData, saving, onFieldChange }: Profile
     }
   }, [formData.birthdate]);
 
-  const handleDateChange = (event: any, date?: Date) => {
+  const handleDateChange = (_event: unknown, date?: Date) => {
     setShowDatePicker(false);
     if (date) {
       setSelectedDate(date);

@@ -1,6 +1,5 @@
 import { UserProfile } from '@/types/profile';
 import { profileService } from '@/services/profileService';
-import { locationService } from '@/services/locationService';
 import { useAuthStore } from '../authStore';
 
 export interface ProfileActions {

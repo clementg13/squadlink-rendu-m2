@@ -32,7 +32,7 @@ export default function SocialMediaChip({
     try {
       await onUpdate(userSocialMedia.id_social_media, editedUsername.trim());
       setIsEditing(false);
-    } catch (error) {
+    } catch {
       Alert.alert('Erreur', 'Impossible de mettre à jour le nom d\'utilisateur');
       setEditedUsername(userSocialMedia.username);
     }

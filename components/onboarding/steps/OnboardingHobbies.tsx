@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, FlatList, Alert, ActivityIndicator, Style
 import { supabase } from '@/lib/supabase';
 
 interface OnboardingHobbiesProps {
-  userId: string;
   onNext: (hobbiesData: string[]) => void;
   onBack: () => void;
 }
@@ -14,7 +13,7 @@ interface Hobby {
   emoji?: string;
 }
 
-export default function OnboardingHobbies({ userId, onNext, onBack }: OnboardingHobbiesProps) {
+export default function OnboardingHobbies({ onNext, onBack }: OnboardingHobbiesProps) {
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);

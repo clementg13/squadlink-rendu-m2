@@ -1,5 +1,4 @@
 import { OnboardingCredentials, OnboardingProfile, OnboardingSport, OnboardingHobbies } from '@/types/onboarding';
-import { locationService } from './locationService';
 import { supabase } from '@/lib/supabase';
 
 export class OnboardingService {

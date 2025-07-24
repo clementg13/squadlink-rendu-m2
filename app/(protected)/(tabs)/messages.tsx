@@ -54,7 +54,7 @@ export default function MessagesScreen() {
 
   // Navigation vers une conversation
   const handleConversationPress = (groupId: number, conversationName: string) => {
-    router.push(`/(protected)/conversation?groupId=${groupId}&name=${encodeURIComponent(conversationName)}` as any);
+    router.push(`/(protected)/conversation?groupId=${groupId}&name=${encodeURIComponent(conversationName)}` as `/(protected)/conversation?groupId=${number}&name=${string}`);
   };
 
   // Rendu d'une conversation

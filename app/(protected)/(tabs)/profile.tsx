@@ -10,8 +10,6 @@ import {
   Text,
   SafeAreaView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useAuth } from '@/stores/authStore';
 import { useProfile } from '@/stores/profileStore';
 
 // Composants
@@ -27,8 +25,6 @@ import ProfileSports from '@/components/profile/sports/ProfileSports';
 import ProfileSocialMedias from '@/components/profile/socialMedias/ProfileSocialMedias';
 
 export default function ProfileScreen() {
-  const router = useRouter();
-  const { user, signOut } = useAuth();
   const { 
     profile, 
     hobbies,
@@ -38,10 +34,13 @@ export default function ProfileScreen() {
     sportLevels,
     socialMedias,
     loading, 
-    saving, 
-    error, 
+    saving,
+    error,
     initialized,
+    initialize,
     loadProfile,
+    updateProfile,
+    clearError,
     addUserHobby,
     removeUserHobby,
     toggleHighlightHobby,
@@ -50,11 +49,8 @@ export default function ProfileScreen() {
     addUserSocialMedia,
     updateUserSocialMedia,
     removeUserSocialMedia,
-    updateProfile,
-    updateLocation,
     loadGymSubscriptions,
-    initialize,
-    clearError 
+    updateLocation
   } = useProfile();
 
   const [formData, setFormData] = useState({
@@ -80,7 +76,7 @@ export default function ProfileScreen() {
     };
     
     initializeStore();
-  }, [initialized]);
+  }, [initialized, initialize, loadProfile, socialMedias.length, sportLevels.length, sports.length]);
 
   useEffect(() => {
     if (profile) {
@@ -203,16 +199,18 @@ export default function ProfileScreen() {
   };
 
   const handleUpdateGym = async (subscriptionId: string | null, gymId?: string | null) => {
-    const updateData: any = {};
+    const updateData: Partial<{ id_gymsubscription?: string; id_gym?: string }> = {};
     
     if (subscriptionId !== null) {
       updateData.id_gymsubscription = subscriptionId;
     } else {
-      updateData.id_gymsubscription = null;
+      updateData.id_gymsubscription = undefined;
     }
     
-    if (gymId !== undefined) {
+    if (gymId !== undefined && gymId !== null) {
       updateData.id_gym = gymId;
+    } else if (gymId === null) {
+      updateData.id_gym = undefined;
     }
 
     console.log('🔄 ProfileScreen: Updating gym data:', updateData);

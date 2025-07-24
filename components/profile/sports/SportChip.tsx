@@ -63,8 +63,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  removeButtonText: {
-    fontSize: 16,
-    color: '#dc3545',
-  },
 });

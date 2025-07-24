@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, SafeAreaView, Alert, ActivityIndicator, Text } from 'react-native';
-import { OnboardingData } from '@/types/onboarding';
 import { useAuth } from '@/stores/authStore';
 import { supabase } from '@/lib/supabase';
 import { locationService } from '@/services/locationService';
@@ -47,28 +46,12 @@ export default function OnboardingContainer() {
   useEffect(() => {
     console.log('📋 OnboardingContainer: Setting onboarding mode');
     setIsOnboarding(true);
-  }, []); // Dépendance vide pour n'exécuter qu'une fois
+  }, [setIsOnboarding]); // Ajouter la dépendance
 
-  const steps: OnboardingStep[] = ['welcome', 'credentials', 'profile', 'sports', 'hobbies', 'completion'];
+  const steps = useMemo(() => ['welcome', 'credentials', 'profile', 'sports', 'hobbies', 'completion'] as OnboardingStep[], []);
   const currentStepIndex = steps.indexOf(currentStep);
 
   // Removed unused updateOnboardingData function as setOnboardingData is not defined.
-
-  const goToNextStep = useCallback(() => {
-    const nextIndex = currentStepIndex + 1;
-    if (nextIndex < steps.length) {
-      const nextStep = steps[nextIndex];
-      console.log('➡️ OnboardingContainer: Moving to next step:', nextStep);
-      setCurrentStep(nextStep);
-    }
-  }, [currentStepIndex, steps]);
-
-  const goToPreviousStep = useCallback(() => {
-    const prevIndex = currentStepIndex - 1;
-    if (prevIndex >= 0) {
-      setCurrentStep(steps[prevIndex]);
-    }
-  }, [currentStepIndex, steps]);
 
   const handleCredentialsNext = (createdUserId: string) => {
     console.log('📝 OnboardingContainer: Credentials completed, user ID:', createdUserId);

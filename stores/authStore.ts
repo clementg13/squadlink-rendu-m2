@@ -3,7 +3,6 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Session, User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'expo-router';
 
 // Types pour le store d'authentification
 interface AuthState {
@@ -219,7 +218,7 @@ export const useAuthStore = create<AuthState>()(
           );
 
           // Stocker la subscription pour pouvoir la nettoyer
-          (get() as AuthState & { _subscription?: any })._subscription = subscription;
+          (get() as AuthState & { _subscription?: unknown })._subscription = subscription;
           
           console.log('✅ Store: Initialisation terminée');
         } catch (error) {
@@ -231,7 +230,7 @@ export const useAuthStore = create<AuthState>()(
       // Nettoyage
       cleanup: () => {
         console.log('🧹 Store: Nettoyage des subscriptions');
-        const subscription = (get() as AuthState & { _subscription?: any })._subscription;
+        const subscription = (get() as AuthState & { _subscription?: { unsubscribe: () => void } })._subscription;
         if (subscription) {
           subscription.unsubscribe();
         }

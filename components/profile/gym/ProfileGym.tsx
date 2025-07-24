@@ -28,7 +28,7 @@ export default function ProfileGym({
   useEffect(() => {
     // Charger tous les abonnements au montage
     onLoadGymSubscriptions();
-  }, []);
+  }, [onLoadGymSubscriptions]);
 
   useEffect(() => {
     // Déterminer la salle sélectionnée depuis l'abonnement
@@ -63,23 +63,6 @@ export default function ProfileGym({
   const getAvailableSubscriptions = () => {
     if (!selectedGymId) return [];
     return gymSubscriptions.filter(s => s.id_gym === selectedGymId);
-  };
-
-  const getSubscriptionsByGym = () => {
-    // Grouper les abonnements par salle pour l'affichage dans le modal
-    const gymGroups: { [gymId: string]: { gym: Gym; subscriptions: GymSubscription[] } } = {};
-    
-    gymSubscriptions.forEach(subscription => {
-      const gym = gyms.find(g => g.id === subscription.id_gym);
-      if (gym) {
-        if (!gymGroups[gym.id]) {
-          gymGroups[gym.id] = { gym, subscriptions: [] };
-        }
-        gymGroups[gym.id].subscriptions.push(subscription);
-      }
-    });
-
-    return Object.values(gymGroups);
   };
 
   return (
