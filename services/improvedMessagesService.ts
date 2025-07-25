@@ -22,27 +22,29 @@ export class ImprovedMessageService {
     try {
       console.log('🔍 Recherche conversations améliorée pour:', userId);
       
-      // 1. Récupérer tous les groupes existants (depuis table groups si elle existe)
-      const allGroups = await this.getAllGroups();
+      // 1. Récupérer les groupes dont l'utilisateur fait partie
+      const userGroups = await this.getUserGroups(userId);
       
-      // 2. Récupérer tous les messages
+      // 2. Récupérer tous les messages pour ces groupes
+      const groupIds = userGroups.map(g => g.id);
       const { data: messages, error: messageError } = await supabase
         .from('message')
         .select('*')
+        .in('id_group', groupIds)
         .order('send_date', { ascending: false });
 
       if (messageError) {
         console.error('❌ Erreur récupération messages:', messageError);
       }
       
-      console.log('📊 Groupes trouvés:', allGroups.length);
+      console.log('📊 Groupes utilisateur trouvés:', userGroups.length);
       console.log('📊 Messages trouvés:', messages?.length || 0);
       
-      // 3. Créer une map des conversations avec TOUS les groupes
+      // 3. Créer une map des conversations avec les groupes de l'utilisateur
       const conversationsMap = new Map<number, ConversationData>();
       
-      // Ajouter tous les groupes d'abord (même sans messages)
-      allGroups.forEach(group => {
+      // Ajouter tous les groupes utilisateur d'abord (même sans messages)
+      userGroups.forEach(group => {
         conversationsMap.set(group.id, {
           groupId: group.id,
           groupInfo: group,
@@ -51,27 +53,21 @@ export class ImprovedMessageService {
         });
       });
       
-      // Si aucun groupe défini, créer des groupes basés sur les id_group des messages
+      // Ajouter les messages
       if (messages && messages.length > 0) {
         messages.forEach(message => {
           const groupId = message.id_group;
           
-          if (!conversationsMap.has(groupId)) {
-            conversationsMap.set(groupId, {
-              groupId,
-              messages: [],
-              participants: new Set()
-            });
-          }
-          
-          const conversation = conversationsMap.get(groupId)!;
-          conversation.messages.push(message);
-          conversation.participants.add(message.id_sender);
-          
-          // Garder le message le plus récent
-          if (!conversation.lastMessage || 
-              new Date(message.send_date) > new Date(conversation.lastMessage.send_date)) {
-            conversation.lastMessage = message;
+          if (conversationsMap.has(groupId)) {
+            const conversation = conversationsMap.get(groupId)!;
+            conversation.messages.push(message);
+            conversation.participants.add(message.id_sender);
+            
+            // Garder le message le plus récent
+            if (!conversation.lastMessage || 
+                new Date(message.send_date) > new Date(conversation.lastMessage.send_date)) {
+              conversation.lastMessage = message;
+            }
           }
         });
       }
@@ -105,84 +101,61 @@ export class ImprovedMessageService {
       });
 
       console.log('📋 Conversations finales:', conversations.length);
-      console.log('📋 Détail:', conversations.map(c => ({ 
-        id: c.id, 
-        name: c.name, 
-        hasMessages: c.lastMessage !== 'Soyez le premier à écrire',
-        messageCount: conversationsMap.get(c.id)?.messages.length || 0
-      })));
       
       return conversations;
 
     } catch (error) {
       console.error('❌ Erreur getUserConversations améliorée:', error);
-      
-      // Fallback avec des groupes fictifs pour tester l'affichage
-      return [
-        {
-          id: 1,
-          name: 'Équipe Marketing',
-          lastMessage: 'Soyez le premier à écrire',
-          lastMessageTime: '',
-          unreadCount: 0,
-          isGroup: true,
-          isOnline: false,
-        },
-        {
-          id: 2,
-          name: 'Projet Alpha',
-          lastMessage: 'Soyez le premier à écrire',
-          lastMessageTime: '',
-          unreadCount: 0,
-          isGroup: true,
-          isOnline: false,
-        },
-        {
-          id: 3,
-          name: 'Support Client',
-          lastMessage: 'Soyez le premier à écrire',
-          lastMessageTime: '',
-          unreadCount: 0,
-          isGroup: true,
-          isOnline: false,
-        }
-      ];
+      return [];
     }
   }
 
-  // Récupérer tous les groupes depuis la table dédiée
-  private static async getAllGroups(): Promise<any[]> {
+  // Récupérer les groupes dont l'utilisateur fait partie
+  private static async getUserGroups(userId: string): Promise<any[]> {
     try {
-      console.log('🔍 Récupération des groupes depuis la table "group"...');
+      console.log('🔍 Récupération des groupes pour l\'utilisateur:', userId);
       
-      const { data: groups, error } = await supabase
+      // Récupérer les IDs des groupes dont l'utilisateur fait partie
+      const { data: userGroupsData, error: userGroupsError } = await supabase
+        .from('groupuser')
+        .select('id_group')
+        .eq('id_user', userId);
+
+      if (userGroupsError) {
+        console.error('❌ Erreur récupération groupuser:', userGroupsError);
+        return [];
+      }
+
+      if (!userGroupsData || userGroupsData.length === 0) {
+        console.log('📋 Aucun groupe trouvé pour l\'utilisateur');
+        return [];
+      }
+
+      const groupIds = userGroupsData.map(ug => ug.id_group);
+      console.log('🔍 IDs des groupes utilisateur:', groupIds);
+
+      // Récupérer les informations des groupes
+      const { data: groupsData, error: groupsError } = await supabase
         .from('group')
-        .select('*');
+        .select('*')
+        .in('id', groupIds);
         
-      if (error) {
-        console.error('❌ Erreur accès table group:', error);
-        console.log('🔄 Utilisation de groupes par défaut...');
-        
-        // Retourner des groupes par défaut si la table n'est pas accessible
-        return [
-          { id: 1, name: 'Équipe Marketing', description: 'Discussions équipe' },
-          { id: 2, name: 'Projet Alpha', description: 'Messages projet' },
-          { id: 3, name: 'Support Client', description: 'Aide et support' },
-          { id: 4, name: 'Groupe Vide', description: 'Groupe sans messages' }
-        ];
+      if (groupsError) {
+        console.error('❌ Erreur accès table group:', groupsError);
+        // Créer des groupes par défaut avec les IDs récupérés
+        return groupIds.map(id => ({
+          id,
+          name: `Groupe ${id}`,
+          description: 'Groupe utilisateur'
+        }));
       }
       
-      console.log(`✅ ${groups?.length || 0} groupes récupérés depuis la table "group"`);
+      console.log(`✅ ${groupsData?.length || 0} groupes récupérés pour l'utilisateur`);
       
-      if (groups && groups.length > 0) {
-        console.log('📋 Structure du groupe:', Object.keys(groups[0]));
-        console.log('📋 Groupes:', groups.map(g => ({ id: g.id, name: g.name })));
-      }
-      
-      return groups || [];
+      return groupsData || [];
       
     } catch (error) {
-      console.error('❌ Erreur récupération groupes:', error);
+      console.error('❌ Erreur getUserGroups:', error);
       return [];
     }
   }

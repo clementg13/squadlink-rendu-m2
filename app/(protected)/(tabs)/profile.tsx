@@ -16,7 +16,6 @@ import { useProfile } from '@/stores/profileStore';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileForm from '@/components/profile/ProfileForm';
 import ProfileHobbies from '@/components/profile/ProfileHobbies';
-import ProfileInfo from '@/components/profile/ProfileInfo';
 import ProfileActions from '@/components/profile/ProfileActions';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import ProfileGym from '@/components/profile/gym/ProfileGym';
@@ -306,8 +305,6 @@ export default function ProfileScreen() {
             onRemoveHobby={handleRemoveHobby}
             onToggleHighlight={handleToggleHighlight}
           />
-
-          <ProfileInfo profile={profile} />
 
           <ProfileActions
             hasChanges={hasChanges}

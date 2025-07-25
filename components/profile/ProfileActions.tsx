@@ -1,23 +1,30 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
 import { useAuth } from '@/stores/authStore';
 
 interface ProfileActionsProps {
   hasChanges: boolean;
   saving: boolean;
-  onSave: () => Promise<void>;
+  onSave: () => void;
   onCancel: () => void;
 }
 
-export default function ProfileActions({ 
-  hasChanges, 
-  saving, 
-  onSave, 
-  onCancel
+export default function ProfileActions({
+  hasChanges,
+  saving,
+  onSave,
+  onCancel,
 }: ProfileActionsProps) {
   const { signOut } = useAuth();
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     Alert.alert(
       'Déconnexion',
       'Êtes-vous sûr de vouloir vous déconnecter ?',
@@ -28,30 +35,36 @@ export default function ProfileActions({
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('🚪 ProfileActions: Initiating sign out');
               await signOut();
-              // La redirection est gérée dans le store
-            } catch (error) {
-              console.error('❌ ProfileActions: Sign out error:', error);
+            } catch {
               Alert.alert('Erreur', 'Une erreur s\'est produite lors de la déconnexion');
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
 
   return (
     <View style={styles.container}>
+      {/* Boutons d'action du profil */}
       <View style={styles.actionButtons}>
-        <TouchableOpacity 
-          style={[
-            styles.saveButton, 
-            (!hasChanges || saving) && styles.saveButtonDisabled
-          ]}
-          onPress={onSave}
-          disabled={!hasChanges || saving}
+        {hasChanges && (
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={onCancel}
+            disabled={saving}
+          >
+            <Text style={styles.cancelButtonText}>Annuler</Text>
+          </TouchableOpacity>
+        )}
+        
+        <TouchableOpacity
           testID="save-button"
+          style={[styles.button, styles.saveButton, saving && styles.buttonDisabled]}
+          onPress={onSave}
+          disabled={saving}
+          accessibilityState={{ disabled: saving }}
         >
           {saving ? (
             <ActivityIndicator size="small" color="#fff" />
@@ -61,23 +74,12 @@ export default function ProfileActions({
             </Text>
           )}
         </TouchableOpacity>
-
-        {hasChanges && (
-          <TouchableOpacity 
-            style={[styles.cancelButton, saving && styles.cancelButtonDisabled]}
-            onPress={onCancel}
-            disabled={saving}
-          >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
-          </TouchableOpacity>
-        )}
       </View>
 
-      <TouchableOpacity 
-        style={[styles.signOutButton, saving && styles.signOutButtonDisabled]}
+      {/* Bouton de déconnexion - même taille que les autres boutons */}
+      <TouchableOpacity
+        style={[styles.button, styles.signOutButton]}
         onPress={handleSignOut}
-        disabled={saving}
-        testID="sign-out-button"
       >
         <Text style={styles.signOutButtonText}>🚪 Se déconnecter</Text>
       </TouchableOpacity>
@@ -90,40 +92,31 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
     marginTop: 10,
+    marginBottom: 20,
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
+    gap: 12,
+    marginBottom: 16, // Espacement entre les boutons d'action et le bouton de déconnexion
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 16, // Taille uniforme pour tous les boutons
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 52, // Hauteur minimale uniforme
   },
   saveButton: {
-    flex: 1,
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
     backgroundColor: '#007AFF',
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#007AFF80',
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 10,
-    backgroundColor: '#6c757d',
-  },
-  cancelButtonDisabled: {
-    backgroundColor: '#6c757d80',
   },
   saveButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  cancelButton: {
+    backgroundColor: '#6c757d',
   },
   cancelButtonText: {
     color: '#fff',
@@ -131,17 +124,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   signOutButton: {
-    backgroundColor: '#dc3545',
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  signOutButtonDisabled: {
-    backgroundColor: '#dc354580',
+    backgroundColor: '#dc3545', // Rouge pour indiquer une action destructive
+    borderWidth: 1,
+    borderColor: '#dc3545',
   },
   signOutButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    textAlign: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

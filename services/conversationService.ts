@@ -26,16 +26,40 @@ export class ConversationService {
         return [];
       }
 
+      // Récupérer les profils des expéditeurs pour afficher leurs vrais noms
+      const senderIds = [...new Set(messages.map(m => m.id_sender))];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profile')
+        .select('id_user, firstname, lastname')
+        .in('id_user', senderIds);
+
+      if (profilesError) {
+        console.error('⚠️ Erreur récupération profils expéditeurs:', profilesError);
+      }
+
       // Convertir en format Message pour l'UI
-      const uiMessages: Message[] = messages.map((msg: DatabaseMessage) => ({
-        id: msg.id,
-        text: msg.content,
-        senderId: msg.id_sender,
-        senderName: msg.id_sender === userId ? 'Vous' : `Utilisateur ${msg.id_sender.slice(0, 8)}...`,
-        timestamp: this.formatMessageTime(msg.send_date),
-        isMe: msg.id_sender === userId,
-        status: 'sent',
-      }));
+      const uiMessages: Message[] = messages.map((msg: DatabaseMessage) => {
+        const senderProfile = profiles?.find(p => p.id_user === msg.id_sender);
+        let senderName = 'Utilisateur inconnu';
+        
+        if (msg.id_sender === userId) {
+          senderName = 'Vous';
+        } else if (senderProfile && senderProfile.firstname && senderProfile.lastname) {
+          senderName = `${senderProfile.firstname} ${senderProfile.lastname}`;
+        } else {
+          senderName = `Utilisateur ${msg.id_sender.slice(0, 8)}...`;
+        }
+
+        return {
+          id: msg.id,
+          text: msg.content,
+          senderId: msg.id_sender,
+          senderName,
+          timestamp: this.formatMessageTime(msg.send_date),
+          isMe: msg.id_sender === userId,
+          status: 'sent',
+        };
+      });
 
       return uiMessages;
 
