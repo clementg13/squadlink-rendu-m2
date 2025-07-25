@@ -36,3 +36,4 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 .env
+components/__tests__/__snapshots__/StyledText-test.js.snap

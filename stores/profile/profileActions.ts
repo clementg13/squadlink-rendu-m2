@@ -19,6 +19,7 @@ export interface ProfileActions {
   handleError: (action: string, error: unknown, defaultMessage: string) => { error: Error };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createProfileActions = (set: any, get: any): ProfileActions => ({
   setProfile: (profile) => set({ profile }),
   setLoading: (loading) => set({ loading }),
@@ -101,7 +102,7 @@ export const createProfileActions = (set: any, get: any): ProfileActions => ({
             delete cleanUpdates[field as keyof UserProfile];
           } else {
             // Nettoyer les espaces
-            (cleanUpdates as any)[field] = value.trim();
+            (cleanUpdates as Record<string, unknown>)[field] = value.trim();
           }
         }
       });
