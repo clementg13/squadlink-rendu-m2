@@ -1,10 +1,19 @@
 import * as React from 'react';
 import renderer from 'react-test-renderer';
+import { act } from 'react-test-renderer';
 
 import { MonoText } from '../StyledText';
 
-it(`renders correctly`, () => {
-  const tree = renderer.create(<MonoText>Snapshot test!</MonoText>).toJSON();
+// Mock useColorScheme pour éviter les problèmes en CI
+jest.mock('../useColorScheme', () => ({
+  useColorScheme: () => 'light'
+}));
 
-  expect(tree).toMatchSnapshot();
+it(`renders correctly`, () => {
+  let tree;
+  act(() => {
+    tree = renderer.create(<MonoText>Snapshot test!</MonoText>);
+  });
+
+  expect(tree.toJSON()).toMatchSnapshot();
 });
