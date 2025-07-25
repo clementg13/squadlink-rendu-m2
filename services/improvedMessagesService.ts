@@ -111,7 +111,7 @@ export class ImprovedMessageService {
   }
 
   // Récupérer les groupes dont l'utilisateur fait partie
-  private static async getUserGroups(userId: string): Promise<any[]> {
+  private static async getUserGroups(userId: string): Promise<GroupInfo[]> {
     try {
       console.log('🔍 Récupération des groupes pour l\'utilisateur:', userId);
       

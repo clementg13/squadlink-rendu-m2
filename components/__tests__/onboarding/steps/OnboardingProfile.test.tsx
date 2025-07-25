@@ -64,7 +64,7 @@ describe('OnboardingProfile', () => {
   it('renders form elements correctly', () => {
     const { getByText, getByPlaceholderText } = render(
       <OnboardingProfile
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -80,7 +80,7 @@ describe('OnboardingProfile', () => {
   it('initializes with default date (18 years ago)', () => {
     const { getByText } = render(
       <OnboardingProfile
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -95,7 +95,7 @@ describe('OnboardingProfile', () => {
   it('updates form fields correctly', () => {
     const { getByPlaceholderText } = render(
       <OnboardingProfile
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -114,7 +114,7 @@ describe('OnboardingProfile', () => {
   it('validates required fields', async () => {
     const { getByText } = render(
       <OnboardingProfile
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -133,7 +133,7 @@ describe('OnboardingProfile', () => {
   it('validates minimum age', async () => {
     const { getByPlaceholderText, getByText } = render(
       <OnboardingProfile
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -158,7 +158,7 @@ describe('OnboardingProfile', () => {
   it('calls onNext with correct data', async () => {
     const { getByPlaceholderText, getByText } = render(
       <OnboardingProfile
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -184,7 +184,7 @@ describe('OnboardingProfile', () => {
   it('calls onBack when back button is pressed', () => {
     const { getByText } = render(
       <OnboardingProfile
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />

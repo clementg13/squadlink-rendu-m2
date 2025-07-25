@@ -1,3 +1,4 @@
+import { ProfileHobby } from '@/types/profile';
 import { hobbyService } from '@/services/hobbyService';
 
 export interface HobbyActions {
@@ -6,6 +7,7 @@ export interface HobbyActions {
   toggleHighlightHobby: (hobbyId: string) => Promise<{ error: Error | null }>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createHobbyActions = (set: any, get: any): HobbyActions => ({
   addUserHobby: async (hobbyId: string, isHighlighted = false) => {
     try {
@@ -17,7 +19,7 @@ export const createHobbyActions = (set: any, get: any): HobbyActions => ({
       }
 
       if (isHighlighted) {
-        const highlightedCount = profile.hobbies?.filter((h: any) => h.is_highlighted).length || 0;
+        const highlightedCount = profile.hobbies?.filter((h: ProfileHobby) => h.is_highlighted).length || 0;
         if (highlightedCount >= 3) {
           throw new Error('Vous ne pouvez avoir que 3 hobbies en favoris maximum');
         }
@@ -54,7 +56,7 @@ export const createHobbyActions = (set: any, get: any): HobbyActions => ({
       set({ 
         profile: { 
           ...profile, 
-          hobbies: profile.hobbies?.filter((h: any) => h.id_hobbie !== hobbyId) || [] 
+          hobbies: profile.hobbies?.filter((h: ProfileHobby) => h.id_hobbie !== hobbyId) || [] 
         },
         saving: false 
       });
@@ -75,7 +77,7 @@ export const createHobbyActions = (set: any, get: any): HobbyActions => ({
         throw new Error('Profil non chargé');
       }
 
-      const userHobby = profile.hobbies?.find((h: any) => h.id_hobbie === hobbyId);
+      const userHobby = profile.hobbies?.find((h: ProfileHobby) => h.id_hobbie === hobbyId);
       if (!userHobby) {
         throw new Error('Hobby non trouvé');
       }
@@ -83,7 +85,7 @@ export const createHobbyActions = (set: any, get: any): HobbyActions => ({
       const newHighlightStatus = !userHobby.is_highlighted;
 
       if (newHighlightStatus) {
-        const highlightedCount = profile.hobbies?.filter((h: any) => h.is_highlighted && h.id_hobbie !== hobbyId).length || 0;
+        const highlightedCount = profile.hobbies?.filter((h: ProfileHobby) => h.is_highlighted && h.id_hobbie !== hobbyId).length || 0;
         if (highlightedCount >= 3) {
           throw new Error('Vous ne pouvez avoir que 3 hobbies en favoris maximum');
         }
@@ -94,7 +96,7 @@ export const createHobbyActions = (set: any, get: any): HobbyActions => ({
       set({ 
         profile: { 
           ...profile, 
-          hobbies: profile.hobbies?.map((h: any) => 
+          hobbies: profile.hobbies?.map((h: ProfileHobby) => 
             h.id_hobbie === hobbyId ? { ...h, is_highlighted: newHighlightStatus } : h
           ) || [] 
         },

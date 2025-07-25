@@ -14,6 +14,7 @@ export interface DataActions {
   cleanup: () => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createDataActions = (set: any, get: any): DataActions => ({
   loadAllGyms: async () => {
     try {
@@ -110,6 +111,7 @@ export const createDataActions = (set: any, get: any): DataActions => ({
         socialMediaService.getAllSocialMedias()
       ]);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       set((state: any) => ({ 
         ...state, 
         sports: sportsResult.status === 'fulfilled' ? sportsResult.value : [],

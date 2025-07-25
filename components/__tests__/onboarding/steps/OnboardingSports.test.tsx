@@ -55,7 +55,7 @@ describe('OnboardingSports', () => {
   it('shows sports counter', async () => {
     const { getByText } = render(
       <OnboardingSports
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -69,7 +69,7 @@ describe('OnboardingSports', () => {
   it('calls onBack when back button is pressed', async () => {
     const { getByText } = render(
       <OnboardingSports
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -89,7 +89,7 @@ describe('OnboardingSports', () => {
     
     render(
       <OnboardingSports
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -107,7 +107,7 @@ describe('OnboardingSports', () => {
   it('shows sports counter', async () => {
     const { getByText } = render(
       <OnboardingSports
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -121,7 +121,7 @@ describe('OnboardingSports', () => {
   it('calls onBack when back button is pressed', async () => {
     const { getByText } = render(
       <OnboardingSports
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -141,7 +141,7 @@ describe('OnboardingSports', () => {
     
     render(
       <OnboardingSports
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />

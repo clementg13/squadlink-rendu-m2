@@ -4,7 +4,7 @@ import { useAuth } from '@/stores/authStore';
 import { supabase } from '@/lib/supabase';
 import { locationService } from '@/services/locationService';
 
-// Components
+// Composants des étapes d'onboarding
 import OnboardingWelcome from './steps/OnboardingWelcome';
 import OnboardingCredentialsStep from './steps/OnboardingCredentials';
 import OnboardingProfileStep from './steps/OnboardingProfile';
@@ -305,7 +305,6 @@ export default function OnboardingContainer() {
         }
         return (
           <OnboardingProfileStep 
-            userId={userId}
             onNext={handleProfileNext}
             onBack={() => setCurrentStep('credentials')}
           />
@@ -314,7 +313,6 @@ export default function OnboardingContainer() {
       case 'sports':
         return (
           <OnboardingSports
-            userId={userId}
             onNext={handleSportsNext}
             onBack={() => setCurrentStep('profile')}
           />
@@ -323,7 +321,6 @@ export default function OnboardingContainer() {
       case 'hobbies':
         return (
           <OnboardingHobbiesStep
-            userId={userId}
             onNext={handleHobbiesNext}
             onBack={() => setCurrentStep('sports')}
           />

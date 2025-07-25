@@ -41,7 +41,7 @@ describe('OnboardingHobbies', () => {
   it('renders hobbies content correctly', async () => {
     const { getByText } = render(
       <OnboardingHobbies
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -59,7 +59,7 @@ describe('OnboardingHobbies', () => {
   it('shows hobby counter', async () => {
     const { getByText } = render(
       <OnboardingHobbies
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -76,7 +76,7 @@ describe('OnboardingHobbies', () => {
   it('validates minimum selection', async () => {
     const { getByText } = render(
       <OnboardingHobbies
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -98,7 +98,7 @@ describe('OnboardingHobbies', () => {
   it('calls onBack when back button is pressed', async () => {
     const { getByText } = render(
       <OnboardingHobbies
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -116,7 +116,7 @@ describe('OnboardingHobbies', () => {
   it('validates minimum selection', async () => {
     const { getByText } = render(
       <OnboardingHobbies
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
@@ -138,7 +138,7 @@ describe('OnboardingHobbies', () => {
   it('calls onBack when back button is pressed', async () => {
     const { getByText } = render(
       <OnboardingHobbies
-        userId="user123"
+        
         onNext={mockOnNext}
         onBack={mockOnBack}
       />
