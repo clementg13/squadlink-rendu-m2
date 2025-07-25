@@ -36,7 +36,7 @@ export default function ProfileActions({
           onPress: async () => {
             try {
               await signOut();
-            } catch (error) {
+            } catch {
               Alert.alert('Erreur', 'Une erreur s\'est produite lors de la déconnexion');
             }
           },

@@ -139,7 +139,7 @@ export const workoutService = {
         try {
           const startDate = new Date(session.start_date);
           const endDate = new Date(session.end_date);
-          let createdAt = session.created_at ? new Date(session.created_at) : new Date();
+          const createdAt = session.created_at ? new Date(session.created_at) : new Date();
           
           // Validation stricte des dates
           const isStartValid = startDate instanceof Date && !isNaN(startDate.getTime()) && startDate.getFullYear() > 1970 && startDate.getFullYear() < 2100;

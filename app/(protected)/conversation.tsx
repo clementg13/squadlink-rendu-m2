@@ -180,7 +180,7 @@ export default function ConversationScreen() {
       await workoutService.joinWorkoutSession(sessionId, user.id);
       await refreshWorkoutSession(sessionId);
       Alert.alert('Succès', 'Vous participez maintenant à cette séance !');
-    } catch (error) {
+    } catch {
       Alert.alert('Erreur', 'Impossible de rejoindre la séance');
     }
   };
@@ -201,7 +201,7 @@ export default function ConversationScreen() {
               await workoutService.leaveWorkoutSession(sessionId, user.id);
               await refreshWorkoutSession(sessionId);
               Alert.alert('Succès', 'Participation annulée');
-            } catch (error) {
+            } catch {
               Alert.alert('Erreur', 'Impossible d\'annuler la participation');
             }
           }
@@ -260,7 +260,7 @@ export default function ConversationScreen() {
     };
 
     loadInitialGroupMembers();
-  }, [groupId]); // Charger dès que groupId est disponible
+  }, [groupId, groupMembers.length, loadingMembers]); // Charger dès que groupId est disponible
 
   const handleShowGroupInfo = async () => {
     // Si les membres ne sont pas encore chargés, les charger
@@ -358,7 +358,7 @@ export default function ConversationScreen() {
             // Essayer de parser comme une date normale
             aTime = new Date(a.timestamp).toISOString();
           }
-        } catch (err) {
+        } catch {
           console.warn('⚠️ Erreur conversion timestamp message:', a.timestamp);
           return 1;
         }
@@ -389,7 +389,7 @@ export default function ConversationScreen() {
             // Essayer de parser comme une date normale
             bTime = new Date(b.timestamp).toISOString();
           }
-        } catch (err) {
+        } catch {
           console.warn('⚠️ Erreur conversion timestamp message:', b.timestamp);
           return -1;
         }

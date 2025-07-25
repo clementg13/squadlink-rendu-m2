@@ -157,7 +157,7 @@ export default function CreateWorkoutModal({
 
       await onCreateSession(sessionData);
       onClose();
-    } catch (error) {
+    } catch {
       Alert.alert('Erreur', 'Impossible de créer la séance');
     } finally {
       setLoading(false);

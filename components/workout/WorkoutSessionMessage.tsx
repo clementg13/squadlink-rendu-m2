@@ -31,7 +31,7 @@ export default function WorkoutSessionMessage({
 
   // Ajout d'une fallback pour created_by si jamais il n'est pas dans session
   // (utile si tu utilises des mocks ou des anciennes données)
-  const createdBy = (session as any).created_by ?? session.created_by ?? '';
+  const createdBy = (session as WorkoutSession & { created_by?: string }).created_by ?? session.created_by ?? '';
 
   const formatDate = (dateString: string) => {
     try {

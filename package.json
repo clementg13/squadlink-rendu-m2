@@ -14,7 +14,11 @@
     "type-check": "tsc --noEmit"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "testPathIgnorePatterns": [
+      "<rootDir>/components/__tests__/setup.ts",
+      "<rootDir>/components/__tests__/utils/testUtils.tsx"
+    ]
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
