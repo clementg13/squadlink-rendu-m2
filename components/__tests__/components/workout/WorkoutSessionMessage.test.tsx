@@ -2,11 +2,17 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import WorkoutSessionMessage from '../../../workout/WorkoutSessionMessage';
 
+const mockOnJoin = jest.fn();
+const mockOnLeave = jest.fn();
+const mockOnDelete = jest.fn();
+
 const mockSession = {
   id: 1,
+  id_sport: 'sport1',
   start_date: '2024-01-15T18:00:00Z',
   end_date: '2024-01-15T19:30:00Z',
   created_at: '2024-01-15T10:00:00Z',
+  created_by: 'user1', // Ajout du créateur
   sport: {
     id: 'sport1',
     name: 'Football'
@@ -24,13 +30,11 @@ const mockSession = {
   participantCount: 1
 };
 
-const mockOnJoin = jest.fn();
-const mockOnLeave = jest.fn();
-
 describe('WorkoutSessionMessage', () => {
   beforeEach(() => {
     mockOnJoin.mockClear();
     mockOnLeave.mockClear();
+    mockOnDelete.mockClear();
   });
 
   it('renders workout session correctly', () => {
@@ -178,5 +182,65 @@ describe('WorkoutSessionMessage', () => {
     );
 
     expect(getByText('2 participants')).toBeTruthy();
+  });
+
+  it('shows delete button when user is creator and onDelete is provided', () => {
+    const { getByTestId } = render(
+      <WorkoutSessionMessage
+        session={mockSession}
+        currentUserId="user1"
+        isParticipating={false}
+        onJoin={mockOnJoin}
+        onLeave={mockOnLeave}
+        onDelete={mockOnDelete}
+      />
+    );
+
+    expect(getByTestId('delete-session')).toBeTruthy();
+  });
+
+  it('does not show delete button when user is not creator', () => {
+    const { queryByTestId } = render(
+      <WorkoutSessionMessage
+        session={mockSession}
+        currentUserId="user2"
+        isParticipating={false}
+        onJoin={mockOnJoin}
+        onLeave={mockOnLeave}
+        onDelete={mockOnDelete}
+      />
+    );
+
+    expect(queryByTestId('delete-session')).toBeNull();
+  });
+
+  it('does not show delete button when onDelete is not provided', () => {
+    const { queryByTestId } = render(
+      <WorkoutSessionMessage
+        session={mockSession}
+        currentUserId="user1"
+        isParticipating={false}
+        onJoin={mockOnJoin}
+        onLeave={mockOnLeave}
+      />
+    );
+
+    expect(queryByTestId('delete-session')).toBeNull();
+  });
+
+  it('calls onDelete when delete button is pressed', () => {
+    const { getByTestId } = render(
+      <WorkoutSessionMessage
+        session={mockSession}
+        currentUserId="user1"
+        isParticipating={false}
+        onJoin={mockOnJoin}
+        onLeave={mockOnLeave}
+        onDelete={mockOnDelete}
+      />
+    );
+
+    fireEvent.press(getByTestId('delete-session'));
+    expect(mockOnDelete).toHaveBeenCalled();
   });
 });

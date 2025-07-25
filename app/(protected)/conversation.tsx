@@ -110,6 +110,7 @@ export default function ConversationScreen() {
       const session = await workoutService.createWorkoutSession({
         ...data,
         groupId,
+        created_by: user?.id || '', // Ajout du créateur
       });
       
       // Ajouter le créateur comme participant automatiquement
@@ -120,8 +121,8 @@ export default function ConversationScreen() {
       // Rafraîchir les données de la session créée
       await refreshWorkoutSession(session.id);
       
-      // Envoyer un message dans la conversation pour notifier la création
-      await sendMessage(`🏋️‍♂️ Nouvelle séance créée !`);
+      // Supprimer l'envoi du message de notification
+      // await sendMessage(`🏋️‍♂️ Nouvelle séance créée !`);
       
       Alert.alert('Succès', 'Séance créée avec succès !');
     } catch (error) {
@@ -269,6 +270,37 @@ export default function ConversationScreen() {
     setShowGroupMembers(true);
   };
 
+  const handleDeleteSession = async (sessionId: number) => {
+    Alert.alert(
+      'Supprimer la séance',
+      'Voulez-vous vraiment supprimer cette séance ? Cette action est irréversible.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await workoutService.deleteWorkoutSession(sessionId, user?.id || '');
+              
+              // Supprimer la séance de l'état local
+              setWorkoutSessions(prev => {
+                const updated = { ...prev };
+                delete updated[sessionId];
+                return updated;
+              });
+              
+              Alert.alert('Séance supprimée');
+            } catch (error) {
+              const errorMessage = (error instanceof Error && error.message) ? error.message : 'Impossible de supprimer la séance';
+              Alert.alert('Erreur', errorMessage);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   // Rendu d'un message (incluant les séances)
   const renderMessage = ({ item }: { item: Message | WorkoutSession }) => {
     // Si c'est une séance d'entraînement
@@ -281,6 +313,7 @@ export default function ConversationScreen() {
           isParticipating={userParticipations[session.id] || false}
           onJoin={() => handleJoinSession(session.id)}
           onLeave={() => handleLeaveSession(session.id)}
+          onDelete={() => handleDeleteSession(session.id)} // Ajout
         />
       );
     }

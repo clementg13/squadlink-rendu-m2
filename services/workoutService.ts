@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { WorkoutSession, WorkoutSessionUser, CreateWorkoutSessionData } from '@/types/workout';
 
 export const workoutService = {
-  async createWorkoutSession(data: CreateWorkoutSessionData): Promise<WorkoutSession> {
+  async createWorkoutSession(data: CreateWorkoutSessionData & { created_by: string }): Promise<WorkoutSession> {
     const now = new Date().toISOString();
     
     const { data: session, error } = await supabase
@@ -12,7 +12,8 @@ export const workoutService = {
         end_date: data.end_date,
         id_sport: data.id_sport,
         id_group: data.groupId,
-        created_at: now, // Utiliser une date valide
+        created_at: now,
+        created_by: data.created_by, // Ajout du créateur
       })
       .select('*')
       .single();
@@ -208,5 +209,26 @@ export const workoutService = {
   async isUserParticipating(sessionId: number, userId: string): Promise<boolean> {
     const participants = await this.getWorkoutSessionParticipants(sessionId);
     return participants.some((member) => member.id_user === userId);
+  },
+
+  async deleteWorkoutSession(sessionId: number, userId: string): Promise<void> {
+    // Vérifier que l'utilisateur est bien le créateur
+    const { data: session, error: fetchError } = await supabase
+      .from('workoutsession')
+      .select('created_by')
+      .eq('id', sessionId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!session || session.created_by !== userId) {
+      throw new Error('Vous n\'êtes pas autorisé à supprimer cette séance');
+    }
+
+    const { error } = await supabase
+      .from('workoutsession')
+      .delete()
+      .eq('id', sessionId);
+
+    if (error) throw error;
   },
 };

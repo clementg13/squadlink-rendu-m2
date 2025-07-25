@@ -22,12 +22,14 @@ describe('WorkoutService', () => {
         start_date: '2024-01-15T18:00:00Z',
         end_date: '2024-01-15T19:30:00Z',
         id_sport: 'sport1',
-        groupId: 1
+        groupId: 1,
+        created_by: 'user1' // Champ maintenant requis
       };
 
       const mockCreatedSession = {
         id: 1,
         ...mockSessionData,
+        id_group: 1,
         created_at: new Date().toISOString()
       };
 
@@ -66,7 +68,8 @@ describe('WorkoutService', () => {
         start_date: '2024-01-15T18:00:00Z',
         end_date: '2024-01-15T19:30:00Z',
         id_sport: 'sport1',
-        groupId: 1
+        groupId: 1,
+        created_by: 'user1' // Champ maintenant requis
       };
 
       await expect(workoutService.createWorkoutSession(sessionData)).rejects.toEqual(mockError);
@@ -446,6 +449,68 @@ describe('WorkoutService', () => {
         }],
         participantCount: 1
       });
+    });
+  });
+
+  describe('deleteWorkoutSession', () => {
+    it('should delete workout session when user is creator', async () => {
+      const mockSession = { created_by: 'user1' };
+
+      mockSupabase.from
+        .mockReturnValueOnce({
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: mockSession,
+                error: null
+              })
+            })
+          })
+        } as any)
+        .mockReturnValueOnce({
+          delete: jest.fn().mockReturnValue({
+            eq: jest.fn().mockResolvedValue({
+              error: null
+            })
+          })
+        } as any);
+
+      await expect(workoutService.deleteWorkoutSession(1, 'user1')).resolves.toBeUndefined();
+    });
+
+    it('should throw error when user is not creator', async () => {
+      const mockSession = { created_by: 'user2' };
+
+      mockSupabase.from.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: mockSession,
+              error: null
+            })
+          })
+        })
+      } as any);
+
+      await expect(workoutService.deleteWorkoutSession(1, 'user1'))
+        .rejects.toThrow('Vous n\'êtes pas autorisé à supprimer cette séance');
+    });
+
+    it('should handle session not found error', async () => {
+      const mockError = { message: 'Session not found' };
+
+      mockSupabase.from.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: null,
+              error: mockError
+            })
+          })
+        })
+      } as any);
+
+      await expect(workoutService.deleteWorkoutSession(1, 'user1')).rejects.toEqual(mockError);
     });
   });
 });

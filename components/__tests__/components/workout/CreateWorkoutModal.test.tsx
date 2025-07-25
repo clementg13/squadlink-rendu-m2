@@ -144,10 +144,6 @@ describe('CreateWorkoutModal', () => {
     fireEvent.press(getByText('Sélectionner un sport'));
     fireEvent.press(getByText('Football'));
 
-    // Mock dates to be in the future
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 1);
-    
     // Create session
     fireEvent.press(getByText('Créer'));
 
@@ -155,7 +151,9 @@ describe('CreateWorkoutModal', () => {
       expect(mockOnCreateSession).toHaveBeenCalledWith(
         expect.objectContaining({
           id_sport: 'sport1',
-          groupId: 0
+          groupId: 0,
+          start_date: expect.any(String),
+          end_date: expect.any(String)
         })
       );
     });
@@ -224,3 +222,4 @@ describe('CreateWorkoutModal', () => {
     expect(getByText(/19:30/)).toBeTruthy(); // Default end time
   });
 });
+

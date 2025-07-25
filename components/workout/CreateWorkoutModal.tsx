@@ -76,14 +76,14 @@ export default function CreateWorkoutModal({
     }
   }, [visible]);
 
-  const handleDateChange = (_event: any, date?: Date) => {
+  const handleDateChange = (_event: unknown, date?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
     if (date) {
       setSelectedDate(date);
     }
   };
 
-  const handleStartTimeChange = (_event: any, time?: Date) => {
+  const handleStartTimeChange = (_event: unknown, time?: Date) => {
     setShowStartTimePicker(Platform.OS === 'ios');
     if (time) {
       setStartTime(time);
@@ -96,7 +96,7 @@ export default function CreateWorkoutModal({
     }
   };
 
-  const handleEndTimeChange = (_event: any, time?: Date) => {
+  const handleEndTimeChange = (_event: unknown, time?: Date) => {
     setShowEndTimePicker(Platform.OS === 'ios');
     if (time) {
       setEndTime(time);
