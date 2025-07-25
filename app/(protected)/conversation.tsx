@@ -220,30 +220,52 @@ export default function ConversationScreen() {
       return;
     }
     
+    // Si les membres sont déjà chargés, ne pas recharger
+    if (groupMembers.length > 0) {
+      return;
+    }
+    
     setLoadingMembers(true);
     try {
       const members = await groupService.getGroupMembers(groupId);
-      console.log('✅ ConversationScreen: Loaded members:', members.length);
-      console.log('📋 ConversationScreen: Members data:', members);
       setGroupMembers(members);
       
       if (members.length === 0) {
-        console.warn('⚠️ ConversationScreen: No members found, this might indicate a problem');
+        console.warn('⚠️ ConversationScreen: No members found');
       }
     } catch (error) {
       console.error('❌ ConversationScreen: Error loading group members:', error);
-      Alert.alert('Erreur', 'Impossible de charger les membres du groupe: ' + (error as Error).message);
+      Alert.alert('Erreur', 'Impossible de charger les membres du groupe');
     } finally {
       setLoadingMembers(false);
     }
   };
 
+  // Optimiser le chargement des membres - charger dès l'ouverture de la conversation
+  useEffect(() => {
+    const loadInitialGroupMembers = async () => {
+      if (groupId && !loadingMembers && groupMembers.length === 0) {
+        console.log('🔍 ConversationScreen: Loading initial group members');
+        setLoadingMembers(true);
+        try {
+          const members = await groupService.getGroupMembers(groupId);
+          setGroupMembers(members);
+        } catch (error) {
+          console.error('❌ ConversationScreen: Error loading initial group members:', error);
+        } finally {
+          setLoadingMembers(false);
+        }
+      }
+    };
+
+    loadInitialGroupMembers();
+  }, [groupId]); // Charger dès que groupId est disponible
+
   const handleShowGroupInfo = async () => {
-    console.log('👥 ConversationScreen: Show group info clicked');
-    console.log('👥 ConversationScreen: Current members count:', groupMembers.length);
-    
-    // Toujours recharger les membres pour s'assurer d'avoir les données les plus récentes
-    await loadGroupMembers();
+    // Si les membres ne sont pas encore chargés, les charger
+    if (groupMembers.length === 0 && !loadingMembers) {
+      await loadGroupMembers();
+    }
     setShowGroupMembers(true);
   };
 

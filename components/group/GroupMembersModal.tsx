@@ -24,9 +24,6 @@ export default function GroupMembersModal({
   groupName,
 }: GroupMembersModalProps) {
   
-  console.log('👥 GroupMembersModal: Rendering with', members.length, 'members');
-  console.log('👥 GroupMembersModal: Members data:', members);
-
   const renderMember = ({ item }: { item: GroupMember }) => (
     <View style={styles.memberItem}>
       <View style={styles.memberAvatar}>
@@ -64,21 +61,6 @@ export default function GroupMembersModal({
           </Text>
         </View>
 
-        {/* Debug info */}
-        {__DEV__ && (
-          <View style={styles.debugInfo}>
-            <Text style={styles.debugText}>
-              Debug: {members.length} membres chargés
-            </Text>
-            {members.length > 0 && (
-              <Text style={styles.debugText}>
-                Premier membre: {members[0].user.firstname} {members[0].user.lastname}
-              </Text>
-            )}
-          </View>
-        )}
-
-        {/* Toujours afficher la liste, même vide */}
         <FlatList
           data={members}
           renderItem={renderMember}
@@ -90,7 +72,7 @@ export default function GroupMembersModal({
               <FontAwesome name="users" size={48} color="#ccc" />
               <Text style={styles.emptyText}>Aucun membre trouvé</Text>
               <Text style={styles.emptySubtext}>
-                Il semble y avoir un problème avec le chargement des membres
+                Vérifiez votre connexion et réessayez
               </Text>
             </View>
           )}
@@ -177,15 +159,5 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 8,
     textAlign: 'center',
-  },
-  debugInfo: {
-    backgroundColor: '#ffe6e6',
-    padding: 8,
-    margin: 16,
-    borderRadius: 4,
-  },
-  debugText: {
-    fontSize: 12,
-    color: '#d63384',
   },
 });
