@@ -18,54 +18,9 @@ export const groupService = {
         return [];
       }
       
-      // Optimiser en une seule requête avec jointure
-      const { data: groupUsersData, error: groupUsersError } = await supabase
-        .from('groupuser')
-        .select(`
-          id_user,
-          profile:id_user (
-            firstname,
-            lastname
-          )
-        `)
-        .eq('id_group', groupId);
-
-      if (groupUsersError) {
-        console.error('❌ GroupService: Error:', groupUsersError);
-        // Fallback à l'ancienne méthode en cas d'erreur de jointure
-        return this.getGroupMembersFallback(groupId);
-      }
-
-      if (!groupUsersData || groupUsersData.length === 0) {
-        return [];
-      }
-
-      // Mapper directement les résultats
-      const result = groupUsersData.map(groupUser => {
-        const profile = groupUser.profile as any;
-        
-        if (profile && profile.firstname && profile.lastname) {
-          return {
-            id_user: groupUser.id_user,
-            user: {
-              firstname: profile.firstname,
-              lastname: profile.lastname,
-            },
-          };
-        } else {
-          const userIdShort = groupUser.id_user.substring(0, 8);
-          return {
-            id_user: groupUser.id_user,
-            user: {
-              firstname: 'Membre',
-              lastname: userIdShort,
-            },
-          };
-        }
-      });
-
-      console.log('✅ GroupService: Found', result.length, 'members');
-      return result;
+      // La jointure directe ne fonctionne pas, utiliser l'approche fallback directement
+      console.log('🔍 GroupService: Using fallback method due to join limitations');
+      return this.getGroupMembersFallback(groupId);
 
     } catch (error) {
       console.error('❌ GroupService: Exception:', error);
@@ -83,6 +38,7 @@ export const groupService = {
         .eq('id_group', groupId);
 
       if (groupUsersError || !groupUsersData || groupUsersData.length === 0) {
+        console.log('📋 GroupService: No users found in group or error:', groupUsersError?.message);
         return [];
       }
 
@@ -94,22 +50,31 @@ export const groupService = {
         return [];
       }
 
+      console.log('✅ GroupService: Found valid user IDs:', validUserIds.length);
+
       let profilesData: any[] = [];
       
       // Essayer d'abord la requête normale
-      const { data: normalProfiles } = await supabase
+      const { data: normalProfiles, error: profilesError } = await supabase
         .from('profile')
         .select('id_user, firstname, lastname')
         .in('id_user', validUserIds);
 
-      if (normalProfiles) {
+      if (profilesError) {
+        console.warn('⚠️ GroupService: Profile query error:', profilesError.message);
+        // Continue with empty profiles array
+        profilesData = [];
+      } else if (normalProfiles) {
         profilesData = normalProfiles;
+        console.log('✅ GroupService: Found profiles:', profilesData.length);
       }
 
-      // Si pas assez de profils, créer des fallbacks
+      // Si pas assez de profils, créer des fallbacks pour tous les utilisateurs manquants
       if (profilesData.length < validUserIds.length) {
         const foundUserIds = profilesData.map(p => p.id_user);
         const missingUserIds = validUserIds.filter(id => !foundUserIds.includes(id));
+        
+        console.log('⚠️ GroupService: Creating fallbacks for missing users:', missingUserIds.length);
         
         for (const userId of missingUserIds) {
           profilesData.push({
@@ -120,7 +85,8 @@ export const groupService = {
         }
       }
 
-      return groupUsersData.map(groupUser => {
+      // Mapper les résultats finaux
+      const result = groupUsersData.map(groupUser => {
         const userProfile = profilesData.find(profile => profile.id_user === groupUser.id_user);
         
         if (userProfile && userProfile.firstname && userProfile.lastname) {
@@ -142,6 +108,9 @@ export const groupService = {
           };
         }
       });
+
+      console.log('✅ GroupService: Final result:', result.length, 'members');
+      return result;
 
     } catch (error) {
       console.error('❌ GroupService: Fallback failed:', error);

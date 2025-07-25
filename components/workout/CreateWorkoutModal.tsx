@@ -4,16 +4,19 @@ import {
   View,
   Text,
   TouchableOpacity,
-  TextInput,
   Alert,
-  ScrollView,
   ActivityIndicator,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { FontAwesome } from '@expo/vector-icons';
-import { Sport } from '@/types/profile';
 import { CreateWorkoutSessionData } from '@/types/workout';
+
+interface Sport {
+  id: string;
+  name: string;
+}
 
 interface CreateWorkoutModalProps {
   visible: boolean;
@@ -28,101 +31,131 @@ export default function CreateWorkoutModal({
   onClose,
   onCreateSession,
 }: CreateWorkoutModalProps) {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(new Date());
   const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
+  const [showSportPicker, setShowSportPicker] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // États pour la date et l'heure
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow;
+  });
+  const [startTime, setStartTime] = useState(() => {
+    const defaultStart = new Date();
+    defaultStart.setHours(18, 0, 0, 0);
+    return defaultStart;
+  });
+  const [endTime, setEndTime] = useState(() => {
+    const defaultEnd = new Date();
+    defaultEnd.setHours(19, 30, 0, 0);
+    return defaultEnd;
+  });
+
+  // États pour l'affichage des pickers
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [showSportsList, setShowSportsList] = useState(false);
 
+  // Réinitialiser les valeurs quand le modal s'ouvre
   useEffect(() => {
     if (visible) {
-      // Initialiser avec la date d'aujourd'hui et une heure dans le futur
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(now.getDate() + 1);
-      
+      setSelectedSport(null);
+      setShowSportPicker(false);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
       setSelectedDate(tomorrow);
       
-      const start = new Date(tomorrow);
-      start.setHours(18, 0, 0, 0); // 18h00
-      setStartTime(start);
+      const defaultStart = new Date();
+      defaultStart.setHours(18, 0, 0, 0);
+      setStartTime(defaultStart);
       
-      const end = new Date(tomorrow);
-      end.setHours(19, 30, 0, 0); // 19h30
-      setEndTime(end);
-      
-      setSelectedSport(null);
+      const defaultEnd = new Date();
+      defaultEnd.setHours(19, 30, 0, 0);
+      setEndTime(defaultEnd);
     }
   }, [visible]);
 
-  const handleDateChange = (event: any, date?: Date) => {
-    setShowDatePicker(false);
+  const handleDateChange = (_event: any, date?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
     if (date) {
       setSelectedDate(date);
-      // Mettre à jour les heures avec la nouvelle date
-      const newStartTime = new Date(date);
-      newStartTime.setHours(startTime.getHours(), startTime.getMinutes());
-      setStartTime(newStartTime);
+    }
+  };
+
+  const handleStartTimeChange = (_event: any, time?: Date) => {
+    setShowStartTimePicker(Platform.OS === 'ios');
+    if (time) {
+      setStartTime(time);
       
-      const newEndTime = new Date(date);
-      newEndTime.setHours(endTime.getHours(), endTime.getMinutes());
+      // Ajuster automatiquement l'heure de fin pour qu'elle soit 1h30 après le début
+      const newEndTime = new Date(time);
+      newEndTime.setHours(newEndTime.getHours() + 1);
+      newEndTime.setMinutes(newEndTime.getMinutes() + 30);
       setEndTime(newEndTime);
     }
   };
 
-  const handleStartTimeChange = (event: any, time?: Date) => {
-    setShowStartTimePicker(false);
+  const handleEndTimeChange = (_event: any, time?: Date) => {
+    setShowEndTimePicker(Platform.OS === 'ios');
     if (time) {
-      const newStartTime = new Date(selectedDate);
-      newStartTime.setHours(time.getHours(), time.getMinutes());
-      setStartTime(newStartTime);
-      
-      // Ajuster l'heure de fin si elle est avant l'heure de début
-      if (newStartTime >= endTime) {
-        const newEndTime = new Date(newStartTime);
-        newEndTime.setHours(newStartTime.getHours() + 1, newStartTime.getMinutes());
-        setEndTime(newEndTime);
-      }
+      setEndTime(time);
     }
   };
 
-  const handleEndTimeChange = (event: any, time?: Date) => {
-    setShowEndTimePicker(false);
-    if (time) {
-      const newEndTime = new Date(selectedDate);
-      newEndTime.setHours(time.getHours(), time.getMinutes());
-      setEndTime(newEndTime);
-    }
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
-  const validateAndCreate = async () => {
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
+  };
+
+  const handleCreate = async () => {
+    // Validation du sport
     if (!selectedSport) {
       Alert.alert('Erreur', 'Veuillez sélectionner un sport');
       return;
     }
 
-    if (startTime >= endTime) {
+    // Validation des heures
+    if (endTime <= startTime) {
       Alert.alert('Erreur', 'L\'heure de fin doit être après l\'heure de début');
       return;
     }
 
-    if (startTime <= new Date()) {
-      Alert.alert('Erreur', 'La séance ne peut pas être programmée dans le passé');
+    // Créer les dates complètes en combinant la date sélectionnée avec les heures
+    const sessionStart = new Date(selectedDate);
+    sessionStart.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+
+    const sessionEnd = new Date(selectedDate);
+    sessionEnd.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
+
+    // Validation que c'est dans le futur
+    const now = new Date();
+    if (sessionStart <= now) {
+      Alert.alert('Erreur', 'La séance doit être programmée dans le futur');
       return;
     }
 
     setLoading(true);
+
     try {
-      await onCreateSession({
-        start_date: startTime.toISOString(),
-        end_date: endTime.toISOString(),
+      const sessionData: CreateWorkoutSessionData = {
+        start_date: sessionStart.toISOString(),
+        end_date: sessionEnd.toISOString(),
         id_sport: selectedSport.id,
-        groupId: 0, // Sera défini dans le composant parent
-      });
+        groupId: 0, // Sera remplacé par le vrai groupId
+      };
+
+      await onCreateSession(sessionData);
       onClose();
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de créer la séance');
@@ -131,125 +164,115 @@ export default function CreateWorkoutModal({
     }
   };
 
+  const renderSportPicker = () => (
+    <View style={styles.sportPicker}>
+      {sports.map((sport) => (
+        <TouchableOpacity
+          key={sport.id}
+          style={styles.sportOption}
+          onPress={() => {
+            setSelectedSport(sport);
+            setShowSportPicker(false);
+          }}
+        >
+          <Text style={styles.sportOptionText}>{sport.name}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+    >
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose}>
-            <Text style={styles.cancelButton}>Annuler</Text>
-          </TouchableOpacity>
           <Text style={styles.title}>Nouvelle séance</Text>
-          <TouchableOpacity onPress={validateAndCreate} disabled={loading}>
-            {loading ? (
-              <ActivityIndicator size="small" color="#007AFF" />
-            ) : (
-              <Text style={styles.createButton}>Créer</Text>
-            )}
+          <TouchableOpacity onPress={onClose}>
+            <FontAwesome name="times" size={24} color="#666" />
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.content}>
-          {/* Sélection du sport */}
+        <View style={styles.content}>
+          {/* Sport */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Sport</Text>
-            <TouchableOpacity 
-              style={styles.sportSelector}
-              onPress={() => setShowSportsList(!showSportsList)}
+            <Text style={styles.label}>Sport</Text>
+            <TouchableOpacity
+              style={styles.selector}
+              onPress={() => setShowSportPicker(!showSportPicker)}
             >
-              <Text style={[styles.sportText, !selectedSport && styles.placeholder]}>
+              <Text style={styles.selectorText}>
                 {selectedSport ? selectedSport.name : 'Sélectionner un sport'}
               </Text>
-              <FontAwesome 
-                name={showSportsList ? "chevron-up" : "chevron-down"} 
-                size={16} 
-                color="#666" 
-              />
+              <FontAwesome name="chevron-down" size={16} color="#666" />
             </TouchableOpacity>
-            
-            {showSportsList && (
-              <View style={styles.sportsList}>
-                {sports.map((sport) => (
-                  <TouchableOpacity
-                    key={sport.id}
-                    style={[
-                      styles.sportItem,
-                      selectedSport?.id === sport.id && styles.selectedSportItem
-                    ]}
-                    onPress={() => {
-                      setSelectedSport(sport);
-                      setShowSportsList(false);
-                    }}
-                  >
-                    <Text style={[
-                      styles.sportItemText,
-                      selectedSport?.id === sport.id && styles.selectedSportItemText
-                    ]}>
-                      {sport.name}
-                    </Text>
-                    {selectedSport?.id === sport.id && (
-                      <FontAwesome name="check" size={16} color="#007AFF" />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+            {showSportPicker && renderSportPicker()}
           </View>
 
           {/* Date */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Date</Text>
+            <Text style={styles.label}>Date</Text>
             <TouchableOpacity
-              style={styles.timeSelector}
+              style={styles.dateSelector}
               onPress={() => setShowDatePicker(true)}
             >
-              <FontAwesome name="calendar" size={20} color="#007AFF" />
-              <Text style={styles.timeText}>
-                {selectedDate.toLocaleDateString('fr-FR', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+              <Text style={styles.dateText}>
+                {formatDate(selectedDate)}
               </Text>
+              <FontAwesome name="calendar" size={16} color="#666" />
             </TouchableOpacity>
           </View>
 
-          {/* Heure de début */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Heure de début</Text>
-            <TouchableOpacity
-              style={styles.timeSelector}
-              onPress={() => setShowStartTimePicker(true)}
-            >
-              <FontAwesome name="clock-o" size={20} color="#007AFF" />
-              <Text style={styles.timeText}>
-                {startTime.toLocaleTimeString('fr-FR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </Text>
-            </TouchableOpacity>
+          {/* Heures */}
+          <View style={styles.timeSection}>
+            <View style={styles.timeInput}>
+              <Text style={styles.label}>Heure de début</Text>
+              <TouchableOpacity
+                style={styles.timeSelector}
+                onPress={() => setShowStartTimePicker(true)}
+              >
+                <Text style={styles.timeText}>{formatTime(startTime)}</Text>
+                <FontAwesome name="clock-o" size={16} color="#666" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.timeInput}>
+              <Text style={styles.label}>Heure de fin</Text>
+              <TouchableOpacity
+                style={styles.timeSelector}
+                onPress={() => setShowEndTimePicker(true)}
+              >
+                <Text style={styles.timeText}>{formatTime(endTime)}</Text>
+                <FontAwesome name="clock-o" size={16} color="#666" />
+              </TouchableOpacity>
+            </View>
           </View>
+        </View>
 
-          {/* Heure de fin */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Heure de fin</Text>
-            <TouchableOpacity
-              style={styles.timeSelector}
-              onPress={() => setShowEndTimePicker(true)}
-            >
-              <FontAwesome name="clock-o" size={20} color="#007AFF" />
-              <Text style={styles.timeText}>
-                {endTime.toLocaleTimeString('fr-FR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={onClose}
+            disabled={loading}
+          >
+            <Text style={styles.cancelButtonText}>Annuler</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.createButton, loading && styles.createButtonDisabled]}
+            onPress={handleCreate}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.createButtonText}>Créer</Text>
+            )}
+          </TouchableOpacity>
+        </View>
 
-        {/* Date Pickers */}
+        {/* Date Picker */}
         {showDatePicker && (
           <DateTimePicker
             value={selectedDate}
@@ -260,6 +283,7 @@ export default function CreateWorkoutModal({
           />
         )}
 
+        {/* Start Time Picker */}
         {showStartTimePicker && (
           <DateTimePicker
             value={startTime}
@@ -269,6 +293,7 @@ export default function CreateWorkoutModal({
           />
         )}
 
+        {/* End Time Picker */}
         {showEndTimePicker && (
           <DateTimePicker
             value={endTime}
@@ -285,7 +310,7 @@ export default function CreateWorkoutModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
@@ -293,18 +318,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
-  },
-  cancelButton: {
-    fontSize: 16,
-    color: '#007AFF',
-  },
-  createButton: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '600',
   },
   title: {
     fontSize: 18,
@@ -318,65 +333,107 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
-  sectionTitle: {
+  label: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  sportSelector: {
+  selector: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    padding: 12,
   },
-  sportText: {
+  selectorText: {
     fontSize: 16,
     color: '#333',
   },
-  placeholder: {
-    color: '#999',
-  },
-  sportsList: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    maxHeight: 200,
+  sportPicker: {
     borderWidth: 1,
     borderColor: '#e0e0e0',
+    borderRadius: 8,
     marginTop: 8,
   },
-  sportItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
+  sportOption: {
+    padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  selectedSportItem: {
-    backgroundColor: '#f0f8ff',
-  },
-  sportItemText: {
+  sportOptionText: {
     fontSize: 16,
     color: '#333',
   },
-  selectedSportItemText: {
-    color: '#007AFF',
-    fontWeight: '500',
+  dateSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    padding: 12,
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#333',
   },
   timeSelector: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    padding: 12,
   },
   timeText: {
     fontSize: 16,
     color: '#333',
-    marginLeft: 12,
+  },
+  timeSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  timeInput: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  footer: {
+    flexDirection: 'row',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  cancelButton: {
+    flex: 1,
+    marginRight: 8,
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  createButton: {
+    flex: 1,
+    marginLeft: 8,
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+  },
+  createButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  createButtonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
   },
 });
