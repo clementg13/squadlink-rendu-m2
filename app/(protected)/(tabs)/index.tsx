@@ -1,135 +1,60 @@
 import React from 'react';
 import {
   StyleSheet,
-  ScrollView,
   ActivityIndicator,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { useAuthUser, useAuthLoading } from '@/stores/authStore';
-import { env } from '@/constants/Environment';
+import CompatibleProfilesList from '@/components/profile/CompatibleProfilesList';
+import { CompatibleProfile } from '@/types/profile';
 
 export default function HomeScreen() {
   const user = useAuthUser();
-  const loading = useAuthLoading();
+  const authLoading = useAuthLoading();
 
-  // Affichage pendant le chargement initial
-  if (loading) {
+  // Gérer la sélection d'un profil
+  const handleProfilePress = (profile: CompatibleProfile) => {
+    console.log('🏠 HomeScreen: Profil sélectionné:', profile.firstname, profile.lastname);
+    // Ici, on pourrait naviguer vers une page de détail du profil
+    // ou ouvrir un modal avec plus d'informations
+  };
+
+  // Affichage pendant le chargement initial de l'authentification
+  if (authLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Chargement...</Text>
+        <Text style={styles.loadingText}>Connexion en cours...</Text>
       </View>
     );
   }
 
-  // Interface pour utilisateur connecté
+  // Interface principale - laissons CompatibleProfilesList gérer son propre header et états
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Bienvenue dans SquadLink</Text>
-        <Text style={styles.subtitle}>Tableau de bord principal</Text>
-      </View>
-
-      <View style={styles.userInfo}>
-        <Text style={styles.userInfoTitle}>Informations utilisateur :</Text>
-        <Text style={styles.userInfoText}>Email: {user?.email}</Text>
-        <Text style={styles.userInfoText}>ID: {user?.id}</Text>
-        <Text style={styles.userInfoText}>
-          Confirmé: {user?.email_confirmed_at ? 'Oui' : 'Non'}
-        </Text>
-      </View>
-
-      <View style={styles.storeInfo}>
-        <Text style={styles.envTitle}>État du store Zustand :</Text>
-        <Text style={styles.envText}>✅ Utilisateur connecté</Text>
-        <Text style={styles.envText}>✅ Session active</Text>
-        <Text style={styles.envText}>✅ Store initialisé</Text>
-      </View>
-
-      <View style={styles.envInfo}>
-        <Text style={styles.envTitle}>Configuration Supabase :</Text>
-        <Text style={styles.envText}>URL: {env.EXPO_PUBLIC_SUPABASE_URL}</Text>
-        <Text style={styles.envText}>Environnement: {env.NODE_ENV}</Text>
-      </View>
-    </ScrollView>
+    <View style={styles.container}>
+      <CompatibleProfilesList 
+        onProfilePress={handleProfilePress}
+        showWelcomeHeader={true}
+        userName={user?.email?.split('@')[0] || 'Utilisateur'}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8F9FA',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#F8F9FA',
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 40,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 4,
-  },
-  userInfo: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 20,
-    marginBottom: 20,
-    marginHorizontal: 20,
-  },
-  userInfoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
-  },
-  userInfoText: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: '#666',
-  },
-  storeInfo: {
-    backgroundColor: '#E8F5E8',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 20,
-    marginHorizontal: 20,
-    borderWidth: 1,
-    borderColor: '#4CAF50',
-  },
-  envInfo: {
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 20,
-    marginHorizontal: 20,
-  },
-  envTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
-  },
-  envText: {
-    fontSize: 14,
-    marginBottom: 4,
-    color: '#666',
+    color: '#666666',
   },
 });
