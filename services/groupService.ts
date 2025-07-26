@@ -52,7 +52,7 @@ export const groupService = {
 
       console.log('✅ GroupService: Found valid user IDs:', validUserIds.length);
 
-      let profilesData: any[] = [];
+      let profilesData: Record<string, unknown>[] = [];
       
       // Essayer d'abord la requête normale
       const { data: normalProfiles, error: profilesError } = await supabase
@@ -86,10 +86,14 @@ export const groupService = {
       }
 
       // Mapper les résultats finaux
-      const result = groupUsersData.map(groupUser => {
+      const result: GroupMember[] = groupUsersData.map(groupUser => {
         const userProfile = profilesData.find(profile => profile.id_user === groupUser.id_user);
-        
-        if (userProfile && userProfile.firstname && userProfile.lastname) {
+
+        if (
+          userProfile &&
+          typeof userProfile.firstname === 'string' &&
+          typeof userProfile.lastname === 'string'
+        ) {
           return {
             id_user: groupUser.id_user,
             user: {
@@ -98,7 +102,7 @@ export const groupService = {
             },
           };
         } else {
-          const userIdShort = groupUser.id_user.substring(0, 8);
+          const userIdShort = typeof groupUser.id_user === 'string' ? groupUser.id_user.substring(0, 8) : '';
           return {
             id_user: groupUser.id_user,
             user: {

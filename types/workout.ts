@@ -2,9 +2,10 @@ export interface WorkoutSession {
   id: number;
   start_date: string;
   end_date: string;
-  created_at: string; // Ajouter created_at
-  id_sport?: string;
-  id_group?: number; // Ajouter le champ id_group
+  created_at?: string;
+  created_by?: string; // Ajout du champ créateur
+  id_sport: string;
+  id_group?: number;
   sport?: {
     id: string;
     name: string;
@@ -27,4 +28,5 @@ export interface CreateWorkoutSessionData {
   end_date: string;
   id_sport: string;
   groupId: number;
+  created_by?: string; // Optionnel pour la compatibilité
 }

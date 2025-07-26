@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Conversation, Message, DatabaseMessage, RealtimePayload } from '@/types/messaging';
+import { RealtimePostgresInsertPayload } from '@supabase/supabase-js';
+import { Conversation, Message, DatabaseMessage } from '@/types/messaging';
 import { ImprovedMessageService } from '@/services/improvedMessagesService';
 import { ConversationService } from '@/services/conversationService';
 import { useAuthUser } from '@/stores/authStore';
@@ -190,7 +191,7 @@ export function useConversation(groupId: number) {
       try {
         subscription = ConversationService.subscribeToMessages(
           groupId,
-          (payload: RealtimePayload<DatabaseMessage>) => {
+          (payload: RealtimePostgresInsertPayload<DatabaseMessage>) => {
             const newMessage = payload.new;
             
             // Éviter de dupliquer nos propres messages

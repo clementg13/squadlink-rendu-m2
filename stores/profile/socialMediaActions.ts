@@ -1,3 +1,4 @@
+import { ProfileSocialMedia } from '@/types/profile';
 import { socialMediaService } from '@/services/socialMediaService';
 
 export interface SocialMediaActions {
@@ -6,6 +7,7 @@ export interface SocialMediaActions {
   removeUserSocialMedia: (socialMediaId: string) => Promise<{ error: Error | null }>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createSocialMediaActions = (set: any, get: any): SocialMediaActions => ({
   addUserSocialMedia: async (socialMediaId: string, username: string) => {
     try {
@@ -47,7 +49,7 @@ export const createSocialMediaActions = (set: any, get: any): SocialMediaActions
       set({ 
         profile: { 
           ...profile, 
-          socialMedias: profile.socialMedias?.map((s: any) => 
+          socialMedias: profile.socialMedias?.map((s: ProfileSocialMedia) => 
             s.id_social_media === socialMediaId ? { ...s, username } : s
           ) || [] 
         },
@@ -75,7 +77,7 @@ export const createSocialMediaActions = (set: any, get: any): SocialMediaActions
       set({ 
         profile: { 
           ...profile, 
-          socialMedias: profile.socialMedias?.filter((s: any) => s.id_social_media !== socialMediaId) || [] 
+          socialMedias: profile.socialMedias?.filter((s: ProfileSocialMedia) => s.id_social_media !== socialMediaId) || [] 
         },
         saving: false 
       });

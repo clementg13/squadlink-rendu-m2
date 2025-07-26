@@ -51,7 +51,7 @@ export class ProfileService {
         Object.prototype.toString.call(cleanUpdates.birthdate) === '[object Date]'
       ) {
         // Convertir Date en string format YYYY-MM-DD
-        cleanUpdates.birthdate = (cleanUpdates.birthdate as Date).toISOString().split('T')[0] as any;
+        cleanUpdates.birthdate = (cleanUpdates.birthdate as Date).toISOString().split('T')[0];
       } else if (typeof cleanUpdates.birthdate === 'string') {
         // Valider le format de date string
         const dateStr = cleanUpdates.birthdate.trim();
@@ -66,7 +66,7 @@ export class ProfileService {
             delete cleanUpdates.birthdate;
           } else {
             // Format correct YYYY-MM-DD
-            cleanUpdates.birthdate = dateObj.toISOString().split('T')[0] as any;
+            cleanUpdates.birthdate = dateObj.toISOString().split('T')[0];
           }
         }
       }

@@ -16,6 +16,7 @@ interface WorkoutSessionMessageProps {
   isParticipating: boolean;
   onJoin: () => void;
   onLeave: () => void;
+  onDelete?: () => void; // Ajout prop
 }
 
 export default function WorkoutSessionMessage({
@@ -24,8 +25,13 @@ export default function WorkoutSessionMessage({
   isParticipating,
   onJoin,
   onLeave,
+  onDelete,
 }: WorkoutSessionMessageProps) {
   const [showParticipants, setShowParticipants] = useState(false);
+
+  // Ajout d'une fallback pour created_by si jamais il n'est pas dans session
+  // (utile si tu utilises des mocks ou des anciennes données)
+  const createdBy = (session as WorkoutSession & { created_by?: string }).created_by ?? session.created_by ?? '';
 
   const formatDate = (dateString: string) => {
     try {
@@ -83,6 +89,16 @@ export default function WorkoutSessionMessage({
       <View style={styles.sessionHeader}>
         <FontAwesome name="bolt" size={20} color="#007AFF" />
         <Text style={styles.sessionTitle}>Séance d'entraînement</Text>
+        {/* Bouton supprimer déplacé dans le header */}
+        {onDelete && createdBy && currentUserId && createdBy === currentUserId && (
+          <TouchableOpacity
+            style={styles.deleteButtonHeader}
+            onPress={onDelete}
+            testID="delete-session"
+          >
+            <FontAwesome name="trash" size={16} color="#ff3b30" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {session.sport && (
@@ -134,7 +150,6 @@ export default function WorkoutSessionMessage({
           </Text>
         </TouchableOpacity>
       </View>
-
       {/* Modal des participants */}
       <Modal
         visible={showParticipants}
@@ -184,6 +199,7 @@ const styles = StyleSheet.create({
   sessionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between', // Ajout pour espacer les éléments
     marginBottom: 8,
   },
   sessionTitle: {
@@ -191,6 +207,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#007AFF',
     marginLeft: 8,
+    flex: 1, // Prend l'espace disponible
+  },
+  deleteButtonHeader: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 59, 48, 0.1)',
   },
   sportName: {
     fontSize: 18,

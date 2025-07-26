@@ -110,6 +110,7 @@ export default function ConversationScreen() {
       const session = await workoutService.createWorkoutSession({
         ...data,
         groupId,
+        created_by: user?.id || '', // Ajout du créateur
       });
       
       // Ajouter le créateur comme participant automatiquement
@@ -120,8 +121,8 @@ export default function ConversationScreen() {
       // Rafraîchir les données de la session créée
       await refreshWorkoutSession(session.id);
       
-      // Envoyer un message dans la conversation pour notifier la création
-      await sendMessage(`🏋️‍♂️ Nouvelle séance créée !`);
+      // Supprimer l'envoi du message de notification
+      // await sendMessage(`🏋️‍♂️ Nouvelle séance créée !`);
       
       Alert.alert('Succès', 'Séance créée avec succès !');
     } catch (error) {
@@ -179,7 +180,7 @@ export default function ConversationScreen() {
       await workoutService.joinWorkoutSession(sessionId, user.id);
       await refreshWorkoutSession(sessionId);
       Alert.alert('Succès', 'Vous participez maintenant à cette séance !');
-    } catch (error) {
+    } catch {
       Alert.alert('Erreur', 'Impossible de rejoindre la séance');
     }
   };
@@ -200,7 +201,7 @@ export default function ConversationScreen() {
               await workoutService.leaveWorkoutSession(sessionId, user.id);
               await refreshWorkoutSession(sessionId);
               Alert.alert('Succès', 'Participation annulée');
-            } catch (error) {
+            } catch {
               Alert.alert('Erreur', 'Impossible d\'annuler la participation');
             }
           }
@@ -259,7 +260,7 @@ export default function ConversationScreen() {
     };
 
     loadInitialGroupMembers();
-  }, [groupId]); // Charger dès que groupId est disponible
+  }, [groupId, groupMembers.length, loadingMembers]); // Charger dès que groupId est disponible
 
   const handleShowGroupInfo = async () => {
     // Si les membres ne sont pas encore chargés, les charger
@@ -267,6 +268,37 @@ export default function ConversationScreen() {
       await loadGroupMembers();
     }
     setShowGroupMembers(true);
+  };
+
+  const handleDeleteSession = async (sessionId: number) => {
+    Alert.alert(
+      'Supprimer la séance',
+      'Voulez-vous vraiment supprimer cette séance ? Cette action est irréversible.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await workoutService.deleteWorkoutSession(sessionId, user?.id || '');
+              
+              // Supprimer la séance de l'état local
+              setWorkoutSessions(prev => {
+                const updated = { ...prev };
+                delete updated[sessionId];
+                return updated;
+              });
+              
+              Alert.alert('Séance supprimée');
+            } catch (error) {
+              const errorMessage = (error instanceof Error && error.message) ? error.message : 'Impossible de supprimer la séance';
+              Alert.alert('Erreur', errorMessage);
+            }
+          }
+        }
+      ]
+    );
   };
 
   // Rendu d'un message (incluant les séances)
@@ -281,6 +313,7 @@ export default function ConversationScreen() {
           isParticipating={userParticipations[session.id] || false}
           onJoin={() => handleJoinSession(session.id)}
           onLeave={() => handleLeaveSession(session.id)}
+          onDelete={() => handleDeleteSession(session.id)} // Ajout
         />
       );
     }
@@ -325,7 +358,7 @@ export default function ConversationScreen() {
             // Essayer de parser comme une date normale
             aTime = new Date(a.timestamp).toISOString();
           }
-        } catch (err) {
+        } catch {
           console.warn('⚠️ Erreur conversion timestamp message:', a.timestamp);
           return 1;
         }
@@ -356,7 +389,7 @@ export default function ConversationScreen() {
             // Essayer de parser comme une date normale
             bTime = new Date(b.timestamp).toISOString();
           }
-        } catch (err) {
+        } catch {
           console.warn('⚠️ Erreur conversion timestamp message:', b.timestamp);
           return -1;
         }

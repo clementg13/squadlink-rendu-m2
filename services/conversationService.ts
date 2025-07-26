@@ -133,7 +133,7 @@ export class ConversationService {
   }
 
   // S'abonner aux nouveaux messages en temps réel
-  static subscribeToMessages(groupId: number, callback: (payload: RealtimePostgresInsertPayload<Record<string, any>>) => void) {
+  static subscribeToMessages(groupId: number, callback: (payload: RealtimePostgresInsertPayload<DatabaseMessage>) => void) {
     try {
       console.log('🔔 Abonnement aux messages du groupe:', groupId);
       
@@ -147,7 +147,7 @@ export class ConversationService {
             table: 'message',
             filter: `id_group=eq.${groupId}`
           },
-          (payload: RealtimePostgresInsertPayload<Record<string, any>>) => {
+          (payload: RealtimePostgresInsertPayload<DatabaseMessage>) => {
             console.log('🔔 Nouveau message reçu:', payload);
             callback(payload);
           }

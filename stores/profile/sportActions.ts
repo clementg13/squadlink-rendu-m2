@@ -1,3 +1,4 @@
+import { ProfileSport } from '@/types/profile';
 import { sportService } from '@/services/sportService';
 
 export interface SportActions {
@@ -5,6 +6,7 @@ export interface SportActions {
   removeUserSport: (sportId: string) => Promise<{ error: Error | null }>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createSportActions = (set: any, get: any): SportActions => ({
   addUserSport: async (sportId: string, levelId: string) => {
     try {
@@ -46,7 +48,7 @@ export const createSportActions = (set: any, get: any): SportActions => ({
       set({ 
         profile: { 
           ...profile, 
-          sports: profile.sports?.filter((s: any) => s.id_sport !== sportId) || [] 
+          sports: profile.sports?.filter((s: ProfileSport) => s.id_sport !== sportId) || [] 
         },
         saving: false 
       });
