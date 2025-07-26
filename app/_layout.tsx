@@ -75,7 +75,7 @@ export default function RootLayout() {
         router.replace('/(public)/onboarding');
       }
     }
-  }, [user, session, loading, isOnboarding, isReady]);
+  }, [user, session, loading, isOnboarding, isReady, initialized]);
 
   if (!loaded) {
     return null;
