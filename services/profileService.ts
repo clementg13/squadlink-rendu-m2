@@ -40,7 +40,6 @@ export class ProfileService {
         firstname: string;
         lastname: string;
         biography: string | null;
-        score: number;
         compatibility_score: string;
         total_count: string;
       }) => ({
@@ -49,7 +48,6 @@ export class ProfileService {
         firstname: row.firstname,
         lastname: row.lastname,
         biography: row.biography,
-        score: row.score,
         compatibility_score: parseFloat(row.compatibility_score),
         total_count: parseInt(row.total_count)
       }));
@@ -101,7 +99,6 @@ export class ProfileService {
       .from('profile')
       .insert([{
         id_user: userId,
-        score: 0,
         fully_completed: false,
         created_at: new Date().toISOString(),
       }])

@@ -5,7 +5,6 @@ export interface CompatibleProfile {
   firstname: string;
   lastname: string;
   biography: string | null;
-  score: number;
   compatibility_score: number;
   total_count: number;
 }

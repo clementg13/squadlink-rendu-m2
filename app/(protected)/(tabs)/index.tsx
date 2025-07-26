@@ -6,15 +6,21 @@ import {
 import { Text, View } from '@/components/Themed';
 import { useAuthUser, useAuthLoading } from '@/stores/authStore';
 import CompatibleProfilesList from '@/components/profile/CompatibleProfilesList';
-import { CompatibleProfile } from '@/types/profile';
+import { EnrichedCompatibleProfile } from '@/services/compatibleProfileService';
 
 export default function HomeScreen() {
   const user = useAuthUser();
   const authLoading = useAuthLoading();
 
   // Gérer la sélection d'un profil
-  const handleProfilePress = (profile: CompatibleProfile) => {
-    console.log('🏠 HomeScreen: Profil sélectionné:', profile.firstname, profile.lastname);
+  const handleProfilePress = (profile: EnrichedCompatibleProfile) => {
+    console.log('🏠 HomeScreen: Profil enrichi sélectionné:', profile.firstname, profile.lastname);
+    console.log('🏠 HomeScreen: Données enrichies:', {
+      age: profile.age,
+      location: profile.location?.town,
+      sports: profile.sports?.length,
+      hobbies: profile.hobbies?.length,
+    });
     // Ici, on pourrait naviguer vers une page de détail du profil
     // ou ouvrir un modal avec plus d'informations
   };
@@ -29,7 +35,7 @@ export default function HomeScreen() {
     );
   }
 
-  // Interface principale - laissons CompatibleProfilesList gérer son propre header et états
+  // Interface principale - utilisons la liste de profils compatibles
   return (
     <View style={styles.container}>
       <CompatibleProfilesList 
