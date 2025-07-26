@@ -23,7 +23,7 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { user, session, loading, initialize, isOnboarding } = useAuth();
+  const { user, session, loading, initialize, isOnboarding, initialized } = useAuth();
   const [isReady, setIsReady] = useState(false);
 
   const [loaded, error] = useFonts({
@@ -58,6 +58,7 @@ export default function RootLayout() {
       console.log('🎯 RootLayout: Navigation check');
       console.log('🎯 RootLayout: User:', user ? 'authenticated' : 'not authenticated');
       console.log('🎯 RootLayout: Is onboarding:', isOnboarding);
+      console.log('🎯 RootLayout: Loading:', loading, 'Initialized:', initialized);
       
       // Si on est en onboarding, ne pas rediriger
       if (isOnboarding) {
@@ -70,8 +71,8 @@ export default function RootLayout() {
         console.log('🎯 RootLayout: Redirecting to protected area');
         router.replace('/(protected)/(tabs)');
       } else {
-        console.log('🎯 RootLayout: Redirecting to auth');
-        router.replace('/(public)/auth');
+        console.log('🎯 RootLayout: Redirecting to onboarding');
+        router.replace('/(public)/onboarding');
       }
     }
   }, [user, session, loading, isOnboarding, isReady]);

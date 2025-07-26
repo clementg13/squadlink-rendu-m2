@@ -3,9 +3,11 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Acti
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/stores/authStore';
 
 export default function AuthScreen() {
   const router = useRouter();
+  const { setIsOnboarding } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -20,8 +22,13 @@ export default function AuthScreen() {
 
       if (error) throw error;
 
-      // Rediriger vers la page d'accueil ou tableau de bord
-      router.push('/(protected)/(tabs)/dashboard');
+      // Désactiver le mode onboarding pour les utilisateurs existants qui se connectent
+      console.log('✅ Auth: Connexion réussie, désactivation du mode onboarding');
+      setIsOnboarding(false);
+      
+      // Laisser le système de layout gérer la redirection automatique
+      console.log('✅ Auth: Redirection automatique en cours...');
+      
     } catch (error) {
       if (error instanceof Error) {
         alert(error.message);
@@ -73,7 +80,7 @@ export default function AuthScreen() {
           {/* Lien mot de passe oublié après les champs */}
           <TouchableOpacity 
             style={styles.forgotPasswordContainer}
-            onPress={() => router.push('/(auth)/forgot-password')}
+            onPress={() => router.push('/forgot-password')}
           >
             <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
           </TouchableOpacity>
