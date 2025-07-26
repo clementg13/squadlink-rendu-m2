@@ -199,7 +199,9 @@ export const useAuthStore = create<AuthState>()(
               session, 
               user: session?.user ?? null,
               loading: false,
-              initialized: true
+              initialized: true,
+              // Si un utilisateur est déjà connecté, désactiver le mode onboarding
+              isOnboarding: session?.user ? false : false
             });
           }
 

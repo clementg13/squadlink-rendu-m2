@@ -23,14 +23,15 @@ export default function ProtectedLayout() {
 
   // Si on est en onboarding, rediriger vers l'onboarding
   if (isOnboarding) {
-    console.log('🔒 ProtectedLayout: Redirecting to onboarding');
+    console.log('🔒 ProtectedLayout: User in onboarding mode, redirecting to onboarding');
+    console.log('🔒 ProtectedLayout: isOnboarding:', isOnboarding, 'user:', !!user);
     return <Redirect href="/(public)/onboarding" />;
   }
 
-  // Si pas d'utilisateur, rediriger vers l'auth
+  // Si pas d'utilisateur, rediriger vers l'onboarding
   if (!user) {
-    console.log('🔒 ProtectedLayout: No user, redirecting to auth');
-    return <Redirect href="/(public)/auth" />;
+    console.log('🔒 ProtectedLayout: No user, redirecting to onboarding');
+    return <Redirect href="/(public)/onboarding" />;
   }
 
   console.log('🔒 ProtectedLayout: Utilisateur authentifié, rendu du contenu protégé');

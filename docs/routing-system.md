@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-SquadLink utilise **Expo Router** (v3) avec une architecture de routage basée sur le système de fichiers. L'application est organisée en trois groupes principaux selon les niveaux d'accès utilisateur.
+SquadLink utilise **Expo Router** (v3) avec une architecture de routage basée sur le système de fichiers. L'application est organisée en deux groupes principaux selon les niveaux d'accès utilisateur.
 
 ## Architecture des Routes
 
@@ -15,17 +15,14 @@ app/
 ├── modal.tsx                   # Modal global
 ├── (public)/                   # 🌐 Routes publiques (sans authentification)
 │   ├── _layout.tsx
-│   ├── onboarding.tsx
+│   ├── auth.tsx                # Page de connexion
+│   ├── forgot-password.tsx     # Réinitialisation mot de passe
+│   ├── onboarding.tsx          # Processus d'inscription
 │   ├── terms.tsx
 │   └── privacy.tsx
-├── (auth)/                     # 🔐 Routes d'authentification
-│   ├── _layout.tsx
-│   ├── login.tsx
-│   ├── register.tsx
-│   ├── forgot-password.tsx
-│   └── reset-password.tsx
 └── (protected)/                # 🛡️ Routes protégées (authentification requise)
     ├── _layout.tsx
+    ├── conversation.tsx
     └── (tabs)/
         ├── _layout.tsx
         ├── index.tsx
@@ -42,154 +39,42 @@ Les parenthèses `()` créent des groupes de routes sans affecter l'URL. Chaque 
 
 ### 1. Point d'entrée (`app/index.tsx`)
 
+Le point d'entrée gère la redirection automatique selon l'état d'authentification :
+
 ```typescript
-export default function IndexScreen() {
-  const router = useRouter();
-  const user = useAuthUser();
-  const loading = useAuthLoading();
-  const initialized = useAuthStore((state) => state.initialized);
-  const setOnAuthChange = useAuthStore((state) => state.setOnAuthChange);
-
-  // Callback pour redirection automatique après connexion
-  useEffect(() => {
-    setOnAuthChange((user) => {
-      if (user) {
-        router.replace('/(protected)/(tabs)');
-      } else {
-        router.replace('/(public)/onboarding');
-      }
-    });
-  }, [router, setOnAuthChange]);
-
-  // Redirection initiale
-  useEffect(() => {
-    if (!initialized || loading) return;
-
-    if (user) {
-      router.replace('/(protected)/(tabs)');
-    } else {
-      router.replace('/(public)/onboarding');
-    }
-  }, [user, initialized, loading, router]);
-
-  return <LoadingScreen />;
+// Redirection automatique
+if (user) {
+  router.replace('/(protected)/(tabs)');
+} else {
+  router.replace('/(public)/onboarding');
 }
 ```
 
-**Logique :**
-- Vérifie l'état d'authentification
-- Redirige vers les routes protégées si connecté
-- Redirige vers l'onboarding si non connecté
-- Configure un callback pour les redirections automatiques
+### 2. Layout racine (`app/_layout.tsx`)
 
-### 2. Diagramme de flux
-
-```mermaid
-graph TD
-    A[App Launch] --> B[index.tsx]
-    B --> C{Utilisateur connecté?}
-    C -->|Oui| D[Routes protégées]
-    C -->|Non| E[Onboarding]
-    E --> F[Slides d'introduction]
-    F --> G[Écran de connexion]
-    G --> H[Formulaire de connexion]
-    H --> I{Connexion réussie?}
-    I -->|Oui| D
-    I -->|Non| G
-    D --> J[Navigation par onglets]
-```
-
-## Layouts et Protection
-
-### Layout Racine (`app/_layout.tsx`)
+Configure l'authentification globale et la navigation :
 
 ```typescript
-export default function RootLayout() {
-  return (
-    <AuthProvider>
-      <ThemeProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(public)" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(protected)" />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        </Stack>
-      </ThemeProvider>
-    </AuthProvider>
-  );
+// Navigation automatique après changement d'état d'auth
+if (user && session) {
+  router.replace('/(protected)/(tabs)');
+} else {
+  router.replace('/(public)/onboarding');
 }
 ```
 
-### Layout Protégé (`app/(protected)/_layout.tsx`)
+### 3. Layout protégé (`app/(protected)/_layout.tsx`)
+
+Vérifie l'authentification avant d'afficher le contenu :
 
 ```typescript
-export default function ProtectedLayout() {
-  const router = useRouter();
-  const { user, loading, initialized } = useAuthStore();
-
-  useEffect(() => {
-    if (!initialized || loading) return;
-
-    // Redirection si non connecté
-    if (!user) {
-      router.replace('/(auth)/login');
-    }
-  }, [user, loading, initialized, router]);
-
-  // Écran de chargement pendant la vérification
-  if (!initialized || loading || !user) {
-    return <LoadingScreen />;
-  }
-
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
-    </Stack>
-  );
-}
-```
-
-**Fonctionnement :**
-- Vérifie automatiquement l'authentification
-- Redirige vers `/login` si non connecté
-- Affiche un écran de chargement pendant la vérification
-- Protège toutes les routes enfants
-
-## Gestion d'État avec Zustand
-
-### Store d'authentification (`stores/authStore.ts`)
-
-```typescript
-interface AuthState {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-  initialized: boolean;
-  
-  // Callback pour redirection
-  onAuthChange?: (user: User | null) => void;
-  setOnAuthChange: (callback: (user: User | null) => void) => void;
+if (isOnboarding) {
+  return <Redirect href="/(public)/onboarding" />;
 }
 
-// Hooks spécialisés
-export const useAuthUser = () => useAuthStore((state) => state.user);
-export const useAuthLoading = () => useAuthStore((state) => state.loading);
-```
-
-### Intégration Supabase
-
-```typescript
-// Dans initialize()
-const { data: { subscription } } = supabase.auth.onAuthStateChange(
-  async (event: string, session: Session | null) => {
-    // Utiliser les setters pour déclencher les callbacks
-    const { setUser, setSession, setLoading } = get();
-    setSession(session);
-    setUser(session?.user ?? null);
-    setLoading(false);
-  }
-);
+if (!user) {
+  return <Redirect href="/(public)/onboarding" />;
+}
 ```
 
 ## Écrans et Fonctionnalités
@@ -198,18 +83,11 @@ const { data: { subscription } } = supabase.auth.onAuthStateChange(
 
 | Écran | Route | Description |
 |-------|-------|-------------|
-| **Onboarding** | `/(public)/onboarding` | Introduction avec slides |
+| **Onboarding** | `/(public)/onboarding` | Processus d'inscription complet |
+| **Connexion** | `/(public)/auth` | Connexion utilisateur existant |
+| **Mot de passe oublié** | `/(public)/forgot-password` | Réinitialisation mot de passe |
 | **Terms** | `/(public)/terms` | Conditions d'utilisation |
 | **Privacy** | `/(public)/privacy` | Politique de confidentialité |
-
-### Routes d'Authentification
-
-| Écran | Route | Description |
-|-------|-------|-------------|
-| **Login** | `/(auth)/login` | Connexion utilisateur |
-| **Register** | `/(auth)/register` | Inscription utilisateur |
-| **Forgot Password** | `/(auth)/forgot-password` | Réinitialisation mot de passe |
-| **Reset Password** | `/(auth)/reset-password` | Nouveau mot de passe |
 
 ### Routes Protégées
 
@@ -219,6 +97,7 @@ const { data: { subscription } } = supabase.auth.onAuthStateChange(
 | **Dashboard** | `/(protected)/(tabs)/dashboard` | Tableau de bord |
 | **Messages** | `/(protected)/(tabs)/messages` | Messagerie |
 | **Profile** | `/(protected)/(tabs)/profile` | Profil utilisateur |
+| **Conversation** | `/(protected)/conversation` | Chat individuel |
 
 ## Navigation
 
@@ -235,6 +114,9 @@ router.replace('/(protected)/(tabs)');
 // Naviguer vers une nouvelle route (avec historique)
 router.push('/(public)/terms');
 
+// Navigation avec contournement de types (si nécessaire)
+router.navigate('/(public)/auth' as any);
+
 // Retour en arrière
 router.back();
 ```
@@ -247,17 +129,26 @@ router.back();
   <Text style={styles.linkText}>Conditions d'utilisation</Text>
 </TouchableOpacity>
 
-// Lien vers la politique de confidentialité
-<TouchableOpacity onPress={() => router.push('/(public)/privacy')}>
-  <Text style={styles.linkText}>Politique de confidentialité</Text>
+// Lien vers la connexion depuis l'onboarding
+<TouchableOpacity onPress={() => router.navigate('/(public)/auth' as any)}>
+  <Text style={styles.linkText}>Se connecter</Text>
 </TouchableOpacity>
 ```
 
 ## Authentification et Redirection
 
+### Processus d'Inscription (Onboarding)
+
+1. **Accueil** dans `/(public)/onboarding`
+2. **Création du compte** avec email/mot de passe
+3. **Saisie du profil** (nom, prénom, date de naissance)
+4. **Sélection des sports** et niveaux
+5. **Choix des hobbies**
+6. **Finalisation** et redirection vers `/(protected)/(tabs)`
+
 ### Processus de Connexion
 
-1. **Saisie des identifiants** dans `/(auth)/login`
+1. **Saisie des identifiants** dans `/(public)/auth`
 2. **Appel à `signIn()`** du store
 3. **Supabase traite l'authentification**
 4. **`onAuthStateChange` déclenché**
@@ -270,7 +161,7 @@ router.back();
 2. **Supabase supprime la session**
 3. **`onAuthStateChange` déclenché**
 4. **Store mis à jour** (`user: null`)
-5. **Redirection automatique** vers `/(auth)/login`
+5. **Redirection automatique** vers `/(public)/onboarding`
 
 ## Sécurité
 
@@ -284,17 +175,19 @@ router.back();
 ### Validation des Données
 
 ```typescript
-// Exemple dans login.tsx
-const handleSignIn = async () => {
+// Exemple dans auth.tsx
+const handleLogin = async () => {
   if (!email || !password) {
     Alert.alert('Erreur', 'Veuillez remplir tous les champs');
     return;
   }
 
-  const { error } = await signIn(email, password);
-  if (error) {
-    Alert.alert('Erreur de connexion', error.message);
-  }
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) throw error;
 };
 ```
 
@@ -335,86 +228,30 @@ export default function SettingsScreen() {
 // 3. La protection est automatique
 ```
 
-### Debugging
+### Gestion des Types de Routes
+
+Si les types de routes ne sont pas reconnus :
 
 ```typescript
-// Logs utiles pour le débogage
-console.log('Auth state:', { user: !!user, loading, initialized });
-console.log('Navigation to:', route);
+// Solution temporaire avec assertion de type
+router.navigate('/(public)/auth' as any);
+
+// Ou régénérer les types
+npx expo start --clear
 ```
 
-### Tests
+## Architecture de l'Authentification
 
-```typescript
-// Test de redirection
-describe('Navigation', () => {
-  it('should redirect to login when not authenticated', () => {
-    // Test logic
-  });
-});
-```
+### Flux Principal
 
-## Bonnes Pratiques
+1. **Non authentifié** → `/(public)/onboarding`
+2. **En cours d'onboarding** → `/(public)/onboarding` (étapes)
+3. **Utilisateur existant** → `/(public)/auth` (depuis onboarding)
+4. **Authentifié** → `/(protected)/(tabs)`
 
-### 1. Navigation
+### États de l'Application
 
-- ✅ Utiliser `router.replace()` pour les redirections d'auth
-- ✅ Utiliser `router.push()` pour la navigation normale
-- ✅ Toujours vérifier l'état d'auth avant navigation
-
-### 2. Layouts
-
-- ✅ Un layout par groupe de routes
-- ✅ Logique de protection dans le layout approprié
-- ✅ Écrans de chargement cohérents
-
-### 3. État
-
-- ✅ Hooks spécialisés pour éviter les re-renders
-- ✅ Callbacks pour les actions critiques
-- ✅ Persistance des données importantes
-
-### 4. Sécurité
-
-- ✅ Validation côté client ET serveur
-- ✅ Gestion des erreurs appropriée
-- ✅ Nettoyage des données sensibles
-
-## Dépannage
-
-### Problèmes Courants
-
-1. **Redirection ne fonctionne pas**
-   - Vérifier l'état d'initialisation
-   - Contrôler les dépendances useEffect
-   - Vérifier les callbacks
-
-2. **Écran blanc**
-   - Vérifier les imports
-   - Contrôler les layouts
-   - Vérifier la configuration Stack
-
-3. **Boucle de redirection**
-   - Vérifier les conditions de redirection
-   - Contrôler l'état d'authentification
-   - Vérifier les dépendances useEffect
-
-### Logs de Debug
-
-```typescript
-// Temporairement pour debug
-console.log('Current route:', router.pathname);
-console.log('Auth state:', { user, loading, initialized });
-```
-
-## Conclusion
-
-Ce système de routage offre :
-
-- **Sécurité** : Protection automatique des routes
-- **Simplicité** : Structure claire et intuitive
-- **Performance** : Chargement optimisé
-- **Maintenabilité** : Code organisé et extensible
-- **UX** : Redirections fluides et feedback approprié
-
-Pour toute question ou problème, référez-vous à cette documentation ou consultez les fichiers de code correspondants. 
+- `loading`: Chargement initial de l'auth
+- `user`: Utilisateur connecté ou null
+- `isOnboarding`: Mode onboarding activé
+- `initialized`: Store d'auth initialisé 
