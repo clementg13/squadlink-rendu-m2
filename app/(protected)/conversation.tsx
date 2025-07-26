@@ -348,8 +348,17 @@ export default function ConversationScreen() {
             return 1;
           }
           
+          // Si le timestamp est au format dd/MM HH:MM
+          if (/^\d{2}\/\d{2}\s\d{2}:\d{2}$/.test(a.timestamp)) {
+            const [datePart, timePart] = a.timestamp.split(' ');
+            const [day, month] = datePart.split('/');
+            const [hours, minutes] = timePart.split(':');
+            const currentYear = new Date().getFullYear();
+            const messageDate = new Date(currentYear, parseInt(month, 10) - 1, parseInt(day, 10), parseInt(hours, 10), parseInt(minutes, 10));
+            aTime = messageDate.toISOString();
+          }
           // Si le timestamp est au format HH:MM, utiliser la date d'aujourd'hui
-          if (/^\d{2}:\d{2}$/.test(a.timestamp)) {
+          else if (/^\d{2}:\d{2}$/.test(a.timestamp)) {
             const today = new Date();
             const [hours, minutes] = a.timestamp.split(':');
             today.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
@@ -379,8 +388,17 @@ export default function ConversationScreen() {
             return -1;
           }
           
+          // Si le timestamp est au format dd/MM HH:MM
+          if (/^\d{2}\/\d{2}\s\d{2}:\d{2}$/.test(b.timestamp)) {
+            const [datePart, timePart] = b.timestamp.split(' ');
+            const [day, month] = datePart.split('/');
+            const [hours, minutes] = timePart.split(':');
+            const currentYear = new Date().getFullYear();
+            const messageDate = new Date(currentYear, parseInt(month, 10) - 1, parseInt(day, 10), parseInt(hours, 10), parseInt(minutes, 10));
+            bTime = messageDate.toISOString();
+          }
           // Si le timestamp est au format HH:MM, utiliser la date d'aujourd'hui
-          if (/^\d{2}:\d{2}$/.test(b.timestamp)) {
+          else if (/^\d{2}:\d{2}$/.test(b.timestamp)) {
             const today = new Date();
             const [hours, minutes] = b.timestamp.split(':');
             today.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
