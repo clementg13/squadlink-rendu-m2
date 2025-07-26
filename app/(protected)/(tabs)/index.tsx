@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { useAuthUser, useAuthLoading } from '@/stores/authStore';
+import { router } from 'expo-router';
 import CompatibleProfilesList from '@/components/profile/CompatibleProfilesList';
 import { EnrichedCompatibleProfile } from '@/services/compatibleProfileService';
 
@@ -21,8 +22,14 @@ export default function HomeScreen() {
       sports: profile.sports?.length,
       hobbies: profile.hobbies?.length,
     });
-    // Ici, on pourrait naviguer vers une page de détail du profil
-    // ou ouvrir un modal avec plus d'informations
+    
+    // Naviguer vers la page de détail du profil
+    router.push({
+      pathname: '/(protected)/profile-detail',
+      params: {
+        profile: JSON.stringify(profile)
+      }
+    });
   };
 
   // Affichage pendant le chargement initial de l'authentification
