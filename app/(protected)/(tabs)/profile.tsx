@@ -8,36 +8,48 @@ import {
   Platform,
   StyleSheet,
   Text,
+  SafeAreaView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useAuth } from '@/stores/authStore';
 import { useProfile } from '@/stores/profileStore';
 
 // Composants
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileForm from '@/components/profile/ProfileForm';
 import ProfileHobbies from '@/components/profile/ProfileHobbies';
-import ProfileInfo from '@/components/profile/ProfileInfo';
 import ProfileActions from '@/components/profile/ProfileActions';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import ProfileGym from '@/components/profile/gym/ProfileGym';
+import ProfileLocation from '@/components/profile/location/ProfileLocation';
+import ProfileSports from '@/components/profile/sports/ProfileSports';
+import ProfileSocialMedias from '@/components/profile/socialMedias/ProfileSocialMedias';
 
 export default function ProfileScreen() {
-  const router = useRouter();
-  const { signOut } = useAuth();
   const { 
     profile, 
     hobbies,
+    gyms,
+    gymSubscriptions,
+    sports,
+    sportLevels,
+    socialMedias,
     loading, 
-    saving, 
-    error, 
+    saving,
+    error,
     initialized,
+    initialize,
     loadProfile,
+    updateProfile,
+    clearError,
     addUserHobby,
     removeUserHobby,
     toggleHighlightHobby,
-    updateProfile, 
-    initialize,
-    clearError 
+    addUserSport,
+    removeUserSport,
+    addUserSocialMedia,
+    updateUserSocialMedia,
+    removeUserSocialMedia,
+    loadGymSubscriptions,
+    updateLocation
   } = useProfile();
 
   const [formData, setFormData] = useState({
@@ -50,14 +62,20 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     const initializeStore = async () => {
+      // Forcer la re-initialisation si nécessaire
+      if (sports.length === 0 && sportLevels.length === 0 && socialMedias.length === 0) {
+        await initialize();
+      }
+      
       if (!initialized) {
         await initialize();
       }
+      
       await loadProfile();
     };
     
     initializeStore();
-  }, [initialized]);
+  }, [initialized, initialize, loadProfile, socialMedias.length, sportLevels.length, sports.length]);
 
   useEffect(() => {
     if (profile) {
@@ -80,14 +98,21 @@ export default function ProfileScreen() {
   };
 
   const handleSave = async () => {
+    // Validation des champs requis
+    if (!formData.firstname || !formData.lastname) {
+      Alert.alert('Erreur', 'Le prénom et le nom sont requis');
+      return;
+    }
+
     const updateData = {
-      lastname: formData.lastname,
-      firstname: formData.firstname,
+      lastname: formData.lastname.trim(),
+      firstname: formData.firstname.trim(),
       birthdate: formData.birthdate,
-      biography: formData.biography,
-      id_gym: profile?.id_gym,
-      id_gymsubscription: profile?.id_gymsubscription,
+      biography: formData.biography?.trim() || undefined,
+      // Ne pas inclure id_gym et id_gymsubscription ici car ils sont gérés séparément
     };
+
+    console.log('🔄 ProfileScreen: Saving profile data:', updateData);
 
     const { error } = await updateProfile(updateData);
     
@@ -96,40 +121,24 @@ export default function ProfileScreen() {
     } else {
       setHasChanges(false);
       Alert.alert('Succès', 'Profil mis à jour avec succès !');
+      // Recharger le profil pour s'assurer que les données sont à jour
+      await loadProfile();
     }
   };
 
   const handleCancel = () => {
     if (profile) {
-      setFormData({
+      const resetData = {
         lastname: profile.lastname || '',
         firstname: profile.firstname || '',
         birthdate: profile.birthdate || '',
         biography: profile.biography || '',
-      });
+      };
+      console.log('🔄 ProfileScreen: Resetting form data:', resetData);
+      setFormData(resetData);
     }
     setHasChanges(false);
     clearError();
-  };
-
-  const handleSignOut = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Déconnexion', 
-          style: 'destructive',
-          onPress: async () => {
-            const { error } = await signOut();
-            if (error) {
-              Alert.alert('Erreur', error.message);
-            }
-          }
-        },
-      ]
-    );
   };
 
   const handleAddHobby = async (hobbyId: string) => {
@@ -153,6 +162,79 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleAddSport = async (sportId: string, levelId: string) => {
+    const { error } = await addUserSport(sportId, levelId);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  const handleRemoveSport = async (sportId: string) => {
+    const { error } = await removeUserSport(sportId);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  const handleAddSocialMedia = async (socialMediaId: string, username: string) => {
+    const { error } = await addUserSocialMedia(socialMediaId, username);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  const handleUpdateSocialMedia = async (socialMediaId: string, username: string) => {
+    const { error } = await updateUserSocialMedia(socialMediaId, username);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  const handleRemoveSocialMedia = async (socialMediaId: string) => {
+    const { error } = await removeUserSocialMedia(socialMediaId);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  const handleUpdateGym = async (subscriptionId: string | null, gymId?: string | null) => {
+    const updateData: Partial<{ id_gymsubscription?: string; id_gym?: string }> = {};
+    
+    if (subscriptionId !== null) {
+      updateData.id_gymsubscription = subscriptionId;
+    } else {
+      updateData.id_gymsubscription = undefined;
+    }
+    
+    if (gymId !== undefined && gymId !== null) {
+      updateData.id_gym = gymId;
+    } else if (gymId === null) {
+      updateData.id_gym = undefined;
+    }
+
+    console.log('🔄 ProfileScreen: Updating gym data:', updateData);
+
+    const { error } = await updateProfile(updateData);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    } else {
+      // Recharger le profil après mise à jour de la salle
+      await loadProfile();
+    }
+  };
+
+  const handleLoadGymSubscriptions = async () => {
+    await loadGymSubscriptions();
+  };
+
+  const handleUpdateLocation = async (locationData: { town: string; postal_code: number; latitude: number; longitude: number }) => {
+    const { error } = await updateLocation(locationData);
+    
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
   if (loading && !profile) {
     return (
       <View style={styles.loadingContainer}>
@@ -163,45 +245,76 @@ export default function ProfileScreen() {
   }
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <ProfileHeader 
-          firstname={formData.firstname}
-          lastname={formData.lastname}
-        />
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <ProfileHeader 
+            firstname={formData.firstname}
+            lastname={formData.lastname}
+          />
 
-        <ProfileForm
-          formData={formData}
-          profile={profile}
-          saving={saving}
-          onFieldChange={handleFieldChange}
-        />
+          <ProfileForm
+            formData={formData}
+            saving={saving}
+            onFieldChange={handleFieldChange}
+          />
 
-        {error && <ErrorMessage message={error} />}
+          {error && <ErrorMessage message={error} />}
 
-        <ProfileHobbies
-          profile={profile}
-          hobbies={hobbies}
-          saving={saving}
-          onAddHobby={handleAddHobby}
-          onRemoveHobby={handleRemoveHobby}
-          onToggleHighlight={handleToggleHighlight}
-        />
+          <ProfileLocation
+            profile={profile}
+            saving={saving}
+            onUpdateLocation={handleUpdateLocation}
+          />
 
-        <ProfileInfo profile={profile} />
+          <ProfileGym
+            profile={profile}
+            gyms={gyms}
+            gymSubscriptions={gymSubscriptions}
+            saving={saving}
+            onUpdateGym={handleUpdateGym}
+            onLoadGymSubscriptions={handleLoadGymSubscriptions}
+          />
 
-        <ProfileActions
-          hasChanges={hasChanges}
-          saving={saving}
-          onSave={handleSave}
-          onCancel={handleCancel}
-          onSignOut={handleSignOut}
-        />
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <ProfileSports
+            profile={profile}
+            sports={sports}
+            sportLevels={sportLevels}
+            saving={saving}
+            onAddSport={handleAddSport}
+            onRemoveSport={handleRemoveSport}
+          />
+
+          <ProfileSocialMedias
+            profile={profile}
+            socialMedias={socialMedias}
+            saving={saving}
+            onAddSocialMedia={handleAddSocialMedia}
+            onUpdateSocialMedia={handleUpdateSocialMedia}
+            onRemoveSocialMedia={handleRemoveSocialMedia}
+          />
+
+          <ProfileHobbies
+            profile={profile}
+            hobbies={hobbies}
+            saving={saving}
+            onAddHobby={handleAddHobby}
+            onRemoveHobby={handleRemoveHobby}
+            onToggleHighlight={handleToggleHighlight}
+          />
+
+          <ProfileActions
+            hasChanges={hasChanges}
+            saving={saving}
+            onSave={handleSave}
+            onCancel={handleCancel}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

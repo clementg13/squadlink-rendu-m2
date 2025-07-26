@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ProfileService } from '@/services/profileService';
-import { CompatibleProfile, CompatibleProfilesState } from '@/types/profile';
+import { CompatibleProfilesState } from '@/types/profile';
 
 /**
  * Hook personnalisé pour gérer les profils compatibles avec lazy loading

@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
   Animated,
 } from 'react-native';
 import { CompatibleProfile } from '@/types/profile';
@@ -14,9 +13,7 @@ interface ProfileCardProps {
   onPress?: (profile: CompatibleProfile) => void;
 }
 
-const { width } = Dimensions.get('window');
 const CARD_MARGIN = 16;
-const CARD_WIDTH = width - (CARD_MARGIN * 2);
 
 export default function ProfileCard({ profile, onPress }: ProfileCardProps) {
   const scaleValue = new Animated.Value(1);
