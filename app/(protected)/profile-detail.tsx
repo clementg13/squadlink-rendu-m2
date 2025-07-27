@@ -96,7 +96,7 @@ export default function ProfileDetailScreen() {
           {/* Informations de base */}
           <View style={styles.basicInfo}>
             <View style={styles.infoRow}>
-              {profileData.age && (
+              {profileData.age !== undefined && profileData.age !== null && (
                 <ProfileTag 
                   text={`${profileData.age} ans`} 
                   variant="age" 

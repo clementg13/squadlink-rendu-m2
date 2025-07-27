@@ -83,7 +83,7 @@ export default function ProfileCard({ profile, onPress }: ProfileCardProps) {
                 {profile.firstname} {profile.lastname}
               </Text>
               <View style={styles.metaRow}>
-                {profile.age && (
+                {profile.age !== undefined && profile.age !== null && (
                   <View style={styles.metaChip}>
                     <Text style={styles.metaText}>{profile.age} ans</Text>
                   </View>

@@ -2,29 +2,16 @@ import { supabase } from '@/lib/supabase';
 import { ProfileHobby, ProfileSport, ProfileSocialMedia, Location, Gym, GymSubscription } from '@/types/profile';
 
 /**
- * Service pour gérer les profils compatibles avec filtrage automatique des profils incomplets
+ * Service pour gérer les profils compatibles
+ * Le filtrage des profils incomplets se fait automatiquement côté Supabase
  * 
  * Exemple d'utilisation :
  * ```typescript
- * // Récupérer seulement les profils complets (par défaut)
+ * // Récupérer les profils complets (filtrage automatique)
  * const response = await CompatibleProfileService.getCompatibleProfiles(userId, {
  *   page_offset: 0,
  *   page_size: 10
  * });
- * 
- * // Récupérer tous les profils (y compris incomplets) pour debug
- * const allProfiles = await CompatibleProfileService.getCompatibleProfiles(userId, {
- *   page_offset: 0,
- *   page_size: 10,
- *   filterIncomplete: false
- * });
- * 
- * // Vérifier si un profil est complet
- * const isComplete = CompatibleProfileService.isProfileComplete(profile);
- * 
- * // Obtenir les statistiques de complétude
- * const stats = CompatibleProfileService.getProfileCompletionStats(profile);
- * console.log(`Profil ${stats.completionPercentage}% complet, manque: ${stats.missingFields.join(', ')}`);
  * ```
  */
 
@@ -52,66 +39,6 @@ export interface CompatibleProfile extends BaseCompatibleProfile {
 }
 
 export class CompatibleProfileService {
-  /**
-   * Vérifie si un profil est complet et peut être affiché dans une carte
-   * 
-   * Critères de complétude :
-   * - Nom et prénom (obligatoire)
-   * - Âge calculé à partir de la date de naissance
-   * - Localisation avec ville
-   * - Au moins un sport
-   * - Au moins un hobby
-   */
-  static isProfileComplete(profile: CompatibleProfile): boolean {
-    // Vérifier les informations essentielles pour une carte complète
-    const hasBasicInfo = !!(profile.firstname && profile.lastname);
-    const hasAge = !!profile.age;
-    const hasLocation = !!(profile.location?.town);
-    const hasSports = !!(profile.sports && profile.sports.length > 0);
-    const hasHobbies = !!(profile.hobbies && profile.hobbies.length > 0);
-
-    const isComplete = hasBasicInfo && hasAge && hasLocation && hasSports && hasHobbies;
-    
-    if (!isComplete) {
-      console.log(`⚠️ Profil incomplet filtré: ${profile.firstname} ${profile.lastname}`, {
-        hasBasicInfo,
-        hasAge,
-        hasLocation,
-        hasSports: hasSports ? profile.sports?.length : 0,
-        hasHobbies: hasHobbies ? profile.hobbies?.length : 0,
-      });
-    }
-
-    return isComplete;
-  }
-
-  /**
-   * Obtient les statistiques de complétude d'un profil
-   */
-  static getProfileCompletionStats(profile: CompatibleProfile): {
-    isComplete: boolean;
-    completionPercentage: number;
-    missingFields: string[];
-  } {
-    const checks = [
-      { field: 'nom/prénom', valid: !!(profile.firstname && profile.lastname) },
-      { field: 'âge', valid: !!profile.age },
-      { field: 'localisation', valid: !!(profile.location?.town) },
-      { field: 'sports', valid: !!(profile.sports && profile.sports.length > 0) },
-      { field: 'hobbies', valid: !!(profile.hobbies && profile.hobbies.length > 0) },
-    ];
-
-    const validChecks = checks.filter(check => check.valid).length;
-    const completionPercentage = Math.round((validChecks / checks.length) * 100);
-    const missingFields = checks.filter(check => !check.valid).map(check => check.field);
-
-    return {
-      isComplete: validChecks === checks.length,
-      completionPercentage,
-      missingFields,
-    };
-  }
-
   /**
    * Enrichit un profil compatible avec toutes ses informations détaillées
    */
@@ -200,10 +127,11 @@ export class CompatibleProfileService {
 
   /**
    * Récupère les profils compatibles avec pagination
+   * Les profils incomplets sont automatiquement filtrés côté Supabase
    */
   static async getCompatibleProfiles(
     currentUserId: string,
-    params: { page_offset: number; page_size: number; filterIncomplete?: boolean } = { page_offset: 0, page_size: 10, filterIncomplete: true }
+    params: { page_offset: number; page_size: number } = { page_offset: 0, page_size: 10 }
   ): Promise<{
     profiles: CompatibleProfile[];
     total_count: number;
@@ -253,23 +181,16 @@ export class CompatibleProfileService {
 
       // Enrichir tous les profils
       const enrichedProfiles = await this.enrichProfiles(baseProfiles);
-
-      // Filtrer les profils incomplets si demandé (par défaut: oui)
-      const finalProfiles = params.filterIncomplete !== false 
-        ? enrichedProfiles.filter(profile => this.isProfileComplete(profile))
-        : enrichedProfiles;
       
-      if (params.filterIncomplete !== false) {
-        console.log(`📊 Profils filtrés: ${enrichedProfiles.length} enrichis → ${finalProfiles.length} complets`);
-      }
+      console.log(`📊 Profils récupérés: ${enrichedProfiles.length} profils depuis Supabase`);
 
       const totalCount = baseProfiles.length > 0 ? baseProfiles[0].total_count : 0;
       const currentPage = Math.floor(params.page_offset / params.page_size);
       const hasMore = params.page_offset + baseProfiles.length < totalCount;
 
       return {
-        profiles: finalProfiles,
-        total_count: totalCount, // On garde le total original pour la pagination
+        profiles: enrichedProfiles,
+        total_count: totalCount,
         has_more: hasMore,
         current_page: currentPage
       };
