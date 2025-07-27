@@ -121,28 +121,21 @@ export default function CompatibleProfilesList({
   // Séparateur entre les éléments
   const ItemSeparator = useCallback(() => <View style={styles.separator} />, []);
 
-  // Rendu du header unifié
+  // Rendu du header moderne
   const renderHeader = useCallback(() => {
     return (
       <View style={styles.headerContainer}>
-        {/* Header de bienvenue (optionnel) */}
+        {/* Header moderne simplifié */}
         {showWelcomeHeader && (
-          <View style={styles.welcomeHeader}>
-            <Text style={styles.welcomeTitle}>Bienvenue, {userName} ! 🎯</Text>
-            <Text style={styles.welcomeSubtitle}>Découvrez vos profils compatibles avec tous leurs détails</Text>
-          </View>
-        )}
-        
-        {/* Compteur de profils (seulement si on a des profils) */}
-        {!loading && profiles.length > 0 && (
-          <View style={styles.countHeader}>
-            <Text style={styles.countText}>
-              {profiles.length} profil{profiles.length > 1 ? 's' : ''} enrichi{profiles.length > 1 ? 's' : ''}
-              {totalCount > profiles.length && ` sur ${totalCount}`}
-            </Text>
-            <Text style={styles.countSubtext}>
-              Avec sports, hobbies, localisation et plus encore
-            </Text>
+          <View style={styles.modernHeader}>
+            <View style={styles.headerContent}>
+              <Text style={styles.modernTitle}>Bienvenue ! 👋</Text>
+              {!loading && profiles.length > 0 && (
+                <Text style={styles.profileCount}>
+                  {totalCount || profiles.length} Profil{(totalCount || profiles.length) > 1 ? 's' : ''} compatible{(totalCount || profiles.length) > 1 ? 's' : ''} avec vous
+                </Text>
+              )}
+            </View>
           </View>
         )}
       </View>
@@ -200,51 +193,51 @@ export default function CompatibleProfilesList({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FFFFFF',
   },
   listContent: {
     flexGrow: 1,
-    paddingBottom: 20,
+    paddingBottom: 32,
+    paddingTop: 8,
   },
   headerContainer: {
     backgroundColor: '#FFFFFF',
   },
-  welcomeHeader: {
-    paddingHorizontal: 20,
+  modernHeader: {
+    paddingHorizontal: 24,
     paddingTop: 60,
-    paddingBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Fallback
+    paddingBottom: 32,
+    backgroundColor: '#FFFFFF',
   },
-  welcomeTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 8,
+  headerContent: {
+    alignItems: 'center',
   },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: '#666666',
-    lineHeight: 22,
+  modernTitle: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#1a1a1a',
+    marginBottom: 16,
+    textAlign: 'center',
+    letterSpacing: -0.5,
   },
-  countHeader: {
+  profileCount: {
+    fontSize: 18,
+    color: '#007AFF',
+    fontWeight: '600',
+    textAlign: 'center',
+    backgroundColor: '#F0F8FF',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#F8F9FA',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  countText: {
-    fontSize: 16,
-    color: '#333333',
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  countSubtext: {
-    fontSize: 13,
-    color: '#666666',
-    fontStyle: 'italic',
+    paddingVertical: 12,
+    borderRadius: 25,
+    overflow: 'hidden',
+    shadowColor: '#007AFF',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   separator: {
     height: 0, // Pas de séparateur car les cartes ont déjà des marges
@@ -254,50 +247,51 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
-    paddingVertical: 64,
+    paddingVertical: 80,
     minHeight: 400,
   },
   emptyTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 12,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#1a1a1a',
+    marginBottom: 16,
     textAlign: 'center',
   },
   emptyText: {
-    fontSize: 18,
-    color: '#666666',
+    fontSize: 20,
+    color: '#007AFF',
     textAlign: 'center',
-    marginTop: 16,
-    fontWeight: '600',
+    marginTop: 20,
+    fontWeight: '700',
   },
   emptySubtext: {
-    fontSize: 14,
-    color: '#999999',
-    textAlign: 'center',
-    marginTop: 8,
-    fontStyle: 'italic',
-  },
-  emptyDescription: {
     fontSize: 16,
     color: '#666666',
     textAlign: 'center',
-    lineHeight: 24,
+    marginTop: 12,
+    lineHeight: 22,
+  },
+  emptyDescription: {
+    fontSize: 18,
+    color: '#666666',
+    textAlign: 'center',
+    lineHeight: 26,
+    marginTop: 16,
   },
   footerLoader: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 32,
     backgroundColor: '#F8F9FA',
-    marginTop: 8,
-    borderRadius: 12,
-    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 16,
+    marginHorizontal: 20,
   },
   footerText: {
-    marginLeft: 12,
-    fontSize: 14,
-    color: '#666666',
-    fontWeight: '500',
+    marginLeft: 16,
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
   },
 }); 
