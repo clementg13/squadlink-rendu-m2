@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useCompatibleProfiles } from '@/hooks/useCompatibleProfiles';
 import { CompatibleProfile } from '@/services/compatibleProfileService';
+import { ProfileSport, ProfileHobby } from '@/types/profile';
 import { useAuthUser } from '@/stores/authStore';
 import ProfileCard from './ProfileCard';
 import ErrorMessage from '@/components/ui/ErrorMessage';
@@ -23,7 +24,7 @@ interface CompatibleProfilesListProps {
 export default function CompatibleProfilesList({ 
   onProfilePress, 
   showWelcomeHeader = false, 
-  userName = 'Utilisateur' 
+  userName: _userName = 'Utilisateur' 
 }: CompatibleProfilesListProps) {
   const user = useAuthUser();
   const {
@@ -44,8 +45,8 @@ export default function CompatibleProfilesList({
       onProfilePress(profile);
     } else {
       // Action par défaut : afficher une alerte avec plus de détails
-      const sportsText = profile.sports?.map((s: any) => s.sport?.name).join(', ') || 'Aucun sport';
-      const hobbiesText = profile.hobbies?.map((h: any) => h.hobbie?.name).join(', ') || 'Aucun hobby';
+      const sportsText = profile.sports?.map((s: ProfileSport) => s.sport?.name).join(', ') || 'Aucun sport';
+      const hobbiesText = profile.hobbies?.map((h: ProfileHobby) => h.hobbie?.name).join(', ') || 'Aucun hobby';
       const locationText = profile.location ? `📍 ${profile.location.town}` : 'Localisation non renseignée';
       const ageText = profile.age ? `${profile.age} ans` : 'Âge non renseigné';
       
@@ -140,7 +141,7 @@ export default function CompatibleProfilesList({
         )}
       </View>
     );
-  }, [showWelcomeHeader, userName, loading, profiles.length, totalCount]);
+  }, [showWelcomeHeader, loading, profiles.length, totalCount]);
 
   return (
     <View style={styles.container}>

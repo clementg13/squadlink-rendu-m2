@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { CompatibleProfile } from '@/services/compatibleProfileService';
+import { ProfileSport, ProfileHobby, ProfileSocialMedia } from '@/types/profile';
 
 
 // Composants pour l'affichage
@@ -180,7 +181,7 @@ export default function ProfileDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Sports pratiqués par {profileData.firstname}</Text>
             <View style={styles.tagsContainer}>
-              {profileData.sports.map((sport: any, index: number) => (
+              {profileData.sports.map((sport: ProfileSport, index: number) => (
                 <SportTag 
                   key={`${sport.id_sport}-${index}`} 
                   sport={sport} 
@@ -196,7 +197,7 @@ export default function ProfileDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Centres d'intérêt de {profileData.firstname}</Text>
             <View style={styles.tagsContainer}>
-              {profileData.hobbies.map((hobby: any, index: number) => (
+              {profileData.hobbies.map((hobby: ProfileHobby, index: number) => (
                 <HobbyTag 
                   key={`${hobby.id_hobbie}-${index}`} 
                   hobby={hobby} 
@@ -212,7 +213,7 @@ export default function ProfileDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Réseaux sociaux</Text>
             <View style={styles.socialContainer}>
-              {profileData.socialMedias.map((social: any, index: number) => (
+              {profileData.socialMedias.map((social: ProfileSocialMedia, index: number) => (
                 <View key={`${social.id_social_media}-${index}`} style={styles.socialItem}>
                   <Text style={styles.socialPlatform}>
                     {social.socialmedia?.name}:
