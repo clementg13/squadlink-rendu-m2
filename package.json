@@ -11,7 +11,13 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "lint:check": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "build:android": "./scripts/build-android.sh release",
+    "build:android:debug": "./scripts/build-android.sh debug",
+    "build:clean": "cd android && ./gradlew clean",
+    "release:prepare": "./scripts/create-release.sh",
+    "release:finalize": "./scripts/finalize-release.sh",
+    "release:help": "echo 'Étape 1: npm run release:prepare <version> | Étape 2: Créer MR avec version code/name | Étape 3: npm run release:finalize <version>'"
   },
   "jest": {
     "preset": "jest-expo",
