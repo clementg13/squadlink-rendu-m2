@@ -1,22 +1,7 @@
 #!/bin/bash
 
-# Script pour automatiser le nouveau processus de # Vérification que master est à jour
-LOCAL=$(git rev-parse @)
-REMOTE=$(git rev-parse @{u})
-
-if [ $LOCAL != $REMOTE ]; then
-    log_error "La branche master locale n'est pas à jour. Faites un git pull"
-    exit 1
-fi
-
-# Étape 1: Vérifier si l'ancienne branche release existe et la merger sur master
-if git show-ref --verify --quiet refs/remotes/origin/release; then
-    log_warning "Une branche release existe déjà sur origin"
-    read -p "Voulez-vous la merger sur master et la supprimer ? (y/N): " confirm
-    if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]; then
-        log_info "Merge de l'ancienne branche release sur master..."
-        git merge origin/release --no-ff -m "Merge release branch to master before new release $VERSION"
-        git push origin master./scripts/create-release.sh <version>
+# Script pour automatiser le nouveau processus de release
+# Usage: ./scripts/create-release.sh <version>
 # Exemple: ./scripts/create-release.sh 1.2.0
 
 set -e
@@ -76,23 +61,23 @@ fi
 log_info "Récupération des dernières modifications..."
 git fetch origin
 
-# Vérification que main est à jour
+# Vérification que master est à jour
 LOCAL=$(git rev-parse @)
 REMOTE=$(git rev-parse @{u})
 
 if [ $LOCAL != $REMOTE ]; then
-    log_error "La branche main locale n'est pas à jour. Faites un git pull"
+    log_error "La branche master locale n'est pas à jour. Faites un git pull"
     exit 1
 fi
 
-# Étape 1: Vérifier si l'ancienne branche release existe et la merger sur main
+# Étape 1: Vérifier si l'ancienne branche release existe et la merger sur master
 if git show-ref --verify --quiet refs/remotes/origin/release; then
     log_warning "Une branche release existe déjà sur origin"
-    read -p "Voulez-vous la merger sur main et la supprimer ? (y/N): " confirm
+    read -p "Voulez-vous la merger sur master et la supprimer ? (y/N): " confirm
     if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]; then
-        log_info "Merge de l'ancienne branche release sur main..."
-        git merge origin/release --no-ff -m "Merge release branch to main before new release $VERSION"
-        git push origin main
+        log_info "Merge de l'ancienne branche release sur master..."
+        git merge origin/release --no-ff -m "Merge release branch to master before new release $VERSION"
+        git push origin master
         
         log_info "Suppression de l'ancienne branche release..."
         git push origin --delete release
@@ -123,4 +108,4 @@ echo "      git checkout release && git pull origin release"
 echo "      git tag -a '$TAG_NAME' -m 'Release $VERSION'"
 echo "      git push origin '$TAG_NAME'"
 
-log_warning "� Le build Android se déclenchera automatiquement après le push du tag"
+log_warning "📱 Le build Android se déclenchera automatiquement après le push du tag"
