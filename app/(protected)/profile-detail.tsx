@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { EnrichedCompatibleProfile } from '@/services/compatibleProfileService';
+import { CompatibleProfile } from '@/services/compatibleProfileService';
 
 
 // Composants pour l'affichage
@@ -21,7 +21,7 @@ import ProfileTag from '@/components/profile/tags/ProfileTag';
 
 export default function ProfileDetailScreen() {
   const params = useLocalSearchParams();
-  const profileData = params.profile ? JSON.parse(params.profile as string) as EnrichedCompatibleProfile : null;
+  const profileData = params.profile ? JSON.parse(params.profile as string) as CompatibleProfile : null;
   
   const [loading, setLoading] = useState(false);
 

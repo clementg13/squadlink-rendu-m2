@@ -7,16 +7,16 @@ import { Text, View } from '@/components/Themed';
 import { useAuthUser, useAuthLoading } from '@/stores/authStore';
 import { router } from 'expo-router';
 import CompatibleProfilesList from '@/components/profile/CompatibleProfilesList';
-import { EnrichedCompatibleProfile } from '@/services/compatibleProfileService';
+import { CompatibleProfile } from '@/services/compatibleProfileService';
 
 export default function HomeScreen() {
   const user = useAuthUser();
   const authLoading = useAuthLoading();
 
   // Gérer la sélection d'un profil
-  const handleProfilePress = (profile: EnrichedCompatibleProfile) => {
-    console.log('🏠 HomeScreen: Profil enrichi sélectionné:', profile.firstname, profile.lastname);
-    console.log('🏠 HomeScreen: Données enrichies:', {
+  const handleProfilePress = (profile: CompatibleProfile) => {
+    console.log('🏠 HomeScreen: Profil sélectionné:', profile.firstname, profile.lastname);
+    console.log('🏠 HomeScreen: Données du profil:', {
       age: profile.age,
       location: profile.location?.town,
       sports: profile.sports?.length,

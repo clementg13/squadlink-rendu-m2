@@ -8,14 +8,14 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import { useEnrichedCompatibleProfiles } from '@/hooks/useEnrichedCompatibleProfiles';
-import { EnrichedCompatibleProfile } from '@/services/compatibleProfileService';
+import { useCompatibleProfiles } from '@/hooks/useCompatibleProfiles';
+import { CompatibleProfile } from '@/services/compatibleProfileService';
 import { useAuthUser } from '@/stores/authStore';
 import ProfileCard from './ProfileCard';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
 interface CompatibleProfilesListProps {
-  onProfilePress?: (profile: EnrichedCompatibleProfile) => void;
+  onProfilePress?: (profile: CompatibleProfile) => void;
   showWelcomeHeader?: boolean;
   userName?: string;
 }
@@ -35,11 +35,11 @@ export default function CompatibleProfilesList({
     loadMore,
     refresh,
     isEmpty
-  } = useEnrichedCompatibleProfiles(user?.id || null, 8); // Réduire la taille de page car plus de données
+  } = useCompatibleProfiles(user?.id || null, 8); // Réduire la taille de page car plus de données
 
   // Gérer la sélection d'un profil
-  const handleProfilePress = useCallback((profile: EnrichedCompatibleProfile) => {
-    console.log('👤 EnrichedCompatibleProfilesList: Profil sélectionné:', profile.firstname, profile.lastname);
+  const handleProfilePress = useCallback((profile: CompatibleProfile) => {
+    console.log('👤 CompatibleProfilesList: Profil sélectionné:', profile.firstname, profile.lastname);
     if (onProfilePress) {
       onProfilePress(profile);
     } else {
@@ -59,20 +59,20 @@ export default function CompatibleProfilesList({
 
   // Gérer le pull-to-refresh
   const handleRefresh = useCallback(() => {
-    console.log('🔄 EnrichedCompatibleProfilesList: Pull-to-refresh déclenché');
+    console.log('🔄 CompatibleProfilesList: Pull-to-refresh déclenché');
     refresh();
   }, [refresh]);
 
   // Gérer le chargement de plus de profils (scroll infini)
   const handleLoadMore = useCallback(() => {
     if (!loading && hasMore) {
-      console.log('📄 EnrichedCompatibleProfilesList: Chargement de plus de profils');
+      console.log('📄 CompatibleProfilesList: Chargement de plus de profils');
       loadMore();
     }
   }, [loading, hasMore, loadMore]);
 
   // Rendu d'un profil
-  const renderProfile = useCallback(({ item }: { item: EnrichedCompatibleProfile }) => (
+  const renderProfile = useCallback(({ item }: { item: CompatibleProfile }) => (
     <ProfileCard
       profile={item}
       onPress={handleProfilePress}
@@ -86,7 +86,7 @@ export default function CompatibleProfilesList({
     return (
       <View style={styles.footerLoader}>
         <ActivityIndicator size="small" color="#007AFF" />
-        <Text style={styles.footerText}>Chargement des profils enrichis...</Text>
+        <Text style={styles.footerText}>Chargement des profils...</Text>
       </View>
     );
   }, [loading, profiles.length]);
@@ -98,7 +98,7 @@ export default function CompatibleProfilesList({
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
           <Text style={styles.emptyText}>Recherche de profils compatibles...</Text>
-          <Text style={styles.emptySubtext}>Enrichissement des données en cours</Text>
+          <Text style={styles.emptySubtext}>Chargement des données en cours</Text>
         </View>
       );
     }

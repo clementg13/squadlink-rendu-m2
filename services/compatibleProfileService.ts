@@ -1,7 +1,20 @@
 import { supabase } from '@/lib/supabase';
-import { CompatibleProfile, ProfileHobby, ProfileSport, ProfileSocialMedia, Location, Gym, GymSubscription } from '@/types/profile';
+import { ProfileHobby, ProfileSport, ProfileSocialMedia, Location, Gym, GymSubscription } from '@/types/profile';
 
-export interface EnrichedCompatibleProfile extends CompatibleProfile {
+// Interface pour un profil compatible de base (avant enrichissement)
+interface BaseCompatibleProfile {
+  profile_id: number;
+  user_id: string;
+  firstname: string;
+  lastname: string;
+  biography: string | null;
+  compatibility_score: number;
+  total_count: number;
+}
+
+// Interface pour un profil compatible avec toutes ses données enrichies
+export interface CompatibleProfile extends BaseCompatibleProfile {
+  // Données enrichies
   location?: Location;
   gym?: Gym;
   gymSubscription?: GymSubscription;
@@ -15,7 +28,7 @@ export class CompatibleProfileService {
   /**
    * Enrichit un profil compatible avec toutes ses informations détaillées
    */
-  static async enrichProfile(profile: CompatibleProfile): Promise<EnrichedCompatibleProfile> {
+  static async enrichProfile(profile: BaseCompatibleProfile): Promise<CompatibleProfile> {
     try {
       // Récupérer le profil complet
       const { data: fullProfile, error: profileError } = await supabase
@@ -93,19 +106,19 @@ export class CompatibleProfileService {
   /**
    * Enrichit une liste de profils compatibles
    */
-  static async enrichProfiles(profiles: CompatibleProfile[]): Promise<EnrichedCompatibleProfile[]> {
+  static async enrichProfiles(profiles: BaseCompatibleProfile[]): Promise<CompatibleProfile[]> {
     const enrichmentPromises = profiles.map(profile => this.enrichProfile(profile));
     return Promise.all(enrichmentPromises);
   }
 
   /**
-   * Récupère les profils compatibles enrichis avec pagination
+   * Récupère les profils compatibles avec pagination
    */
-  static async getEnrichedCompatibleProfiles(
+  static async getCompatibleProfiles(
     currentUserId: string,
     params: { page_offset: number; page_size: number } = { page_offset: 0, page_size: 10 }
   ): Promise<{
-    profiles: EnrichedCompatibleProfile[];
+    profiles: CompatibleProfile[];
     total_count: number;
     has_more: boolean;
     current_page: number;
@@ -133,7 +146,7 @@ export class CompatibleProfileService {
       }
 
       // Transformer et enrichir les données
-      const baseProfiles: CompatibleProfile[] = data.map((row: {
+      const baseProfiles: BaseCompatibleProfile[] = data.map((row: {
         profile_id: number;
         user_id: string;
         firstname: string;
@@ -166,7 +179,7 @@ export class CompatibleProfileService {
       };
 
     } catch (error) {
-      console.error('❌ Erreur dans CompatibleProfileService.getEnrichedCompatibleProfiles:', error);
+      console.error('❌ Erreur dans CompatibleProfileService.getCompatibleProfiles:', error);
       throw error;
     }
   }

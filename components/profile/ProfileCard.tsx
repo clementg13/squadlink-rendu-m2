@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native';
-import { EnrichedCompatibleProfile } from '@/services/compatibleProfileService';
+import { CompatibleProfile } from '@/services/compatibleProfileService';
 import SportTag from './tags/SportTag';
 import HobbyTag from './tags/HobbyTag';
 
 interface ProfileCardProps {
-  profile: EnrichedCompatibleProfile;
-  onPress?: (profile: EnrichedCompatibleProfile) => void;
+  profile: CompatibleProfile;
+  onPress?: (profile: CompatibleProfile) => void;
 }
 
 export default function ProfileCard({ profile, onPress }: ProfileCardProps) {
