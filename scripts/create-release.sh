@@ -1,7 +1,22 @@
 #!/bin/bash
 
-# Script pour automatiser le nouveau processus de release
-# Usage: ./scripts/create-release.sh <version>
+# Script pour automatiser le nouveau processus de # Vérification que master est à jour
+LOCAL=$(git rev-parse @)
+REMOTE=$(git rev-parse @{u})
+
+if [ $LOCAL != $REMOTE ]; then
+    log_error "La branche master locale n'est pas à jour. Faites un git pull"
+    exit 1
+fi
+
+# Étape 1: Vérifier si l'ancienne branche release existe et la merger sur master
+if git show-ref --verify --quiet refs/remotes/origin/release; then
+    log_warning "Une branche release existe déjà sur origin"
+    read -p "Voulez-vous la merger sur master et la supprimer ? (y/N): " confirm
+    if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]; then
+        log_info "Merge de l'ancienne branche release sur master..."
+        git merge origin/release --no-ff -m "Merge release branch to master before new release $VERSION"
+        git push origin master./scripts/create-release.sh <version>
 # Exemple: ./scripts/create-release.sh 1.2.0
 
 set -e
@@ -44,10 +59,10 @@ TAG_NAME="v$VERSION"
 
 log_info "Début du processus de release pour la version $VERSION"
 
-# Vérification que nous sommes sur la branche main
+# Vérification que nous sommes sur la branche master
 CURRENT_BRANCH=$(git branch --show-current)
-if [ "$CURRENT_BRANCH" != "main" ]; then
-    log_error "Vous devez être sur la branche main pour créer un release"
+if [ "$CURRENT_BRANCH" != "master" ]; then
+    log_error "Vous devez être sur la branche master pour créer un release"
     exit 1
 fi
 
@@ -87,15 +102,15 @@ if git show-ref --verify --quiet refs/remotes/origin/release; then
     fi
 fi
 
-# Étape 2: Créer une nouvelle branche release depuis origin/main
-log_info "Création de la nouvelle branche release depuis origin/main..."
-git checkout -b release origin/main
+# Étape 2: Créer une nouvelle branche release depuis origin/master
+log_info "Création de la nouvelle branche release depuis origin/master..."
+git checkout -b release origin/master
 git push origin release
 
 log_info "✅ Nouvelle branche release créée !"
 log_info "📋 Actions effectuées:"
 echo "   • Ancienne branche release mergée et supprimée (si elle existait)"
-echo "   • Nouvelle branche release créée depuis origin/main"
+echo "   • Nouvelle branche release créée depuis origin/master"
 echo "   • Branche release poussée sur origin"
 
 log_info "🔄 Prochaines étapes manuelles:"
