@@ -7,11 +7,14 @@ import { Text, View } from '@/components/Themed';
 import { useAuthUser, useAuthLoading } from '@/stores/authStore';
 import { router } from 'expo-router';
 import CompatibleProfilesList from '@/components/profile/CompatibleProfilesList';
+import ProfileIncompleteAlert from '@/components/profile/ProfileIncompleteAlert';
 import { CompatibleProfile } from '@/services/compatibleProfileService';
+import { useCurrentUserProfileCompletion } from '@/hooks/useCurrentUserProfileCompletion';
 
 export default function HomeScreen() {
   const user = useAuthUser();
   const authLoading = useAuthLoading();
+  const { isComplete, isLoading, completionPercentage, missingFields } = useCurrentUserProfileCompletion();
 
   // Gérer la sélection d'un profil
   const handleProfilePress = (profile: CompatibleProfile) => {
@@ -45,6 +48,15 @@ export default function HomeScreen() {
   // Interface principale - utilisons la liste de profils compatibles
   return (
     <View style={styles.container}>
+      {/* Alerte profil incomplet */}
+      {!isLoading && !isComplete && (
+        <ProfileIncompleteAlert 
+          completionPercentage={completionPercentage}
+          missingFields={missingFields}
+          compact={true}
+        />
+      )}
+      
       <CompatibleProfilesList 
         onProfilePress={handleProfilePress}
         showWelcomeHeader={true}
