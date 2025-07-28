@@ -12,8 +12,8 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { CompatibleProfile } from '@/services/compatibleProfileService';
 import { ProfileSport, ProfileHobby, ProfileSocialMedia } from '@/types/profile';
 
-
 // Composants pour l'affichage
+import MatchButton from '@/components/profile/MatchButton';
 
 // Tags pour l'affichage
 import SportTag from '@/components/profile/tags/SportTag';
@@ -128,6 +128,21 @@ export default function ProfileDetailScreen() {
                   {Math.round(profileData.compatibility_score)}%
                 </Text>
               </View>
+            </View>
+
+            {/* Bouton de match */}
+            <View style={styles.matchSection}>
+              <MatchButton 
+                profile={profileData}
+                size="large"
+                variant="primary"
+                onMatchSuccess={(result) => {
+                  console.log('💕 ProfileDetail: Match successful:', result);
+                }}
+                onMatchError={(error) => {
+                  console.error('❌ ProfileDetail: Match error:', error);
+                }}
+              />
             </View>
           </View>
         </View>
@@ -365,6 +380,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  matchSection: {
+    marginTop: 20,
+    alignItems: 'center',
   },
   section: {
     backgroundColor: '#FFFFFF',

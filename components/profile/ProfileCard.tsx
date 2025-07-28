@@ -9,6 +9,7 @@ import {
 import { CompatibleProfile } from '@/services/compatibleProfileService';
 import SportTag from './tags/SportTag';
 import HobbyTag from './tags/HobbyTag';
+import MatchButton from './MatchButton';
 
 interface ProfileCardProps {
   profile: CompatibleProfile;
@@ -184,6 +185,21 @@ export default function ProfileCard({ profile, onPress }: ProfileCardProps) {
             </View>
           )}
         </View>
+
+        {/* Bouton de match */}
+        <View style={styles.matchSection}>
+          <MatchButton 
+            profile={profile}
+            size="small"
+            variant="primary"
+            onMatchSuccess={(result) => {
+              console.log('💕 ProfileCard: Match successful:', result);
+            }}
+            onMatchError={(error) => {
+              console.error('❌ ProfileCard: Match error:', error);
+            }}
+          />
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -358,5 +374,9 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     flex: 1,
     lineHeight: 20,
+  },
+  matchSection: {
+    marginTop: 16,
+    alignItems: 'center',
   },
 }); 
