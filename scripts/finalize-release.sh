@@ -91,12 +91,13 @@ log_info "✅ Release $VERSION finalisée avec succès!"
 log_info "📋 Actions effectuées:"
 echo "   • Tag $TAG_NAME créé sur la branche release"
 echo "   • Tag poussé sur origin"
-log_info "🚀 Le build Android va démarrer automatiquement via GitHub Actions"
+log_info "🚀 Le build EAS va démarrer automatiquement via GitHub Actions"
 log_warning "📱 Surveillez l'onglet Actions de GitHub pour voir le progrès du build"
+log_info "📦 Une fois le build terminé, les APK/AAB seront disponibles sur EAS"
 
-# Optionnel: retour sur main
-read -p "Voulez-vous retourner sur la branche main ? (Y/n): " back_to_main
-if [[ $back_to_main != [nN] && $back_to_main != [nN][oO] ]]; then
-    git checkout main
-    log_info "🔄 Retour sur la branche main"
+# Optionnel: retour sur master
+read -p "Voulez-vous retourner sur la branche master ? (Y/n): " back_to_master
+if [[ $back_to_master != [nN] && $back_to_master != [nN][oO] ]]; then
+    git checkout master
+    log_info "🔄 Retour sur la branche master"
 fi

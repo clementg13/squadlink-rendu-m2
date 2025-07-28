@@ -1,32 +1,40 @@
-# 🚀 Guide de Release Android - Nouveau Processus
+# 🚀 Guide de Release - Migration vers EAS
 
-Ce guide explique le nouveau processus de release rigoureux pour l'application Android SquadLink.
+⚠️ **IMPORTANT** : Ce guide est obsolète. Le projet a migré de Firebase vers EAS (Expo Application Services).
 
-## 📋 Processus de Release en 3 Étapes
+## � Nouveau Guide
 
-### 🔄 Workflow Complet
+Consultez le nouveau guide de build et release : **[EAS Build Guide](./eas-build-guide.md)**
 
-1. **Préparation** : Gestion des branches et création de la branche release
-2. **Modification** : MR pour incrémenter version code et modifier version name  
-3. **Finalisation** : Création du tag et déclenchement du build automatique
+## 🔄 Migration vers EAS
 
-## 🛠️ Étapes Détaillées
+Le projet utilise maintenant EAS pour :
+- ✅ **Build Android/iOS** plus simple et rapide
+- ✅ **Distribution automatique** via EAS
+- ✅ **Over-the-Air Updates** pour les correctifs urgents
+- ✅ **Meilleure intégration** avec l'écosystème Expo
+- ✅ **Builds cloud** sans configuration locale complexe
 
-### Étape 1 : Préparation de la Release
+## � Workflow Simplifié
 
-**Depuis la branche `main` :**
-
+### Préparation (inchangé)
 ```bash
-# Préparer la release (automatise la gestion des branches)
 npm run release:prepare 1.2.0
 ```
 
-**Ce script fait automatiquement :**
-- ✅ Vérifie que vous êtes sur `main` et à jour
-- ✅ Merge l'ancienne branche `release` sur `main` (si elle existe)
-- ✅ Supprime l'ancienne branche `release`
-- ✅ Crée une nouvelle branche `release` depuis `origin/main`
-- ✅ Pousse la nouvelle branche `release` sur origin
+### Finalisation (inchangé)  
+```bash
+npm run release:finalize 1.2.0
+```
+
+### Nouveau : Builds disponibles
+- **Preview builds** : APK pour tests rapides
+- **Production builds** : AAB pour Play Store
+- **Development builds** : Pour développement avec hot reload
+
+---
+
+## 📚 Ancien Processus (Firebase - Obsolète)
 
 ### Étape 2 : Modification des Versions (MR Manuelle)
 
@@ -92,7 +100,7 @@ on:
 # Aide complète
 npm run release:help
 
-# Étape 1: Préparer (depuis main)
+# Étape 1: Préparer (depuis master)
 npm run release:prepare 1.2.0
 
 # Étape 2: MR manuelle sur GitHub
@@ -117,7 +125,7 @@ npm run build:clean
 
 ### Structure des Branches
 ```
-main (développement principal)
+master (développement principal)
   ↓
 release (créée pour chaque release)
   ↓  
@@ -125,10 +133,10 @@ tag v1.2.0 (déclenche le build)
 ```
 
 ### Cycle de Vie d'une Branche Release
-1. **Création** : Nouvelle branche `release` depuis `main`
+1. **Création** : Nouvelle branche `release` depuis `master`
 2. **Modification** : MR avec version code/name
 3. **Tag** : Création du tag sur `release`
-4. **Merge retour** : Lors de la prochaine release, `release` est mergée dans `main`
+4. **Merge retour** : Lors de la prochaine release, `release` est mergée dans `master`
 
 ## 🔧 Configuration Requise
 
@@ -153,7 +161,7 @@ Dans GitHub → Settings → Secrets and variables → Actions :
 ### ✅ **Avantages**
 - **Contrôle rigoureux** : Chaque release passe par une MR
 - **Traçabilité** : Historique clair des versions dans Android
-- **Séparation claire** : `main` pour dev, `release` pour production
+- **Séparation claire** : `master` pour dev, `release` pour production
 - **Rollback facile** : Branches et tags séparés
 - **Review des versions** : Validation par l'équipe via MR
 
