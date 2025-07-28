@@ -1,4 +1,4 @@
-name: Release Android Build
+name: Release Build with EAS
 
 on:
   push:
@@ -35,41 +35,34 @@ jobs:
     - name: Run tests
       run: npm test -- --watchAll=false --passWithNoTests
 
-    # 2. Setup Android pour le build
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+    # 2. Setup EAS CLI
+    - name: Setup Expo and EAS CLI
+      run: |
+        npm install -g @expo/cli eas-cli
+        eas whoami
 
     - name: Create environment file
       run: |
         echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" > .env
         echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
 
-    - name: Make gradlew executable
-      run: chmod +x ./android/gradlew
-
-    # 3. Build AAB
-    - name: Build Android Release AAB
+    # 3. Build with EAS
+    - name: Build Android Preview with EAS
       run: |
-        cd android
-        ./gradlew bundleRelease
-
-    # 4. Distribuer via Firebase App Distribution
-    - name: Install Firebase CLI
-      run: npm install -g firebase-tools
-
-    - name: Distribute to Firebase App Distribution
-      run: |
-        firebase appdistribution:distribute \
-          ./android/app/build/outputs/bundle/release/app-release.aab \
-          --app ${{ secrets.FIREBASE_APP_ID }} \
-          --token ${{ secrets.FIREBASE_TOKEN }} \
-          --groups "testers" \
-          --release-notes "Release ${{ env.VERSION }} - Built from tag on release branch"
+        eas build --platform android --profile preview --non-interactive --wait
       env:
-        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+    # 4. Build Production AAB with EAS  
+    - name: Build Android Production with EAS
+      run: |
+        eas build --platform android --profile production --non-interactive --wait
+      env:
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+    # 5. Optionnel: Submit to Google Play Store (internal track)
+    # - name: Submit to Google Play Store
+    #   run: |
+    #     eas submit --platform android --latest --non-interactive
+    #   env:
+    #     EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

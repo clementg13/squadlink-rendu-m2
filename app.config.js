@@ -35,10 +35,21 @@ export default {
     plugins: [
       'expo-router'
     ],
+    updates: {
+      url: "https://u.expo.dev/YOUR_PROJECT_ID"
+    },
+    runtimeVersion: {
+      policy: "sdkVersion"
+    },
     experiments: {
       typedRoutes: true
     },
     extra: {
+      // EAS Project ID
+      eas: {
+        projectId: "d9748c1b-051b-40a7-917f-46deb54d8185"
+      },
+      
       // Variables d'environnement chargées depuis .env
       API_URL: process.env.API_URL,
       DEBUG: process.env.DEBUG,
