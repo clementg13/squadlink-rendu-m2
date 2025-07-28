@@ -48,7 +48,7 @@ export default function CompatibleProfilesList({
       const sportsText = profile.sports?.map((s: ProfileSport) => s.sport?.name).join(', ') || 'Aucun sport';
       const hobbiesText = profile.hobbies?.map((h: ProfileHobby) => h.hobbie?.name).join(', ') || 'Aucun hobby';
       const locationText = profile.location ? `📍 ${profile.location.town}` : 'Localisation non renseignée';
-      const ageText = profile.age ? `${profile.age} ans` : 'Âge non renseigné';
+      const ageText = profile.age !== undefined && profile.age !== null ? `${profile.age} ans` : 'Âge non renseigné';
       
       Alert.alert(
         `${profile.firstname} ${profile.lastname}`,
