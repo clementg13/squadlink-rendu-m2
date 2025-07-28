@@ -39,7 +39,12 @@ jobs:
     - name: Setup Expo and EAS CLI
       run: |
         npm install -g @expo/cli eas-cli
+
+    - name: Authenticate with EAS
+      run: |
         eas whoami
+      env:
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
     - name: Create environment file
       run: |
