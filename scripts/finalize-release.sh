@@ -101,3 +101,8 @@ if [[ $back_to_master != [nN] && $back_to_master != [nN][oO] ]]; then
     git checkout master
     log_info "🔄 Retour sur la branche master"
 fi
+
+log_info "💡 Pensez à merger la branche release dans master une fois que le build est terminé"
+echo "   • git checkout master"
+echo "   • git merge release"
+echo "   • git push origin master"
