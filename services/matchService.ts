@@ -4,6 +4,7 @@ export interface MatchResult {
   success: boolean;
   message: string;
   match_id?: number;
+  group_id?: number;
 }
 
 export interface Match {
@@ -181,6 +182,170 @@ export class MatchService {
     } catch (error) {
       console.error('❌ MatchService: Unexpected error getting match status:', error);
       return { exists: false, isAccepted: false, isInitiator: false };
+    }
+  }
+
+  // services/matchService.ts - Méthode corrigée avec jointure RPC
+
+/**
+ * Récupère les demandes d'amis reçues en attente
+ * @returns Promise<Match[]>
+ */
+static async getPendingReceivedMatches(): Promise<Match[]> {
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('❌ MatchService: User not authenticated');
+      return [];
+    }
+
+    // Utiliser la fonction RPC avec vraie jointure
+    const { data, error } = await supabase
+      .rpc('get_pending_received_matches', {
+        user_id: user.id
+      });
+
+    if (error) {
+      console.error('❌ MatchService: Failed to fetch pending received matches:', error);
+      return [];
+    }
+
+    // Transformer les données pour correspondre à l'interface
+    const transformedData = data?.map((row: any) => ({
+      id: row.id,
+      id_user_initiator: row.id_user_initiator,
+      id_user_receiver: row.id_user_receiver,
+      date_initiation: row.date_initiation,
+      date_response: row.date_response,
+      is_accepted: row.is_accepted,
+      is_closed: row.is_closed,
+      id_user_initiator_details: {
+        id_user: row.profile_id_user,
+        firstname: row.profile_firstname,
+        lastname: row.profile_lastname,
+        birthdate: row.profile_birthdate,
+        biography: row.profile_biography
+      }
+    })) || [];
+
+    return transformedData;
+  } catch (error) {
+    console.error('❌ MatchService: Unexpected error fetching pending received matches:', error);
+    return [];
+  }
+  }
+
+  /**
+   * Accepte une demande d'ami
+   * @param matchId - ID du match à accepter
+   * @returns Promise<MatchResult>
+   */
+  static async acceptMatch(matchId: number): Promise<MatchResult> {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        return {
+          success: false,
+          message: 'Vous devez être connecté pour accepter une demande'
+        };
+      }
+
+      // Utiliser la fonction RPC Supabase
+      const { data, error } = await supabase
+        .rpc('respond_to_match', {
+          match_id: matchId,
+          user_id: user.id,
+          accept_match: true
+        });
+
+      if (error) {
+        console.error('❌ MatchService: Failed to accept match:', error);
+        return {
+          success: false,
+          message: error.message || 'Erreur lors de l\'acceptation de la demande'
+        };
+      }
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        console.log('✅ MatchService: Accept match result:', result);
+        
+        return {
+          success: result.success,
+          message: result.message,
+          match_id: matchId,
+          group_id: result.group_id
+        };
+      }
+
+      return {
+        success: false,
+        message: 'Réponse inattendue du serveur'
+      };
+    } catch (error) {
+      console.error('❌ MatchService: Unexpected error accepting match:', error);
+      return {
+        success: false,
+        message: 'Erreur inattendue lors de l\'acceptation de la demande'
+      };
+    }
+  }
+
+  /**
+   * Refuse une demande d'ami
+   * @param matchId - ID du match à refuser
+   * @returns Promise<MatchResult>
+   */
+  static async rejectMatch(matchId: number): Promise<MatchResult> {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        return {
+          success: false,
+          message: 'Vous devez être connecté pour refuser une demande'
+        };
+      }
+
+      // Utiliser la fonction RPC Supabase
+      const { data, error } = await supabase
+        .rpc('respond_to_match', {
+          match_id: matchId,
+          user_id: user.id,
+          accept_match: false
+        });
+
+      if (error) {
+        console.error('❌ MatchService: Failed to reject match:', error);
+        return {
+          success: false,
+          message: error.message || 'Erreur lors du refus de la demande'
+        };
+      }
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        console.log('✅ MatchService: Reject match result:', result);
+        
+        return {
+          success: result.success,
+          message: result.message,
+          match_id: matchId
+        };
+      }
+
+      return {
+        success: false,
+        message: 'Réponse inattendue du serveur'
+      };
+    } catch (error) {
+      console.error('❌ MatchService: Unexpected error rejecting match:', error);
+      return {
+        success: false,
+        message: 'Erreur inattendue lors du refus de la demande'
+      };
     }
   }
 } 

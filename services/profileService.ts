@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { UserProfile, Location, Gym, GymSubscription, Hobbie } from '@/types/profile';
+import { CompatibleProfile } from '@/services/compatibleProfileService';
 
 /**
  * Service pour gérer les appels aux fonctions Supabase liées aux profils utilisateur
@@ -209,6 +210,57 @@ export class ProfileService {
 
     if (error) throw error;
     return data || [];
+  }
+
+  /**
+   * Récupère les détails complets d'un profil à partir de son user_id
+   * @param userId - ID de l'utilisateur
+   * @returns Promise<CompatibleProfile | null>
+   */
+  async getProfileDetails(userId: string): Promise<CompatibleProfile | null> {
+    try {
+      // Utiliser la fonction RPC Supabase
+      const { data, error } = await supabase
+        .rpc('get_profile_details', {
+          target_user_id: userId
+        });
+
+      if (error) {
+        console.error('❌ ProfileService: Failed to fetch profile details:', error);
+        return null;
+      }
+
+      if (!data || data.length === 0) {
+        console.warn('⚠️ ProfileService: No profile details found for user:', userId);
+        return null;
+      }
+
+      const profileData = data[0];
+      console.log('✅ ProfileService: Profile details loaded:', profileData);
+
+      // Construire l'objet CompatibleProfile
+      const compatibleProfile: CompatibleProfile = {
+        profile_id: profileData.profile_id,
+        user_id: profileData.user_id,
+        firstname: profileData.firstname,
+        lastname: profileData.lastname,
+        biography: profileData.biography,
+        compatibility_score: 0, // Pas de calcul de compatibilité pour les demandes
+        total_count: 0,
+        age: profileData.age,
+        location: profileData.location || undefined,
+        gym: profileData.gym || undefined,
+        gymSubscription: profileData.gym_subscription || undefined,
+        hobbies: profileData.hobbies || [],
+        sports: profileData.sports || [],
+        socialMedias: profileData.social_medias || []
+      };
+
+      return compatibleProfile;
+    } catch (error) {
+      console.error('❌ ProfileService: Unexpected error fetching profile details:', error);
+      return null;
+    }
   }
 }
 

@@ -8,6 +8,7 @@ import { useAuthUser, useAuthLoading } from '@/stores/authStore';
 import { router } from 'expo-router';
 import CompatibleProfilesList from '@/components/profile/CompatibleProfilesList';
 import ProfileIncompleteAlert from '@/components/profile/ProfileIncompleteAlert';
+import PendingMatchesNotification from '@/components/profile/PendingMatchesNotification';
 import { CompatibleProfile } from '@/services/compatibleProfileService';
 import { useCurrentUserProfileCompletion } from '@/hooks/useCurrentUserProfileCompletion';
 
@@ -56,6 +57,9 @@ export default function HomeScreen() {
           compact={true}
         />
       )}
+      
+      {/* Notification des demandes d'amis reçues */}
+      <PendingMatchesNotification />
       
       <CompatibleProfilesList 
         onProfilePress={handleProfilePress}
