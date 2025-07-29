@@ -106,3 +106,8 @@ log_info "💡 Pensez à merger la branche release dans master une fois que le b
 echo "   • git checkout master"
 echo "   • git merge release"
 echo "   • git push origin master"
+
+log_info "🧹 Ensuite, supprimez la branche release devenue inutile :"
+echo "   • git branch -d release"
+echo "   • git push origin --delete release"
+log_warning "⚠️  La branche release sera recréée automatiquement lors de la prochaine release"
