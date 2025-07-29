@@ -8,6 +8,7 @@ import {
   Animated,
   View,
 } from 'react-native';
+import { router } from 'expo-router';
 import { MatchService, MatchResult } from '@/services/matchService';
 import { CompatibleProfile } from '@/services/compatibleProfileService';
 
@@ -33,7 +34,15 @@ export default function MatchButton({
     exists: boolean;
     isAccepted: boolean;
     isInitiator: boolean;
-  }>({ exists: false, isAccepted: false, isInitiator: false });
+    isRejected: boolean;
+    isPending: boolean;
+  }>({ 
+    exists: false, 
+    isAccepted: false, 
+    isInitiator: false,
+    isRejected: false,
+    isPending: false
+  });
   const [scaleValue] = useState(new Animated.Value(1));
 
   // Vérifier le statut du match
@@ -49,7 +58,28 @@ export default function MatchButton({
   }, [profile.user_id]);
 
   const handleMatch = async () => {
-    if (!profile.user_id || disabled || matchStatus.exists) {
+    // Si on est le receiver et qu'il y a une demande en attente, naviguer vers pending-matches
+    if (matchStatus.exists && matchStatus.isPending && !matchStatus.isInitiator) {
+      router.push('/(protected)/pending-matches');
+      return;
+    }
+
+    // Si on est l'initiateur et qu'il y a une demande en attente, ne rien faire
+    if (matchStatus.exists && matchStatus.isPending && matchStatus.isInitiator) {
+      return;
+    }
+
+    // Si le match est refusé, ne rien faire
+    if (matchStatus.exists && matchStatus.isRejected) {
+      return;
+    }
+
+    // Si on est amis, ne rien faire
+    if (matchStatus.exists && matchStatus.isAccepted) {
+      return;
+    }
+
+    if (!profile.user_id || disabled) {
       return;
     }
 
@@ -74,7 +104,13 @@ export default function MatchButton({
         ]).start();
 
         // Mettre à jour le statut
-        setMatchStatus({ exists: true, isAccepted: false, isInitiator: true });
+        setMatchStatus({ 
+          exists: true, 
+          isAccepted: false, 
+          isInitiator: true,
+          isRejected: false,
+          isPending: true
+        });
         
         Alert.alert(
           'Demande d\'ami envoyée ! 👥',
@@ -109,8 +145,12 @@ export default function MatchButton({
       buttonStyle.push(styles.outline);
     }
 
-    if (disabled || matchStatus.exists) {
+    if (disabled || (matchStatus.exists && matchStatus.isRejected) || (matchStatus.exists && matchStatus.isAccepted)) {
       buttonStyle.push(styles.disabled);
+    } else if (matchStatus.exists && matchStatus.isPending && !matchStatus.isInitiator) {
+      buttonStyle.push(styles.received);
+    } else if (matchStatus.exists && matchStatus.isPending && matchStatus.isInitiator) {
+      buttonStyle.push(styles.pending);
     }
 
     return buttonStyle;
@@ -125,7 +165,14 @@ export default function MatchButton({
       textStyle.push(styles.primaryText);
     }
 
-    if (disabled || matchStatus.exists) {
+    // Couleurs spécifiques selon l'état du match
+    if (matchStatus.exists && matchStatus.isPending && !matchStatus.isInitiator) {
+      textStyle.push(styles.receivedText);
+    } else if (matchStatus.exists && matchStatus.isPending && matchStatus.isInitiator) {
+      textStyle.push(styles.pendingText);
+    } else if (matchStatus.exists && matchStatus.isRejected) {
+      textStyle.push(styles.rejectedText);
+    } else if (disabled || (matchStatus.exists && matchStatus.isAccepted)) {
       textStyle.push(styles.disabledText);
     }
 
@@ -137,8 +184,14 @@ export default function MatchButton({
     if (matchStatus.isAccepted) {
       return 'Amis ✓';
     }
-    if (matchStatus.exists) {
-      return 'Demande envoyée ✓';
+    if (matchStatus.exists && matchStatus.isPending && !matchStatus.isInitiator) {
+      return 'Demande reçue';
+    }
+    if (matchStatus.exists && matchStatus.isPending && matchStatus.isInitiator) {
+      return 'Demande en attente';
+    }
+    if (matchStatus.exists && matchStatus.isRejected) {
+      return 'Demande refusée';
     }
     if (isLoading) {
       return 'Envoi...';
@@ -151,8 +204,14 @@ export default function MatchButton({
     if (matchStatus.isAccepted) {
       return '👥';
     }
-    if (matchStatus.exists) {
-      return '✓';
+    if (matchStatus.exists && matchStatus.isPending && !matchStatus.isInitiator) {
+      return '📨';
+    }
+    if (matchStatus.exists && matchStatus.isPending && matchStatus.isInitiator) {
+      return '⏳';
+    }
+    if (matchStatus.exists && matchStatus.isRejected) {
+      return '❌';
     }
     if (isLoading) {
       return '';
@@ -165,7 +224,7 @@ export default function MatchButton({
       <TouchableOpacity
         style={getButtonStyle()}
         onPress={handleMatch}
-        disabled={disabled || matchStatus.exists || isLoading}
+        disabled={disabled || (matchStatus.exists && matchStatus.isPending && matchStatus.isInitiator) || (matchStatus.exists && matchStatus.isRejected) || (matchStatus.exists && matchStatus.isAccepted) || isLoading}
         activeOpacity={0.8}
       >
         {isLoading ? (
@@ -251,7 +310,16 @@ const styles = StyleSheet.create({
   disabled: {
     backgroundColor: '#F0F0F0',
     borderColor: '#E0E0E0',
-    opacity: 0.6,
+    opacity: 0.8,
+  },
+  received: {
+    backgroundColor: '#007AFF',
+  },
+  pending: {
+    backgroundColor: '#007AFF',
+  },
+  rejected: {
+    backgroundColor: '#8E8E93',
   },
   
   // Textes par taille
@@ -274,7 +342,17 @@ const styles = StyleSheet.create({
   },
   
   // Textes par état
+  receivedText: {
+    color: '#FFFFFF',
+  },
+  pendingText: {
+    color: '#FFFFFF',
+  },
+  rejectedText: {
+    color: '#616161',
+  },
   disabledText: {
-    color: '#999999',
+    color: '#666666',
+    opacity: 0.9,
   },
 }); 

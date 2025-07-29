@@ -146,12 +146,24 @@ export class MatchService {
    * @param targetUserId - ID de l'utilisateur cible
    * @returns Promise<{ exists: boolean; isAccepted: boolean; isInitiator: boolean }>
    */
-  static async getMatchStatus(targetUserId: string): Promise<{ exists: boolean; isAccepted: boolean; isInitiator: boolean }> {
+  static async getMatchStatus(targetUserId: string): Promise<{ 
+    exists: boolean; 
+    isAccepted: boolean; 
+    isInitiator: boolean;
+    isRejected: boolean;
+    isPending: boolean;
+  }> {
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
-        return { exists: false, isAccepted: false, isInitiator: false };
+        return { 
+          exists: false, 
+          isAccepted: false, 
+          isInitiator: false,
+          isRejected: false,
+          isPending: false
+        };
       }
 
       const { data, error } = await supabase
@@ -163,25 +175,47 @@ export class MatchService {
 
       if (error) {
         console.error('❌ MatchService: Failed to get match status:', error);
-        return { exists: false, isAccepted: false, isInitiator: false };
+        return { 
+          exists: false, 
+          isAccepted: false, 
+          isInitiator: false,
+          isRejected: false,
+          isPending: false
+        };
       }
 
       if (!data || data.length === 0) {
-        return { exists: false, isAccepted: false, isInitiator: false };
+        return { 
+          exists: false, 
+          isAccepted: false, 
+          isInitiator: false,
+          isRejected: false,
+          isPending: false
+        };
       }
 
       const match = data[0];
       const isInitiator = match.id_user_initiator === user.id;
       const isAccepted = match.is_accepted === true;
+      const isRejected = match.is_accepted === false;
+      const isPending = match.is_accepted === null;
 
       return {
         exists: true,
         isAccepted,
-        isInitiator
+        isInitiator,
+        isRejected,
+        isPending
       };
     } catch (error) {
       console.error('❌ MatchService: Unexpected error getting match status:', error);
-      return { exists: false, isAccepted: false, isInitiator: false };
+      return { 
+        exists: false, 
+        isAccepted: false, 
+        isInitiator: false,
+        isRejected: false,
+        isPending: false
+      };
     }
   }
 
