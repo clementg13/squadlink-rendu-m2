@@ -139,48 +139,29 @@ export default function MatchButton({
 
   // Styles dynamiques basés sur la taille et la variante
   const getButtonStyle = () => {
-    const buttonStyle: any = [styles.button, styles[size]];
-    
-    if (variant === 'primary') {
-      buttonStyle.push(styles.primary);
-    } else if (variant === 'secondary') {
-      buttonStyle.push(styles.secondary);
-    } else if (variant === 'outline') {
-      buttonStyle.push(styles.outline);
-    }
-
-    if (disabled || (matchStatus.exists && matchStatus.isRejected) || (matchStatus.exists && matchStatus.isAccepted)) {
-      buttonStyle.push(styles.disabled);
-    } else if (matchStatus.exists && matchStatus.isPending && !matchStatus.isInitiator) {
-      buttonStyle.push(styles.received);
-    } else if (matchStatus.exists && matchStatus.isPending && matchStatus.isInitiator) {
-      buttonStyle.push(styles.pending);
-    }
-
-    return buttonStyle;
+    return [
+      styles.button,
+      styles[size],
+      variant === 'primary' && styles.primary,
+      variant === 'secondary' && styles.secondary,
+      variant === 'outline' && styles.outline,
+      (disabled || (matchStatus.exists && matchStatus.isRejected) || (matchStatus.exists && matchStatus.isAccepted)) && styles.disabled,
+      (matchStatus.exists && matchStatus.isPending && !matchStatus.isInitiator) && styles.received,
+      (matchStatus.exists && matchStatus.isPending && matchStatus.isInitiator) && styles.pending,
+    ].filter(Boolean);
   };
 
   const getTextStyle = () => {
-    const textStyle: any = [styles.text, styles[`${size}Text`]];
-    
-    if (variant === 'outline') {
-      textStyle.push(styles.outlineText);
-    } else if (variant === 'primary') {
-      textStyle.push(styles.primaryText);
-    }
-
-    // Couleurs spécifiques selon l'état du match
-    if (matchStatus.exists && matchStatus.isPending && !matchStatus.isInitiator) {
-      textStyle.push(styles.receivedText);
-    } else if (matchStatus.exists && matchStatus.isPending && matchStatus.isInitiator) {
-      textStyle.push(styles.pendingText);
-    } else if (matchStatus.exists && matchStatus.isRejected) {
-      textStyle.push(styles.rejectedText);
-    } else if (disabled || (matchStatus.exists && matchStatus.isAccepted)) {
-      textStyle.push(styles.disabledText);
-    }
-
-    return textStyle;
+    return [
+      styles.text,
+      styles[`${size}Text`],
+      variant === 'outline' && styles.outlineText,
+      variant === 'primary' && styles.primaryText,
+      (matchStatus.exists && matchStatus.isPending && !matchStatus.isInitiator) && styles.receivedText,
+      (matchStatus.exists && matchStatus.isPending && matchStatus.isInitiator) && styles.pendingText,
+      (matchStatus.exists && matchStatus.isRejected) && styles.rejectedText,
+      (disabled || (matchStatus.exists && matchStatus.isAccepted)) && styles.disabledText,
+    ].filter(Boolean);
   };
 
   // Texte du bouton selon l'état
@@ -277,17 +258,20 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   
-  // Tailles
+  // Tailles - Utilisés dynamiquement via styles[size]
+  // eslint-disable-next-line react-native/no-unused-styles
   small: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     minHeight: 36,
   },
+  // eslint-disable-next-line react-native/no-unused-styles
   medium: {
     paddingHorizontal: 20,
     paddingVertical: 12,
     minHeight: 44,
   },
+  // eslint-disable-next-line react-native/no-unused-styles
   large: {
     paddingHorizontal: 24,
     paddingVertical: 16,
@@ -322,17 +306,22 @@ const styles = StyleSheet.create({
   pending: {
     backgroundColor: '#007AFF',
   },
+  // eslint-disable-next-line react-native/no-unused-styles
   rejected: {
     backgroundColor: '#8E8E93',
   },
+
   
-  // Textes par taille
+  // Textes par taille - Utilisés dynamiquement via styles[`${size}Text`]
+  // eslint-disable-next-line react-native/no-unused-styles
   smallText: {
     fontSize: 14,
   },
+  // eslint-disable-next-line react-native/no-unused-styles
   mediumText: {
     fontSize: 16,
   },
+  // eslint-disable-next-line react-native/no-unused-styles
   largeText: {
     fontSize: 18,
   },

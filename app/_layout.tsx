@@ -30,6 +30,7 @@ function RootLayout() {
   const { user, session, loading, initialize, isOnboarding, initialized } = useAuth();
   const [isReady, setIsReady] = useState(false);
   useSentryNavigationConfig();
+
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
