@@ -8,6 +8,10 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAuth } from '@/stores/authStore';
+import { initSentry, useSentryNavigationConfig } from '@/lib/sentry';
+import * as Sentry from '@sentry/react-native';
+
+initSentry();
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -22,9 +26,10 @@ export const unstable_settings = {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayout() {
   const { user, session, loading, initialize, isOnboarding, initialized } = useAuth();
   const [isReady, setIsReady] = useState(false);
+  useSentryNavigationConfig();
 
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -112,3 +117,5 @@ function RootLayoutNav() {
     </ThemeProvider>
   );
 }
+
+export default Sentry.wrap(RootLayout);

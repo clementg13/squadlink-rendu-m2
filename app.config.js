@@ -33,7 +33,15 @@ export default {
       favicon: './assets/images/favicon.png'
     },
     plugins: [
-      'expo-router'
+      'expo-router',
+      [
+        '@sentry/react-native/expo',
+        {
+          url: 'https://sentry.io/',
+          project: 'react-native',
+          organization: 'ynov-boo'
+        }
+      ]
     ],
     updates: {
       url: "https://u.expo.dev/YOUR_PROJECT_ID"

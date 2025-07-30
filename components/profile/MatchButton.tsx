@@ -306,6 +306,10 @@ const styles = StyleSheet.create({
   pending: {
     backgroundColor: '#007AFF',
   },
+  // eslint-disable-next-line react-native/no-unused-styles
+  rejected: {
+    backgroundColor: '#8E8E93',
+  },
 
   
   // Textes par taille - Utilisés dynamiquement via styles[`${size}Text`]
