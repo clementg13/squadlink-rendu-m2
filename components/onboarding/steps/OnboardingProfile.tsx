@@ -192,11 +192,15 @@ export default function OnboardingProfile({ onNext, onBack }: OnboardingProfileP
             <Text style={styles.label}>Localisation (optionnel)</Text>
             {location ? (
               <View style={styles.locationContainer}>
-                <Text style={styles.locationText}>📍 {location.town}</Text>
+                <Text style={styles.locationText} accessibilityLabel={`Localisation actuelle: ${location.town}`}>
+                  📍 {location.town}
+                </Text>
                 <TouchableOpacity
                   style={styles.changeLocationButton}
                   onPress={handleGetLocation}
                   disabled={isLoadingLocation}
+                  accessibilityLabel="Modifier la localisation"
+                  accessibilityHint="Appuyez pour changer votre localisation"
                 >
                   <Text style={styles.changeLocationText}>Modifier</Text>
                 </TouchableOpacity>
@@ -206,6 +210,8 @@ export default function OnboardingProfile({ onNext, onBack }: OnboardingProfileP
                 style={styles.locationButton}
                 onPress={handleGetLocation}
                 disabled={isLoadingLocation}
+                accessibilityLabel="Ajouter ma localisation"
+                accessibilityHint="Appuyez pour ajouter votre localisation"
               >
                 {isLoadingLocation ? (
                   <ActivityIndicator size="small" color="#007AFF" />
