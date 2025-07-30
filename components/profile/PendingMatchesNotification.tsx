@@ -9,11 +9,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { MatchService } from '@/services/matchService';
 import { router } from 'expo-router';
+import { useMatchRefreshStore } from '@/stores/matchRefreshStore';
 
 export default function PendingMatchesNotification() {
   const [pendingCount, setPendingCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [fadeAnim] = useState(new Animated.Value(0));
+  const refreshTrigger = useMatchRefreshStore((state) => state.refreshTrigger);
 
   useEffect(() => {
     loadPendingCount();
@@ -23,7 +25,7 @@ export default function PendingMatchesNotification() {
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [refreshTrigger]);
 
   const loadPendingCount = async () => {
     try {

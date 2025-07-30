@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { MatchService, Match } from '@/services/matchService';
 import { profileService } from '@/services/profileService';
+import { useMatchRefreshStore } from '@/stores/matchRefreshStore';
 
 interface PendingMatchWithUser extends Match {
   id_user_initiator_details?: {
@@ -28,6 +29,7 @@ export default function PendingMatchesScreen() {
   const [pendingMatches, setPendingMatches] = useState<PendingMatchWithUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const triggerRefresh = useMatchRefreshStore((state) => state.triggerRefresh);
 
   useEffect(() => {
     loadPendingMatches();
@@ -57,6 +59,7 @@ export default function PendingMatchesScreen() {
       if (result.success) {
         Alert.alert('Succès', result.message);
         loadPendingMatches();
+        triggerRefresh(); // Déclencher le rafraîchissement
       } else {
         Alert.alert('Erreur', result.message);
       }
@@ -81,6 +84,7 @@ export default function PendingMatchesScreen() {
               if (result.success) {
                 Alert.alert('Succès', result.message);
                 loadPendingMatches();
+                triggerRefresh(); // Déclencher le rafraîchissement
               } else {
                 Alert.alert('Erreur', result.message);
               }

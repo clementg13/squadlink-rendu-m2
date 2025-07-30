@@ -11,6 +11,7 @@ import {
 import { router } from 'expo-router';
 import { MatchService, MatchResult } from '@/services/matchService';
 import { CompatibleProfile } from '@/services/compatibleProfileService';
+import { useMatchRefreshStore } from '@/stores/matchRefreshStore';
 
 interface MatchButtonProps {
   profile: CompatibleProfile;
@@ -44,6 +45,8 @@ export default function MatchButton({
     isPending: false
   });
   const [scaleValue] = useState(new Animated.Value(1));
+  const triggerRefresh = useMatchRefreshStore((state) => state.triggerRefresh);
+  const refreshTrigger = useMatchRefreshStore((state) => state.refreshTrigger);
 
   // Vérifier le statut du match
   useEffect(() => {
@@ -55,7 +58,7 @@ export default function MatchButton({
     };
 
     checkMatchStatus();
-  }, [profile.user_id]);
+  }, [profile.user_id, refreshTrigger]);
 
   const handleMatch = async () => {
     // Si on est le receiver et qu'il y a une demande en attente, naviguer vers pending-matches
@@ -119,6 +122,7 @@ export default function MatchButton({
         );
 
         onMatchSuccess?.(result);
+        triggerRefresh(); // Déclencher le rafraîchissement
       } else {
         Alert.alert('Erreur', result.message);
         onMatchError?.(result.message);

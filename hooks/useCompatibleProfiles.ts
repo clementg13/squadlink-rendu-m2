@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CompatibleProfileService, CompatibleProfile } from '@/services/compatibleProfileService';
+import { useMatchRefreshStore } from '@/stores/matchRefreshStore';
 
 interface UseCompatibleProfilesState {
   profiles: CompatibleProfile[];
@@ -12,6 +13,8 @@ interface UseCompatibleProfilesState {
 }
 
 export function useCompatibleProfiles(userId: string | null, pageSize: number = 10) {
+  const refreshTrigger = useMatchRefreshStore((state) => state.refreshTrigger);
+  const triggerRefresh = useMatchRefreshStore((state) => state.triggerRefresh);
   const [state, setState] = useState<UseCompatibleProfilesState>({
     profiles: [],
     loading: false,
@@ -117,6 +120,7 @@ export function useCompatibleProfiles(userId: string | null, pageSize: number = 
       }));
 
       console.log('✅ useCompatibleProfiles: Liste actualisée:', response.profiles.length);
+      triggerRefresh(); // Déclencher le rafraîchissement des autres composants
     } catch (error) {
       console.error('❌ useCompatibleProfiles: Erreur actualisation:', error);
       setState(prev => ({
@@ -126,9 +130,9 @@ export function useCompatibleProfiles(userId: string | null, pageSize: number = 
         isEmpty: prev.profiles.length === 0,
       }));
     }
-  }, [userId, pageSize]);
+  }, [userId, pageSize, triggerRefresh]);
 
-  // Effet pour le chargement initial
+  // Effet pour le chargement initial et rafraîchissement
   useEffect(() => {
     if (userId) {
       loadInitial();
@@ -144,7 +148,7 @@ export function useCompatibleProfiles(userId: string | null, pageSize: number = 
         isEmpty: false,
       });
     }
-  }, [loadInitial, userId]);
+  }, [loadInitial, userId, refreshTrigger]);
 
   return {
     profiles: state.profiles,
