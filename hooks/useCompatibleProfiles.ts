@@ -1,42 +1,41 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ProfileService } from '@/services/profileService';
-import { CompatibleProfile, CompatibleProfilesState } from '@/types/profile';
+import { CompatibleProfileService, CompatibleProfile } from '@/services/compatibleProfileService';
+import { useMatchRefreshStore } from '@/stores/matchRefreshStore';
 
-/**
- * Hook personnalisé pour gérer les profils compatibles avec lazy loading
- */
-export const useCompatibleProfiles = (currentUserId: string | null, pageSize: number = 10) => {
-  const [state, setState] = useState<CompatibleProfilesState>({
+interface UseCompatibleProfilesState {
+  profiles: CompatibleProfile[];
+  loading: boolean;
+  error: string | null;
+  hasMore: boolean;
+  totalCount: number;
+  currentPage: number;
+  isEmpty: boolean;
+}
+
+export function useCompatibleProfiles(userId: string | null, pageSize: number = 10) {
+  const refreshTrigger = useMatchRefreshStore((state) => state.refreshTrigger);
+  const triggerRefresh = useMatchRefreshStore((state) => state.triggerRefresh);
+  const [state, setState] = useState<UseCompatibleProfilesState>({
     profiles: [],
     loading: false,
     error: null,
     hasMore: true,
     totalCount: 0,
-    currentPage: 0
+    currentPage: 0,
+    isEmpty: false,
   });
 
-  /**
-   * Charge la première page des profils compatibles
-   */
-  const loadInitialProfiles = useCallback(async () => {
-    if (!currentUserId) {
-      setState(prev => ({
-        ...prev,
-        profiles: [],
-        loading: false,
-        error: 'Utilisateur non connecté',
-        hasMore: false
-      }));
-      return;
-    }
+  // Chargement initial
+  const loadInitial = useCallback(async () => {
+    if (!userId) return;
 
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const response = await ProfileService.getCompatibleProfiles(currentUserId, {
-        page_offset: 0,
-        page_size: pageSize
-      });
+      const response = await CompatibleProfileService.getCompatibleProfiles(
+        userId,
+        { page_offset: 0, page_size: pageSize }
+      );
 
       setState(prev => ({
         ...prev,
@@ -44,74 +43,71 @@ export const useCompatibleProfiles = (currentUserId: string | null, pageSize: nu
         loading: false,
         hasMore: response.has_more,
         totalCount: response.total_count,
-        currentPage: 0,
-        error: null
+        currentPage: response.current_page,
+        isEmpty: response.profiles.length === 0,
       }));
 
+      console.log('✅ useCompatibleProfiles: Profils initiaux chargés:', response.profiles.length);
     } catch (error) {
-      console.error('❌ Erreur lors du chargement initial des profils:', error);
+      console.error('❌ useCompatibleProfiles: Erreur chargement initial:', error);
       setState(prev => ({
         ...prev,
         loading: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
-        hasMore: false
+        isEmpty: true,
       }));
     }
-  }, [currentUserId, pageSize]);
+  }, [userId, pageSize]);
 
-  /**
-   * Charge la page suivante des profils (lazy loading)
-   */
-  const loadMoreProfiles = useCallback(async () => {
-    if (!currentUserId || state.loading || !state.hasMore) {
-      return;
-    }
+  // Charger plus de profils (pagination)
+  const loadMore = useCallback(async () => {
+    if (!userId || state.loading || !state.hasMore) return;
 
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
       const nextOffset = (state.currentPage + 1) * pageSize;
-      const response = await ProfileService.getCompatibleProfiles(currentUserId, {
-        page_offset: nextOffset,
-        page_size: pageSize
-      });
+      const response = await CompatibleProfileService.getCompatibleProfiles(
+        userId,
+        { page_offset: nextOffset, page_size: pageSize }
+      );
 
       setState(prev => ({
         ...prev,
         profiles: [...prev.profiles, ...response.profiles],
         loading: false,
         hasMore: response.has_more,
-        currentPage: prev.currentPage + 1,
-        error: null
+        currentPage: response.current_page,
       }));
 
+      console.log('✅ useCompatibleProfiles: Plus de profils chargés:', response.profiles.length);
     } catch (error) {
-      console.error('❌ Erreur lors du chargement de profils supplémentaires:', error);
+      console.error('❌ useCompatibleProfiles: Erreur chargement pagination:', error);
       setState(prev => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error.message : 'Erreur lors du chargement'
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
       }));
     }
-  }, [currentUserId, pageSize, state.loading, state.hasMore, state.currentPage]);
+  }, [userId, pageSize, state.loading, state.hasMore, state.currentPage]);
 
-  /**
-   * Rafraîchit complètement la liste des profils
-   */
-  const refreshProfiles = useCallback(async () => {
-    if (!currentUserId) return;
+  // Actualiser la liste (pull-to-refresh)
+  const refresh = useCallback(async () => {
+    if (!userId) return;
 
     setState(prev => ({ 
       ...prev, 
       loading: true, 
       error: null,
-      profiles: [],
       currentPage: 0,
-      hasMore: true
+      hasMore: true,
     }));
 
     try {
-      const response = await ProfileService.refreshCompatibleProfiles(currentUserId, pageSize);
+      const response = await CompatibleProfileService.getCompatibleProfiles(
+        userId,
+        { page_offset: 0, page_size: pageSize }
+      );
 
       setState(prev => ({
         ...prev,
@@ -119,26 +115,40 @@ export const useCompatibleProfiles = (currentUserId: string | null, pageSize: nu
         loading: false,
         hasMore: response.has_more,
         totalCount: response.total_count,
-        currentPage: 0,
-        error: null
+        currentPage: response.current_page,
+        isEmpty: response.profiles.length === 0,
       }));
 
+      console.log('✅ useCompatibleProfiles: Liste actualisée:', response.profiles.length);
+      triggerRefresh(); // Déclencher le rafraîchissement des autres composants
     } catch (error) {
-      console.error('❌ Erreur lors du rafraîchissement des profils:', error);
+      console.error('❌ useCompatibleProfiles: Erreur actualisation:', error);
       setState(prev => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error.message : 'Erreur lors du rafraîchissement'
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
+        isEmpty: prev.profiles.length === 0,
       }));
     }
-  }, [currentUserId, pageSize]);
+  }, [userId, pageSize, triggerRefresh]);
 
-  /**
-   * Charge les profils initiaux quand le hook est monté ou que l'utilisateur change
-   */
+  // Effet pour le chargement initial et rafraîchissement
   useEffect(() => {
-    loadInitialProfiles();
-  }, [loadInitialProfiles]);
+    if (userId) {
+      loadInitial();
+    } else {
+      // Réinitialiser l'état si pas d'utilisateur
+      setState({
+        profiles: [],
+        loading: false,
+        error: null,
+        hasMore: true,
+        totalCount: 0,
+        currentPage: 0,
+        isEmpty: false,
+      });
+    }
+  }, [loadInitial, userId, refreshTrigger]);
 
   return {
     profiles: state.profiles,
@@ -146,8 +156,8 @@ export const useCompatibleProfiles = (currentUserId: string | null, pageSize: nu
     error: state.error,
     hasMore: state.hasMore,
     totalCount: state.totalCount,
-    loadMore: loadMoreProfiles,
-    refresh: refreshProfiles,
-    isEmpty: state.profiles.length === 0 && !state.loading
+    isEmpty: state.isEmpty,
+    loadMore,
+    refresh,
   };
-}; 
+} 

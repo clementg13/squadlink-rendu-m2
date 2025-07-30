@@ -1,79 +1,39 @@
-import { useEffect } from 'react';
-import { Stack, useRouter } from 'expo-router';
-import { useAuthStore } from '@/stores/authStore';
-import { useColorScheme } from '@/components/useColorScheme';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { Text } from '@/components/Themed';
+import { useAuth } from '@/stores/authStore';
+import { Redirect, Stack } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
 export default function ProtectedLayout() {
-  const router = useRouter();
-  const colorScheme = useColorScheme();
-  const { user, loading, initialized } = useAuthStore();
+  const { user, loading, isOnboarding } = useAuth();
+  const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
-    // Attendre que l'authentification soit initialisée
-    if (!initialized || loading) {
-      return;
+    if (!loading) {
+      setShouldRender(true);
     }
+  }, [loading]);
 
-    console.log('🔒 Protection des routes - État:', { user: !!user, loading, initialized });
-
-    // Rediriger vers l'authentification si pas connecté
-    if (!user) {
-      console.log('❌ Utilisateur non connecté, redirection vers login');
-      router.replace('/(auth)/login');
-    } else {
-      console.log('✅ Utilisateur connecté, accès autorisé');
-    }
-  }, [user, loading, initialized, router]);
-
-  // Afficher un écran de chargement pendant la vérification
-  if (!initialized || loading) {
+  if (loading || !shouldRender) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>
-          {!initialized ? 'Initialisation...' : 'Vérification...'}
-        </Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
       </View>
     );
   }
 
-  // Afficher un écran de chargement si pas d'utilisateur (pendant la redirection)
+  // Si on est en onboarding, rediriger vers l'onboarding
+  if (isOnboarding) {
+    console.log('🔒 ProtectedLayout: User in onboarding mode, redirecting to onboarding');
+    console.log('🔒 ProtectedLayout: isOnboarding:', isOnboarding, 'user:', !!user);
+    return <Redirect href="/(public)/onboarding" />;
+  }
+
+  // Si pas d'utilisateur, rediriger vers l'onboarding
   if (!user) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Redirection...</Text>
-      </View>
-    );
+    console.log('🔒 ProtectedLayout: No user, redirecting to onboarding');
+    return <Redirect href="/(public)/onboarding" />;
   }
 
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        // Style par défaut pour les écrans protégés
-        contentStyle: {
-          backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
-        },
-      }}
-    >
-      <Stack.Screen name="(tabs)" />
-    </Stack>
-  );
+  console.log('🔒 ProtectedLayout: Utilisateur authentifié, rendu du contenu protégé');
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-}); 
