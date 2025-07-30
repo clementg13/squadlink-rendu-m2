@@ -1,88 +1,12 @@
 import { supabase } from '@/lib/supabase';
-import { CompatibleProfile, PaginationParams, CompatibleProfilesResponse, UserProfile, Location, Gym, GymSubscription, Hobbie } from '@/types/profile';
+import { UserProfile, Location, Gym, GymSubscription, Hobbie } from '@/types/profile';
+import { CompatibleProfile } from '@/services/compatibleProfileService';
 
 /**
- * Service pour gérer les appels aux fonctions Supabase liées aux profils
+ * Service pour gérer les appels aux fonctions Supabase liées aux profils utilisateur
+ * Note: Les profils compatibles sont maintenant gérés par CompatibleProfileService
  */
 export class ProfileService {
-  /**
-   * Récupère les profils compatibles avec pagination via la fonction Supabase
-   */
-  static async getCompatibleProfiles(
-    currentUserId: string,
-    params: PaginationParams = { page_offset: 0, page_size: 10 }
-  ): Promise<CompatibleProfilesResponse> {
-    try {
-      const { data, error } = await supabase.rpc('get_compatible_profiles', {
-        current_user_id: currentUserId,
-        page_offset: params.page_offset,
-        page_size: params.page_size
-      });
-
-      if (error) {
-        console.error('❌ Erreur lors de la récupération des profils compatibles:', error);
-        throw new Error(`Erreur Supabase: ${error.message}`);
-      }
-
-      if (!data || data.length === 0) {
-        return {
-          profiles: [],
-          total_count: 0,
-          has_more: false,
-          current_page: Math.floor(params.page_offset / params.page_size)
-        };
-      }
-
-      // Transformer les données de la fonction Supabase
-      const profiles: CompatibleProfile[] = data.map((row: {
-        profile_id: number;
-        user_id: string;
-        firstname: string;
-        lastname: string;
-        biography: string | null;
-        score: number;
-        compatibility_score: string;
-        total_count: string;
-      }) => ({
-        profile_id: row.profile_id,
-        user_id: row.user_id,
-        firstname: row.firstname,
-        lastname: row.lastname,
-        biography: row.biography,
-        score: row.score,
-        compatibility_score: parseFloat(row.compatibility_score),
-        total_count: parseInt(row.total_count)
-      }));
-
-      const totalCount = profiles.length > 0 ? profiles[0].total_count : 0;
-      const currentPage = Math.floor(params.page_offset / params.page_size);
-      const hasMore = params.page_offset + profiles.length < totalCount;
-
-      return {
-        profiles,
-        total_count: totalCount,
-        has_more: hasMore,
-        current_page: currentPage
-      };
-
-    } catch (error) {
-      console.error('❌ Erreur dans ProfileService.getCompatibleProfiles:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Rafraîchit la liste des profils compatibles (recharge depuis le début)
-   */
-  static async refreshCompatibleProfiles(
-    currentUserId: string,
-    pageSize: number = 10
-  ): Promise<CompatibleProfilesResponse> {
-    return this.getCompatibleProfiles(currentUserId, {
-      page_offset: 0,
-      page_size: pageSize
-    });
-  }
 
   // === Profile Management ===
   async getProfile(userId: string): Promise<UserProfile | null> {
@@ -101,7 +25,6 @@ export class ProfileService {
       .from('profile')
       .insert([{
         id_user: userId,
-        score: 0,
         fully_completed: false,
         created_at: new Date().toISOString(),
       }])
@@ -287,6 +210,57 @@ export class ProfileService {
 
     if (error) throw error;
     return data || [];
+  }
+
+  /**
+   * Récupère les détails complets d'un profil à partir de son user_id
+   * @param userId - ID de l'utilisateur
+   * @returns Promise<CompatibleProfile | null>
+   */
+  async getProfileDetails(userId: string): Promise<CompatibleProfile | null> {
+    try {
+      // Utiliser la fonction RPC Supabase
+      const { data, error } = await supabase
+        .rpc('get_profile_details', {
+          target_user_id: userId
+        });
+
+      if (error) {
+        console.error('❌ ProfileService: Failed to fetch profile details:', error);
+        return null;
+      }
+
+      if (!data || data.length === 0) {
+        console.warn('⚠️ ProfileService: No profile details found for user:', userId);
+        return null;
+      }
+
+      const profileData = data[0];
+      console.log('✅ ProfileService: Profile details loaded:', profileData);
+
+      // Construire l'objet CompatibleProfile
+      const compatibleProfile: CompatibleProfile = {
+        profile_id: profileData.profile_id,
+        user_id: profileData.user_id,
+        firstname: profileData.firstname,
+        lastname: profileData.lastname,
+        biography: profileData.biography,
+        compatibility_score: 0, // Pas de calcul de compatibilité pour les demandes
+        total_count: 0,
+        age: profileData.age,
+        location: profileData.location || undefined,
+        gym: profileData.gym || undefined,
+        gymSubscription: profileData.gym_subscription || undefined,
+        hobbies: profileData.hobbies || [],
+        sports: profileData.sports || [],
+        socialMedias: profileData.social_medias || []
+      };
+
+      return compatibleProfile;
+    } catch (error) {
+      console.error('❌ ProfileService: Unexpected error fetching profile details:', error);
+      return null;
+    }
   }
 }
 

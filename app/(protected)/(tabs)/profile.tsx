@@ -11,9 +11,11 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useProfile } from '@/stores/profileStore';
+import { useCurrentUserProfileCompletion } from '@/hooks/useCurrentUserProfileCompletion';
 
 // Composants
 import ProfileHeader from '@/components/profile/ProfileHeader';
+import ProfileIncompleteAlert from '@/components/profile/ProfileIncompleteAlert';
 import ProfileForm from '@/components/profile/ProfileForm';
 import ProfileHobbies from '@/components/profile/ProfileHobbies';
 import ProfileActions from '@/components/profile/ProfileActions';
@@ -51,6 +53,8 @@ export default function ProfileScreen() {
     loadGymSubscriptions,
     updateLocation
   } = useProfile();
+
+  const { isComplete, isLoading: profileCompletionLoading, completionPercentage, missingFields } = useCurrentUserProfileCompletion();
 
   const [formData, setFormData] = useState({
     lastname: '',
@@ -255,6 +259,16 @@ export default function ProfileScreen() {
             firstname={formData.firstname}
             lastname={formData.lastname}
           />
+
+          {/* Alerte profil incomplet */}
+          {!profileCompletionLoading && !isComplete && (
+            <ProfileIncompleteAlert 
+              completionPercentage={completionPercentage}
+              missingFields={missingFields}
+              compact={false}
+              clickable={false}
+            />
+          )}
 
           <ProfileForm
             formData={formData}

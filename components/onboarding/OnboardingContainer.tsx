@@ -209,7 +209,7 @@ export default function OnboardingContainer() {
         const sportsPayload = sportsData.map(sport => ({
           id_profile: profile.id,
           id_sport: sport.sportId,
-          id_sportlevel: sport.levelId,
+          id_sport_level: sport.levelId,
         }));
 
         const { error: sportsError } = await supabase

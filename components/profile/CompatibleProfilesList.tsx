@@ -9,7 +9,8 @@ import {
   Alert,
 } from 'react-native';
 import { useCompatibleProfiles } from '@/hooks/useCompatibleProfiles';
-import { CompatibleProfile } from '@/types/profile';
+import { CompatibleProfile } from '@/services/compatibleProfileService';
+import { ProfileSport, ProfileHobby } from '@/types/profile';
 import { useAuthUser } from '@/stores/authStore';
 import ProfileCard from './ProfileCard';
 import ErrorMessage from '@/components/ui/ErrorMessage';
@@ -23,7 +24,7 @@ interface CompatibleProfilesListProps {
 export default function CompatibleProfilesList({ 
   onProfilePress, 
   showWelcomeHeader = false, 
-  userName = 'Utilisateur' 
+  userName: _userName = 'Utilisateur' 
 }: CompatibleProfilesListProps) {
   const user = useAuthUser();
   const {
@@ -35,7 +36,7 @@ export default function CompatibleProfilesList({
     loadMore,
     refresh,
     isEmpty
-  } = useCompatibleProfiles(user?.id || null, 10);
+  } = useCompatibleProfiles(user?.id || null, 8); // Réduire la taille de page car plus de données
 
   // Gérer la sélection d'un profil
   const handleProfilePress = useCallback((profile: CompatibleProfile) => {
@@ -43,10 +44,15 @@ export default function CompatibleProfilesList({
     if (onProfilePress) {
       onProfilePress(profile);
     } else {
-      // Action par défaut : afficher une alerte avec les détails
+      // Action par défaut : afficher une alerte avec plus de détails
+      const sportsText = profile.sports?.map((s: ProfileSport) => s.sport?.name).join(', ') || 'Aucun sport';
+      const hobbiesText = profile.hobbies?.map((h: ProfileHobby) => h.hobbie?.name).join(', ') || 'Aucun hobby';
+      const locationText = profile.location ? `📍 ${profile.location.town}` : 'Localisation non renseignée';
+      const ageText = profile.age !== undefined && profile.age !== null ? `${profile.age} ans` : 'Âge non renseigné';
+      
       Alert.alert(
         `${profile.firstname} ${profile.lastname}`,
-        `Score de compatibilité: ${Math.round(profile.compatibility_score)}%\n\n${profile.biography || 'Pas de biographie disponible.'}`,
+        `${ageText}\n${locationText}\n\n🏃‍♂️ Sports: ${sportsText}\n🎯 Hobbies: ${hobbiesText}\n\nScore de compatibilité: ${Math.round(profile.compatibility_score)}%\n\n${profile.biography || 'Pas de biographie disponible.'}`,
         [{ text: 'OK' }]
       );
     }
@@ -81,7 +87,7 @@ export default function CompatibleProfilesList({
     return (
       <View style={styles.footerLoader}>
         <ActivityIndicator size="small" color="#007AFF" />
-        <Text style={styles.footerText}>Chargement...</Text>
+        <Text style={styles.footerText}>Chargement des profils...</Text>
       </View>
     );
   }, [loading, profiles.length]);
@@ -93,6 +99,7 @@ export default function CompatibleProfilesList({
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
           <Text style={styles.emptyText}>Recherche de profils compatibles...</Text>
+          <Text style={styles.emptySubtext}>Chargement des données en cours</Text>
         </View>
       );
     }
@@ -115,30 +122,26 @@ export default function CompatibleProfilesList({
   // Séparateur entre les éléments
   const ItemSeparator = useCallback(() => <View style={styles.separator} />, []);
 
-  // Rendu du header unifié
+  // Rendu du header moderne
   const renderHeader = useCallback(() => {
     return (
       <View style={styles.headerContainer}>
-        {/* Header de bienvenue (optionnel) */}
+        {/* Header moderne simplifié */}
         {showWelcomeHeader && (
-          <View style={styles.welcomeHeader}>
-            <Text style={styles.welcomeTitle}>Bienvenue, {userName} !</Text>
-            <Text style={styles.welcomeSubtitle}>Découvrez vos profils compatibles</Text>
-          </View>
-        )}
-        
-        {/* Compteur de profils (seulement si on a des profils) */}
-        {!loading && profiles.length > 0 && (
-          <View style={styles.countHeader}>
-            <Text style={styles.countText}>
-              {profiles.length} profil{profiles.length > 1 ? 's' : ''} trouvé{profiles.length > 1 ? 's' : ''}
-              {totalCount > profiles.length && ` sur ${totalCount}`}
-            </Text>
+          <View style={styles.modernHeader}>
+            <View style={styles.headerContent}>
+              <Text style={styles.modernTitle}>Bienvenue ! 👋</Text>
+              {!loading && profiles.length > 0 && (
+                <Text style={styles.profileCount}>
+                  {totalCount || profiles.length} Profil{(totalCount || profiles.length) > 1 ? 's' : ''} compatible{(totalCount || profiles.length) > 1 ? 's' : ''} avec vous
+                </Text>
+              )}
+            </View>
           </View>
         )}
       </View>
     );
-  }, [showWelcomeHeader, userName, loading, profiles.length, totalCount]);
+  }, [showWelcomeHeader, loading, profiles.length, totalCount]);
 
   return (
     <View style={styles.container}>
@@ -155,7 +158,7 @@ export default function CompatibleProfilesList({
       <FlatList
         data={profiles}
         renderItem={renderProfile}
-        keyExtractor={(item) => `profile-${item.profile_id}`}
+        keyExtractor={(item) => `enriched-profile-${item.profile_id}`}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyComponent}
         ListFooterComponent={renderFooter}
@@ -171,13 +174,18 @@ export default function CompatibleProfilesList({
           />
         }
         onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1}
+        onEndReachedThreshold={0.15} // Un peu plus élevé car les cartes sont plus complexes
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         removeClippedSubviews={true}
-        maxToRenderPerBatch={5}
-        updateCellsBatchingPeriod={100}
-        windowSize={10}
+        maxToRenderPerBatch={4} // Réduire car les cartes sont plus complexes
+        updateCellsBatchingPeriod={150}
+        windowSize={8}
+        getItemLayout={(data, index) => ({
+          length: 180, // Estimation pour le design moderne optimisé
+          offset: 180 * index,
+          index,
+        })}
       />
     </View>
   );
@@ -186,82 +194,105 @@ export default function CompatibleProfilesList({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FFFFFF',
   },
   listContent: {
     flexGrow: 1,
+    paddingBottom: 32,
+    paddingTop: 8,
   },
   headerContainer: {
     backgroundColor: '#FFFFFF',
   },
-  welcomeHeader: {
-    paddingHorizontal: 20,
+  modernHeader: {
+    paddingHorizontal: 24,
     paddingTop: 60,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    paddingBottom: 32,
+    backgroundColor: '#FFFFFF',
   },
-  welcomeTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 8,
+  headerContent: {
+    alignItems: 'center',
   },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: '#666666',
+  modernTitle: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#1a1a1a',
+    marginBottom: 16,
+    textAlign: 'center',
+    letterSpacing: -0.5,
   },
-  countHeader: {
+  profileCount: {
+    fontSize: 18,
+    color: '#007AFF',
+    fontWeight: '600',
+    textAlign: 'center',
+    backgroundColor: '#F0F8FF',
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#F8F9FA',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  countText: {
-    fontSize: 14,
-    color: '#666666',
-    fontWeight: '500',
+    borderRadius: 25,
+    overflow: 'hidden',
+    shadowColor: '#007AFF',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   separator: {
-    height: 8,
+    height: 0, // Pas de séparateur car les cartes ont déjà des marges
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
-    paddingVertical: 64,
-    minHeight: 300,
+    paddingVertical: 80,
+    minHeight: 400,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 12,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#1a1a1a',
+    marginBottom: 16,
     textAlign: 'center',
   },
   emptyText: {
+    fontSize: 20,
+    color: '#007AFF',
+    textAlign: 'center',
+    marginTop: 20,
+    fontWeight: '700',
+  },
+  emptySubtext: {
     fontSize: 16,
     color: '#666666',
     textAlign: 'center',
     marginTop: 12,
+    lineHeight: 22,
   },
   emptyDescription: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#666666',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 26,
+    marginTop: 16,
   },
   footerLoader: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 32,
+    backgroundColor: '#F8F9FA',
+    marginTop: 16,
+    borderRadius: 16,
+    marginHorizontal: 20,
   },
   footerText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#666666',
+    marginLeft: 16,
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
   },
 }); 
