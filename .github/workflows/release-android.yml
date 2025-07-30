@@ -20,10 +20,36 @@ jobs:
         cache: 'npm'
 
     - name: Get version from tag
+      id: version
       run: |
         VERSION=${GITHUB_REF#refs/tags/}
         echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "tag=$VERSION" >> $GITHUB_OUTPUT
         echo "Release version: $VERSION"
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Rendre le script exécutable
+        chmod +x scripts/generate-changelog.sh
+        
+        # Générer le changelog pour cette version
+        ./scripts/generate-changelog.sh "$VERSION"
+        
+        # Vérifier si le changelog a été généré
+        if [ -f "CHANGELOG_${VERSION}.md" ]; then
+          echo "generated=true" >> $GITHUB_OUTPUT
+          echo "file=CHANGELOG_${VERSION}.md" >> $GITHUB_OUTPUT
+          
+          # Extraire un résumé pour le build message
+          CHANGELOG_SUMMARY=$(head -1 "CHANGELOG_${VERSION}.md" | sed 's/# //')
+          COMMIT_COUNT=$(grep "Nombre total de commits:" "CHANGELOG_${VERSION}.md" | sed 's/.*: //' || echo "N/A")
+          BUILD_MESSAGE="${CHANGELOG_SUMMARY} - ${COMMIT_COUNT} commits"
+          echo "build_message=${BUILD_MESSAGE}" >> $GITHUB_OUTPUT
+        else
+          echo "generated=false" >> $GITHUB_OUTPUT
+          echo "build_message=Release $VERSION" >> $GITHUB_OUTPUT
+        fi
 
     - name: Install dependencies
       run: npm ci
@@ -54,7 +80,11 @@ jobs:
     # 3. Build Production AAB with EAS  
     - name: Build Android Production with EAS
       run: |
-        eas build --platform android --profile production --non-interactive --wait
+        # Utiliser le message de build généré par l'étape changelog
+        BUILD_MESSAGE="${{ steps.changelog.outputs.build_message }}"
+        echo "📋 Message de build: $BUILD_MESSAGE"
+        
+        eas build --platform android --profile production --non-interactive --wait --message "$BUILD_MESSAGE"
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 

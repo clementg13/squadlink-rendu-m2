@@ -20,7 +20,8 @@
     "setup:eas": "./scripts/setup-eas.sh",
     "release:prepare": "./scripts/create-release.sh",
     "release:finalize": "./scripts/finalize-release.sh",
-    "release:help": "echo 'Étape 1: npm run release:prepare <version> | Étape 2: Créer MR avec version code/name | Étape 3: npm run release:finalize <version>'"
+    "release:changelog": "./scripts/generate-changelog.sh",
+    "release:help": "echo 'Étape 1: npm run release:prepare <version> | Étape 2: Créer MR avec version code/name | Étape 3: npm run release:finalize <version> | Changelog: npm run release:changelog'"
   },
   "jest": {
     "preset": "jest-expo",

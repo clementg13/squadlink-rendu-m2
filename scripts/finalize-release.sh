@@ -79,9 +79,32 @@ if ! git log --oneline -10 | grep -i "version\|release" > /dev/null; then
     fi
 fi
 
-# Création du tag
-log_info "Création du tag $TAG_NAME..."
-git tag -a "$TAG_NAME" -m "Release $VERSION"
+# Génération du changelog
+log_info "Génération du changelog..."
+if [ -f "scripts/generate-changelog.sh" ]; then
+    ./scripts/generate-changelog.sh "$VERSION"
+    CHANGELOG_FILE="CHANGELOG_v${VERSION}.md"
+    
+    if [ -f "$CHANGELOG_FILE" ]; then
+        log_info "📋 Changelog généré: $CHANGELOG_FILE"
+        
+        # Demander si on veut utiliser le changelog comme message de tag
+        read -p "Voulez-vous utiliser le changelog comme message de tag ? (Y/n): " use_changelog
+        if [[ $use_changelog != [nN] && $use_changelog != [nN][oO] ]]; then
+            log_info "Création du tag $TAG_NAME avec le changelog..."
+            git tag -a "$TAG_NAME" -F "$CHANGELOG_FILE"
+        else
+            log_info "Création du tag $TAG_NAME avec un message simple..."
+            git tag -a "$TAG_NAME" -m "Release $VERSION"
+        fi
+    else
+        log_warning "Fichier changelog non trouvé, création du tag avec un message simple..."
+        git tag -a "$TAG_NAME" -m "Release $VERSION"
+    fi
+else
+    log_warning "Script de génération de changelog non trouvé, création du tag avec un message simple..."
+    git tag -a "$TAG_NAME" -m "Release $VERSION"
+fi
 
 # Push du tag
 log_info "Push du tag $TAG_NAME..."
