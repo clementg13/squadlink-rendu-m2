@@ -246,7 +246,7 @@ static async getPendingReceivedMatches(): Promise<Match[]> {
     }
 
     // Transformer les données pour correspondre à l'interface
-    const transformedData = data?.map((row: any) => ({
+    const transformedData = data?.map((row: Record<string, unknown>) => ({
       id: row.id,
       id_user_initiator: row.id_user_initiator,
       id_user_receiver: row.id_user_receiver,

@@ -25,7 +25,7 @@ export default function PendingMatchesNotification() {
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, fadeAnim]);
 
   const loadPendingCount = async () => {
     try {
