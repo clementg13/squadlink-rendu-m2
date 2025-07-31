@@ -46,7 +46,7 @@ export default function AuthScreen() {
       
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.logo}>🏋️‍♂️</Text>
+          <Text style={styles.logo} importantForAccessibility="no">🏋️‍♂️</Text>
           <Text style={styles.title}>SquadLink</Text>
           <Text style={styles.subtitle}>Connectez-vous à votre compte</Text>
         </View>
@@ -81,6 +81,8 @@ export default function AuthScreen() {
           <TouchableOpacity 
             style={styles.forgotPasswordContainer}
             onPress={() => router.push('/forgot-password')}
+            accessibilityLabel="Mot de passe oublié"
+            accessibilityHint="Appuyez pour réinitialiser votre mot de passe"
           >
             <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
           </TouchableOpacity>
@@ -89,6 +91,8 @@ export default function AuthScreen() {
             style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
+            accessibilityLabel="Se connecter"
+            accessibilityHint="Appuyez pour vous connecter à votre compte"
           >
             {isLoading ? (
               <ActivityIndicator size="small" color="#fff" />
@@ -103,6 +107,8 @@ export default function AuthScreen() {
             <TouchableOpacity 
               onPress={() => router.replace('/(public)/onboarding')}
               disabled={isLoading}
+              accessibilityLabel="S'inscrire"
+              accessibilityHint="Appuyez pour créer un nouveau compte"
             >
               <Text style={styles.signupLink}>S'inscrire</Text>
             </TouchableOpacity>

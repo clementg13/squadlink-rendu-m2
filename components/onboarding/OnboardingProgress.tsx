@@ -12,12 +12,21 @@ export default function OnboardingProgress({ currentStep, totalSteps }: Onboardi
   return (
     <View style={styles.container} testID="progress-bar">
       <View style={styles.header}>
-        <Text style={styles.stepText}>
+        <Text 
+          style={styles.stepText}
+          accessibilityLabel={`Étape ${currentStep + 1} sur ${totalSteps}`}
+        >
           {currentStep + 1} / {totalSteps}
         </Text>
       </View>
       <View style={styles.progressBarContainer}>
-        <View style={styles.progressBarBackground} testID="progress-container">
+        <View 
+          style={styles.progressBarBackground} 
+          testID="progress-container"
+          accessibilityLabel="Barre de progression de l'onboarding"
+          accessibilityValue={{ now: progressPercentage, min: 0, max: 100 }}
+          accessibilityRole="progressbar"
+        >
           <View
             style={[
               styles.progressBarFill,

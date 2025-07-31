@@ -12,7 +12,8 @@ describe('OnboardingWelcome', () => {
   it('renders welcome content correctly', () => {
     const { getByText } = render(<OnboardingWelcome onNext={mockOnNext} />);
     
-    expect(getByText('🏋️‍♂️')).toBeTruthy();
+    // L'emoji principal ne devrait pas être accessible car il a importantForAccessibility="no"
+    // Mais on peut vérifier les autres textes
     expect(getByText('Bienvenue sur SquadLink')).toBeTruthy();
     expect(getByText(/L'application qui vous connecte/)).toBeTruthy();
   });
@@ -20,12 +21,10 @@ describe('OnboardingWelcome', () => {
   it('renders all feature items', () => {
     const { getByText } = render(<OnboardingWelcome onNext={mockOnNext} />);
     
-    expect(getByText('🤝')).toBeTruthy();
-    expect(getByText('Trouvez des partenaires d\'entraînement')).toBeTruthy();
-    expect(getByText('🎯')).toBeTruthy();
-    expect(getByText('Partagez vos objectifs sportifs')).toBeTruthy();
-    expect(getByText('📍')).toBeTruthy();
-    expect(getByText('Découvrez des salles près de chez vous')).toBeTruthy();
+    // Les emojis sont maintenant intégrés dans le texte complet
+    expect(getByText('🤝 Trouvez des partenaires d\'entraînement')).toBeTruthy();
+    expect(getByText('🎯 Partagez vos objectifs sportifs')).toBeTruthy();
+    expect(getByText('📍 Découvrez des salles près de chez vous')).toBeTruthy();
   });
 
   it('renders start button', () => {

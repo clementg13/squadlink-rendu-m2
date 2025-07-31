@@ -20,7 +20,7 @@ export default function OnboardingCompletion() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.emoji}>🎉</Text>
+        <Text style={styles.emoji} importantForAccessibility="no">🎉</Text>
         <Text style={styles.title}>Bienvenue dans SquadLink !</Text>
         <Text style={styles.subtitle}>
           Votre profil est maintenant configuré
@@ -30,28 +30,37 @@ export default function OnboardingCompletion() {
           <Text style={styles.featuresTitle}>Vous pouvez maintenant :</Text>
           
           <View style={styles.feature}>
-            <Text style={styles.featureEmoji}>🤝</Text>
-            <Text style={styles.featureText}>Trouver des partenaires qui vous correspondent</Text>
+            <Text style={styles.featureText} accessibilityLabel="Trouver des partenaires qui vous correspondent">
+              🤝 Trouver des partenaires qui vous correspondent
+            </Text>
           </View>
           
           <View style={styles.feature}>
-            <Text style={styles.featureEmoji}>💬</Text>
-            <Text style={styles.featureText}>Discuter ensemble</Text>
+            <Text style={styles.featureText} accessibilityLabel="Discuter ensemble">
+              💬 Discuter ensemble
+            </Text>
           </View>
           
           <View style={styles.feature}>
-            <Text style={styles.featureEmoji}>📅</Text>
-            <Text style={styles.featureText}>Créer des séances ensemble</Text>
+            <Text style={styles.featureText} accessibilityLabel="Créer des séances ensemble">
+              📅 Créer des séances ensemble
+            </Text>
           </View>
           
           <View style={styles.feature}>
-            <Text style={styles.featureEmoji}>📈</Text>
-            <Text style={styles.featureText}>Progresser ensemble !</Text>
+            <Text style={styles.featureText} accessibilityLabel="Progresser ensemble">
+              📈 Progresser ensemble !
+            </Text>
           </View>
         </View>
       </View>
       
-      <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+      <TouchableOpacity 
+        style={styles.continueButton} 
+        onPress={handleContinue}
+        accessibilityLabel="Découvrir SquadLink"
+        accessibilityHint="Appuyez pour terminer l'onboarding et accéder à l'application"
+      >
         <Text style={styles.continueButtonText}>Découvrir SquadLink</Text>
       </TouchableOpacity>
     </View>
@@ -99,17 +108,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   feature: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 16,
     paddingHorizontal: 20,
   },
-  featureEmoji: {
-    fontSize: 24,
-    marginRight: 16,
-  },
   featureText: {
-    flex: 1,
     fontSize: 16,
     color: '#34495e',
     lineHeight: 22,

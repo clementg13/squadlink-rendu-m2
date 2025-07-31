@@ -9,7 +9,7 @@ export default function OnboardingWelcome({ onNext }: OnboardingWelcomeProps) {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.emoji}>🏋️‍♂️</Text>
+        <Text style={styles.emoji} importantForAccessibility="no">🏋️‍♂️</Text>
         <Text style={styles.title}>Bienvenue sur SquadLink</Text>
         <Text style={styles.subtitle}>
           L'application qui vous connecte avec des partenaires sportifs près de chez vous
@@ -17,23 +17,31 @@ export default function OnboardingWelcome({ onNext }: OnboardingWelcomeProps) {
         
         <View style={styles.features}>
           <View style={styles.feature}>
-            <Text style={styles.featureEmoji}>🤝</Text>
-            <Text style={styles.featureText}>Trouvez des partenaires d'entraînement</Text>
+            <Text style={styles.featureText} accessibilityLabel="Trouvez des partenaires d'entraînement">
+              🤝 Trouvez des partenaires d'entraînement
+            </Text>
           </View>
           
           <View style={styles.feature}>
-            <Text style={styles.featureEmoji}>🎯</Text>
-            <Text style={styles.featureText}>Partagez vos objectifs sportifs</Text>
+            <Text style={styles.featureText} accessibilityLabel="Partagez vos objectifs sportifs">
+              🎯 Partagez vos objectifs sportifs
+            </Text>
           </View>
           
           <View style={styles.feature}>
-            <Text style={styles.featureEmoji}>📍</Text>
-            <Text style={styles.featureText}>Découvrez des salles près de chez vous</Text>
+            <Text style={styles.featureText} accessibilityLabel="Découvrez des salles près de chez vous">
+              📍 Découvrez des salles près de chez vous
+            </Text>
           </View>
         </View>
       </View>
       
-      <TouchableOpacity style={styles.startButton} onPress={onNext}>
+      <TouchableOpacity 
+        style={styles.startButton} 
+        onPress={onNext}
+        accessibilityLabel="Commencer l'onboarding"
+        accessibilityHint="Appuyez pour commencer la configuration de votre profil"
+      >
         <Text style={styles.startButtonText}>Commencer</Text>
       </TouchableOpacity>
     </View>
@@ -75,16 +83,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   feature: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 20,
   },
-  featureEmoji: {
-    fontSize: 24,
-    marginRight: 16,
-  },
   featureText: {
-    flex: 1,
     fontSize: 16,
     color: '#34495e',
     lineHeight: 22,
