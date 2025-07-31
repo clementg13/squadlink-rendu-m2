@@ -205,10 +205,10 @@ describe('MatchService', () => {
       const mockFrom = jest.fn().mockReturnValue({
         select: jest.fn().mockReturnValue({
           or: jest.fn().mockReturnValue({
-            order: jest.fn().mockResolvedValue({
-              data: mockMatches,
-              error: null,
-            }),
+        order: jest.fn().mockResolvedValue({
+          data: mockMatches,
+          error: null,
+        }),
           }),
         }),
       });
@@ -244,7 +244,7 @@ describe('MatchService', () => {
       const mockFrom = jest.fn().mockReturnValue({
         select: jest.fn().mockReturnValue({
           or: jest.fn().mockReturnValue({
-            order: jest.fn().mockResolvedValue({
+        order: jest.fn().mockResolvedValue({
               data: null,
               error: { message: 'Database error' },
             }),
@@ -292,8 +292,8 @@ describe('MatchService', () => {
 
       // Mock pour les chaînes multiples .or().or()
       const mockLimit = jest.fn().mockResolvedValue({
-        data: [{ id: 1 }],
-        error: null,
+          data: [{ id: 1 }],
+          error: null,
       });
 
       const mockOr2 = jest.fn().mockReturnValue({
@@ -536,10 +536,10 @@ describe('MatchService', () => {
       const mockFrom = jest.fn().mockReturnValue({
         select: jest.fn().mockReturnValue({
           or: jest.fn().mockReturnValue({
-            limit: jest.fn().mockResolvedValue({
-              data: [],
-              error: null,
-            }),
+        limit: jest.fn().mockResolvedValue({
+          data: [],
+          error: null,
+        }),
           }),
         }),
       });

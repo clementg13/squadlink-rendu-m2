@@ -1,8 +1,4 @@
-import 'react-native-gesture-handler/jestSetup';
 import { jest } from '@jest/globals';
-
-// Mock react-native modules
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -35,59 +31,8 @@ jest.mock('react-native-safe-area-context', () => ({
 // Mock DateTimePicker
 jest.mock('@react-native-community/datetimepicker', () => 'DateTimePicker');
 
-// Mock all profile actions
-jest.mock('../../stores/profile/profileActions', () => ({
-  createProfileActions: () => ({
-    setProfile: jest.fn(),
-    setLoading: jest.fn(),
-    setSaving: jest.fn(),
-    setError: jest.fn(),
-    clearError: jest.fn(),
-    loadProfile: jest.fn(),
-    updateProfile: jest.fn(),
-    updateLocation: jest.fn(),
-    handleError: jest.fn(),
-  }),
-}));
-
-jest.mock('../../stores/profile/hobbyActions', () => ({
-  createHobbyActions: () => ({
-    addUserHobby: jest.fn(),
-    removeUserHobby: jest.fn(),
-    toggleHighlightHobby: jest.fn(),
-  }),
-}));
-
-jest.mock('../../stores/profile/sportActions', () => ({
-  createSportActions: () => ({
-    addUserSport: jest.fn(),
-    removeUserSport: jest.fn(),
-  }),
-}));
-
-jest.mock('../../stores/profile/socialMediaActions', () => ({
-  createSocialMediaActions: () => ({
-    addUserSocialMedia: jest.fn(),
-    updateUserSocialMedia: jest.fn(),
-    removeUserSocialMedia: jest.fn(),
-  }),
-}));
-
-jest.mock('../../stores/profile/dataActions', () => ({
-  createDataActions: () => ({
-    loadAllGyms: jest.fn(),
-    loadGymSubscriptions: jest.fn(),
-    loadAllHobbies: jest.fn(),
-    loadAllSports: jest.fn(),
-    loadAllSportLevels: jest.fn(),
-    loadAllSocialMedias: jest.fn(),
-    initialize: jest.fn(),
-    cleanup: jest.fn(),
-  }),
-}));
-
 // Mock Supabase
-jest.mock('../../lib/supabase', () => ({
+jest.mock('@/lib/supabase', () => ({
   supabase: {
     from: jest.fn(() => ({
       select: jest.fn().mockReturnThis(),
@@ -101,16 +46,128 @@ jest.mock('../../lib/supabase', () => ({
   },
 }));
 
-// Mock Alert
-jest.mock('react-native', () => {
-  const RN = jest.requireActual('react-native') as object;
-  return {
-    ...RN,
-    Alert: {
-      alert: jest.fn(),
+// Mock @expo/vector-icons
+jest.mock('@expo/vector-icons', () => ({
+  FontAwesome: 'FontAwesome',
+  AntDesign: 'AntDesign',
+  MaterialIcons: 'MaterialIcons',
+  Ionicons: 'Ionicons',
+  Feather: 'Feather',
+  Entypo: 'Entypo',
+  EvilIcons: 'EvilIcons',
+  FontAwesome5: 'FontAwesome5',
+  Foundation: 'Foundation',
+  MaterialCommunityIcons: 'MaterialCommunityIcons',
+  Octicons: 'Octicons',
+  SimpleLineIcons: 'SimpleLineIcons',
+  Zocial: 'Zocial',
+}));
+
+// Mock useColorScheme
+jest.mock('@/components/useColorScheme', () => ({
+  useColorScheme: () => 'light',
+}));
+
+// Mock react-native with comprehensive implementation
+jest.mock('react-native', () => ({
+  Alert: {
+    alert: jest.fn(),
+  },
+  Platform: {
+    OS: 'ios',
+    select: jest.fn((obj: any) => obj.ios),
+  },
+  Dimensions: {
+    get: jest.fn(() => ({ width: 375, height: 667 })),
+  },
+  StyleSheet: {
+    create: jest.fn((styles) => styles),
+    flatten: jest.fn((style) => style),
+    hairlineWidth: 1,
+    absoluteFill: { position: 'absolute', top: 0, left: 0, bottom: 0, right: 0 },
+  },
+  // Composants de base
+  View: 'View',
+  Text: 'Text',
+  TouchableOpacity: 'TouchableOpacity',
+  TouchableHighlight: 'TouchableHighlight',
+  TouchableWithoutFeedback: 'TouchableWithoutFeedback',
+  ScrollView: 'ScrollView',
+  FlatList: ({ data, renderItem, keyExtractor, ...props }: any) => {
+    // Mock FlatList qui rend ses éléments
+    const React = require('react');
+    return React.createElement('View', props, 
+      data?.map((item: any, index: number) => 
+        React.createElement('View', { key: keyExtractor ? keyExtractor(item, index) : index }, 
+          renderItem({ item, index })
+        )
+      )
+    );
+  },
+  Image: 'Image',
+  TextInput: 'TextInput',
+  Modal: 'Modal',
+  Pressable: 'Pressable',
+  Switch: 'Switch',
+  Slider: 'Slider',
+  ActivityIndicator: 'ActivityIndicator',
+  RefreshControl: 'RefreshControl',
+  StatusBar: 'StatusBar',
+  KeyboardAvoidingView: 'KeyboardAvoidingView',
+  SafeAreaView: 'SafeAreaView',
+  // Animated
+  Animated: {
+    Value: jest.fn(),
+    timing: jest.fn(),
+    spring: jest.fn(),
+    View: 'Animated.View',
+    Text: 'Animated.Text',
+    Image: 'Animated.Image',
+    ScrollView: 'Animated.ScrollView',
+  },
+  // Layout
+  LayoutAnimation: {
+    configureNext: jest.fn(),
+    create: jest.fn(),
+    Presets: {
+      easeInEaseOut: {},
+      linear: {},
+      spring: {},
     },
-  };
-});
+  },
+  // Interaction
+  PanResponder: {
+    create: jest.fn(),
+  },
+  // Linking
+  Linking: {
+    openURL: jest.fn(),
+    canOpenURL: jest.fn(),
+  },
+  // Permissions
+  PermissionsAndroid: {
+    request: jest.fn(),
+    PERMISSIONS: {},
+    RESULTS: {},
+  },
+  // BackHandler
+  BackHandler: {
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+  },
+  // AppState
+  AppState: {
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    currentState: 'active',
+  },
+  // NetInfo
+  NetInfo: {
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    fetch: jest.fn(),
+  },
+}));
 
 // Silence console warnings during tests
 global.console = {
