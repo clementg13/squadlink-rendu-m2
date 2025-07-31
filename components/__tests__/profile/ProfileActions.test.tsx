@@ -40,7 +40,15 @@ jest.mock('../../../lib/supabase', () => ({
 // Mock Alert
 jest.spyOn(Alert, 'alert');
 
+// Mock profileService.deleteAccountAndData directement
+jest.mock('../../../services/profileService', () => ({
+  profileService: {
+    deleteAccountAndData: jest.fn(),
+  },
+}));
+
 import ProfileActions from '../../profile/ProfileActions';
+import { profileService } from '../../../services/profileService';
 
 const mockOnSave = jest.fn();
 const mockOnCancel = jest.fn();
@@ -262,4 +270,97 @@ describe('ProfileActions', () => {
     );
     expect(getByText('Enregistrer')).toBeTruthy();
   });
-}); 
+
+  it('shows delete account button', () => {
+    const { getByText } = render(
+      <ProfileActions
+        hasChanges={false}
+        saving={false}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+      />
+    );
+    expect(getByText('🗑️ Supprimer mon compte')).toBeTruthy();
+  });
+
+  it('shows confirmation dialog when delete account button is pressed', () => {
+    const { getByText } = render(
+      <ProfileActions
+        hasChanges={false}
+        saving={false}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+      />
+    );
+    fireEvent.press(getByText('🗑️ Supprimer mon compte'));
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'Suppression du compte',
+      expect.stringContaining('Êtes-vous sûr de vouloir supprimer définitivement votre compte'),
+      expect.arrayContaining([
+        expect.objectContaining({ text: 'Annuler', style: 'cancel' }),
+        expect.objectContaining({
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: expect.any(Function),
+        }),
+      ])
+    );
+  });
+
+  it('calls profileService.deleteAccountAndData and signOut on confirm', async () => {
+    (profileService.deleteAccountAndData as jest.Mock).mockResolvedValue({});
+    mockSignOut.mockResolvedValue({ error: null });
+
+    const { getByText } = render(
+      <ProfileActions
+        hasChanges={false}
+        saving={false}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+      />
+    );
+    fireEvent.press(getByText('🗑️ Supprimer mon compte'));
+    const alertCall = (Alert.alert as jest.Mock).mock.calls.find(call => call[0] === 'Suppression du compte');
+    const confirmButton = alertCall[2].find((button: any) => button.text === 'Supprimer');
+    await confirmButton.onPress();
+    expect(profileService.deleteAccountAndData).toHaveBeenCalled();
+    expect(mockSignOut).toHaveBeenCalled();
+  });
+
+  it('shows error if deleteAccountAndData returns error', async () => {
+    (profileService.deleteAccountAndData as jest.Mock).mockResolvedValue({ error: 'Erreur suppression' });
+
+    const { getByText } = render(
+      <ProfileActions
+        hasChanges={false}
+        saving={false}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+      />
+    );
+    fireEvent.press(getByText('🗑️ Supprimer mon compte'));
+    const alertCall = (Alert.alert as jest.Mock).mock.calls.find(call => call[0] === 'Suppression du compte');
+    const confirmButton = alertCall[2].find((button: any) => button.text === 'Supprimer');
+    await confirmButton.onPress();
+    expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Erreur suppression');
+  });
+
+  it('shows success alert if deleteAccountAndData succeeds', async () => {
+    (profileService.deleteAccountAndData as jest.Mock).mockResolvedValue({});
+    mockSignOut.mockResolvedValue({ error: null });
+
+    const { getByText } = render(
+      <ProfileActions
+        hasChanges={false}
+        saving={false}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+      />
+    );
+    fireEvent.press(getByText('🗑️ Supprimer mon compte'));
+    const alertCall = (Alert.alert as jest.Mock).mock.calls.find(call => call[0] === 'Suppression du compte');
+    const confirmButton = alertCall[2].find((button: any) => button.text === 'Supprimer');
+    await confirmButton.onPress();
+    expect(Alert.alert).toHaveBeenCalledWith('Compte supprimé', expect.stringContaining('Votre compte et vos données ont été supprimés.'));
+  });
+});

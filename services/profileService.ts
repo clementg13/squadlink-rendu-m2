@@ -262,6 +262,50 @@ export class ProfileService {
       return null;
     }
   }
+
+  /**
+   * Supprime le compte utilisateur et toutes ses données personnelles.
+   * Utilise la fonction RPC sécurisée côté Supabase (auth_delete_current_user).
+   */
+  async deleteAccountAndData(): Promise<{ error?: string }> {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        return { error: 'Impossible de récupérer votre compte.' };
+      }
+
+      // Supprimer le profil utilisateur (et données liées si FK ON DELETE CASCADE)
+      const { error: profileError } = await supabase
+        .from('profile')
+        .delete()
+        .eq('id_user', user.id);
+
+      if (profileError) {
+        return { error: 'Erreur lors de la suppression des données du profil.' };
+      }
+
+      // Attendre un court instant pour laisser la cascade s'effectuer côté base
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Tentative de suppression du compte Supabase Auth via la fonction RPC
+      const { error: rpcError, data } = await supabase.rpc('auth_delete_current_user');
+      console.log('RPC delete user result:', { data, rpcError });
+      if (rpcError) {
+        if (rpcError.code === '23503') {
+          return {
+            error:
+              "Impossible de supprimer votre compte car certaines de vos données sont encore référencées ailleurs (ex : groupes, matches, etc.). Veuillez d'abord quitter ou supprimer ces éléments avant de réessayer."
+          };
+        }
+        return { error: 'Erreur lors de la suppression du compte utilisateur.' };
+      }
+      // data est null si la fonction SQL retourne void ou rien, mais la suppression a réussi
+      // On considère donc la suppression comme un succès si rpcError est null
+      return {};
+    } catch (err) {
+      return { error: 'Une erreur est survenue lors de la suppression du compte.' };
+    }
+  }
 }
 
 export const profileService = new ProfileService();
