@@ -28,7 +28,7 @@ const mockLocationService = {
   getCurrentLocation: jest.fn(),
 };
 
-jest.mock('../../../services/locationService', () => ({
+jest.mock('@/services/locationService', () => ({
   locationService: mockLocationService,
 }));
 

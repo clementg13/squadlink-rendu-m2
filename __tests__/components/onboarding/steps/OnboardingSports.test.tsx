@@ -28,7 +28,7 @@ const mockSupabase = {
     .mockReturnValueOnce(createMockChain(mockSportLevels)),
 };
 
-jest.mock('../../../lib/supabase', () => ({
+jest.mock('@/lib/supabase', () => ({
   supabase: mockSupabase,
 }));
 
