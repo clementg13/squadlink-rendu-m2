@@ -68,6 +68,22 @@ jest.mock('@/components/useColorScheme', () => ({
   useColorScheme: () => 'light',
 }));
 
+// Mock expo-web-browser
+jest.mock('expo-web-browser', () => ({
+  openBrowserAsync: jest.fn(),
+  openAuthSessionAsync: jest.fn(),
+  dismissBrowser: jest.fn(),
+  isAvailableAsync: jest.fn(),
+}));
+
+// Mock ExternalLink component
+jest.mock('@/components/ExternalLink', () => ({
+  ExternalLink: ({ children, ...props }: any) => {
+    const React = require('react');
+    return React.createElement('View', props, children);
+  },
+}));
+
 // Mock react-native with comprehensive implementation
 jest.mock('react-native', () => ({
   Alert: {
