@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useAuth } from '@/stores/authStore';
+import { profileService } from '@/services/profileService';
 
 interface ProfileActionsProps {
   hasChanges: boolean;
@@ -38,6 +39,29 @@ export default function ProfileActions({
               await signOut();
             } catch {
               Alert.alert('Erreur', 'Une erreur s\'est produite lors de la déconnexion');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      'Suppression du compte',
+      'Êtes-vous sûr de vouloir supprimer définitivement votre compte et toutes vos données personnelles ? Cette action est irréversible.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            const { error } = await profileService.deleteAccountAndData();
+            if (error) {
+              Alert.alert('Erreur', error);
+            } else {
+              Alert.alert('Compte supprimé', 'Votre compte et vos données ont été supprimés.');
+              await signOut();
             }
           },
         },
@@ -82,6 +106,14 @@ export default function ProfileActions({
         onPress={handleSignOut}
       >
         <Text style={styles.signOutButtonText}>🚪 Se déconnecter</Text>
+      </TouchableOpacity>
+
+      {/* Nouveau bouton de suppression de compte */}
+      <TouchableOpacity
+        style={[styles.button, styles.deleteAccountButton]}
+        onPress={handleDeleteAccount}
+      >
+        <Text style={styles.deleteAccountButtonText}>🗑️ Supprimer mon compte</Text>
       </TouchableOpacity>
     </View>
   );
@@ -130,6 +162,18 @@ const styles = StyleSheet.create({
   },
   signOutButtonText: {
     color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  deleteAccountButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#dc3545',
+    marginTop: 16,
+  },
+  deleteAccountButtonText: {
+    color: '#dc3545',
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',

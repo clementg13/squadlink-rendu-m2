@@ -12,8 +12,10 @@ import OnboardingSports from './steps/OnboardingSports';
 import OnboardingHobbiesStep from './steps/OnboardingHobbies';
 import OnboardingCompletion from './steps/OnboardingCompletion';
 import OnboardingProgress from './OnboardingProgress';
+import OnboardingTerms from './steps/OnboardingTerms';
+import OnboardingPrivacy from './steps/OnboardingPrivacy';
 
-type OnboardingStep = 'welcome' | 'credentials' | 'profile' | 'sports' | 'hobbies' | 'completion';
+type OnboardingStep = 'welcome' | 'terms' | 'privacy' | 'credentials' | 'profile' | 'sports' | 'hobbies' | 'completion';
 
 interface ProfileData {
   firstname: string;
@@ -48,8 +50,19 @@ export default function OnboardingContainer() {
     setIsOnboarding(true);
   }, [setIsOnboarding]); // Ajouter la dépendance
 
-  const steps = useMemo(() => ['welcome', 'credentials', 'profile', 'sports', 'hobbies', 'completion'] as OnboardingStep[], []);
+  const steps = useMemo(
+    () => ['welcome', 'terms', 'privacy', 'credentials', 'profile', 'sports', 'hobbies', 'completion'] as OnboardingStep[],
+    []
+  );
   const currentStepIndex = steps.indexOf(currentStep);
+
+  // Calcule les étapes à afficher dans la barre de progression (exclut welcome, terms, privacy, completion)
+  const progressSteps = useMemo(
+    () => steps.filter(s => !['welcome', 'terms', 'privacy', 'completion'].includes(s)),
+    [steps]
+  );
+  // Trouve l'index de l'étape courante dans la progression (0 si pas dans la progression)
+  const progressStepIndex = progressSteps.indexOf(currentStep);
 
   // Removed unused updateOnboardingData function as setOnboardingData is not defined.
 
@@ -286,10 +299,23 @@ export default function OnboardingContainer() {
       case 'welcome':
         return (
           <OnboardingWelcome
-            onNext={() => setCurrentStep('credentials')}
+            onNext={() => setCurrentStep('terms')}
           />
         );
-
+      case 'terms':
+        return (
+          <OnboardingTerms
+            onAccept={() => setCurrentStep('privacy')}
+            onBack={() => setCurrentStep('welcome')}
+          />
+        );
+      case 'privacy':
+        return (
+          <OnboardingPrivacy
+            onAccept={() => setCurrentStep('credentials')}
+            onBack={() => setCurrentStep('terms')}
+          />
+        );
       case 'credentials':
         return (
           <OnboardingCredentialsStep
@@ -351,10 +377,11 @@ export default function OnboardingContainer() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {currentStep !== 'welcome' && currentStep !== 'completion' && (
+      {/* Affiche la barre de progression uniquement pour les étapes concernées */}
+      {progressStepIndex >= 0 && (
         <OnboardingProgress 
-          currentStep={currentStepIndex} 
-          totalSteps={steps.length - 2} // Exclude completion and welcome
+          currentStep={progressStepIndex}
+          totalSteps={progressSteps.length}
         />
       )}
       <View style={styles.content}>

@@ -1,15 +1,22 @@
 # Vérification OWASP M6 – Inadequate Privacy Controls
 
-Après analyse du code fourni :
+## Analyse du code fourni (mise à jour) :
 
-- Seules les données personnelles strictement nécessaires sont collectées (profil, email, localisation, etc.).
-- Toutes les PII sont transmises via des canaux sécurisés (HTTPS/TLS).
-- Aucune PII n’est loggée dans les logs applicatifs ou transmise dans les messages d’erreur.
-- Aucune PII n’est transmise dans les URL (query params).
-- Les données PII ne sont pas copiées dans le presse-papier ni exposées à d’autres apps.
-- Les données sont stockées dans le sandbox de l’app, sans backup non chiffré géré par l’app.
-- L’accès aux PII est protégé par authentification.
-- L’utilisateur est informé lors de l’inscription ; il est recommandé d’ajouter une politique de confidentialité accessible.
-- La suppression des données personnelles à la demande n’est pas explicitement implémentée : à prévoir pour la conformité RGPD.
+- **Collecte de données personnelles** : seules les données strictement nécessaires sont collectées (profil, email, localisation, etc.).
+- **Transmission sécurisée** : toutes les PII sont transmises via des canaux sécurisés (HTTPS/TLS).
+- **Logs et erreurs** : aucune PII n’est loggée dans les logs applicatifs ou transmise dans les messages d’erreur.
+- **URL** : aucune PII n’est transmise dans les URL (query params).
+- **Presse-papier et autres apps** : les données PII ne sont pas copiées dans le presse-papier ni exposées à d’autres apps.
+- **Stockage** : les données sont stockées dans le sandbox de l’app, sans backup non chiffré géré par l’app.
+- **Authentification** : l’accès aux PII est protégé par authentification.
+- **Information utilisateur** : l’utilisateur est informé lors de l’inscription, et une politique de confidentialité ainsi que des conditions d’utilisation sont désormais accessibles dans l’onboarding et depuis le profil.
+- **Suppression des données** : la suppression des données personnelles à la demande est implémentée via la fonctionnalité de suppression de compte.
 
-**Aucune modification n’est nécessaire pour la règle OWASP M6, mais il est recommandé d’ajouter une politique de confidentialité accessible et une fonctionnalité de suppression de compte/PII pour une conformité totale.**
+## Conclusion
+
+**La règle OWASP M6 est respectée** :  
+- Les contrôles de confidentialité sont en place et accessibles à l’utilisateur (CGU et politique de confidentialité).
+- La suppression de compte/PII est disponible.
+- Aucun flux ou stockage non sécurisé de PII n’a été détecté.
+
+**Aucune modification supplémentaire n’est nécessaire pour la conformité à OWASP M6.**

@@ -9,9 +9,13 @@ import {
   StyleSheet,
   Text,
   SafeAreaView,
+  TouchableOpacity,
+  ActionSheetIOS
 } from 'react-native';
 import { useProfile } from '@/stores/profileStore';
 import { useCurrentUserProfileCompletion } from '@/hooks/useCurrentUserProfileCompletion';
+import { router } from 'expo-router';
+import { Linking } from 'react-native';
 
 // Composants
 import ProfileHeader from '@/components/profile/ProfileHeader';
@@ -239,6 +243,45 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleOpenLegal = () => {
+    // Utilise ActionSheetIOS uniquement sur iOS, sinon fallback simple pour Android/web
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Annuler', 'Conditions d\'utilisation', 'Politique de confidentialité'],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            router.push('/terms');
+          } else if (buttonIndex === 2) {
+            router.push('/privacy');
+          }
+        }
+      );
+    } else {
+      // Fallback Android/web : simple Alert avec liens
+      Alert.alert(
+        'Informations légales',
+        'Choisissez une option',
+        [
+          {
+            text: 'Conditions d\'utilisation',
+            onPress: () => router.push('/terms'),
+          },
+          {
+            text: 'Politique de confidentialité',
+            onPress: () => router.push('/privacy'),
+          },
+          {
+            text: 'Annuler',
+            style: 'cancel',
+          },
+        ]
+      );
+    }
+  };
+
   if (loading && !profile) {
     return (
       <View style={styles.loadingContainer}>
@@ -250,8 +293,21 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        style={styles.container}
+      {/* Header fixe avec roue crantée */}
+      <View style={styles.headerRow}>
+        <View style={{ flex: 1 }} />
+        <TouchableOpacity
+          onPress={handleOpenLegal}
+          style={styles.settingsButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel="Ouvrir les informations légales"
+        >
+          <Text style={styles.settingsIcon}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -350,5 +406,27 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingTop: 16,
+    paddingRight: 18,
+    backgroundColor: '#fff',
+    // Ajout d'une ombre légère pour séparer visuellement le header
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 2,
+    zIndex: 10,
+  },
+  settingsButton: {
+    padding: 4,
+  },
+  settingsIcon: {
+    fontSize: 26,
+    opacity: 0.7,
   },
 });
