@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { UserProfile } from '@/types/profile';
-import ProfileHobbies from '../../profile/ProfileHobbies';
+import ProfileHobbies from '@/components/profile/ProfileHobbies';
 
 type Hobby = {
   id: string;

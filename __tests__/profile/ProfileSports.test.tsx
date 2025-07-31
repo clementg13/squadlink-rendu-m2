@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import ProfileSports from '../../profile/sports/ProfileSports';
-import { createMockProfile, createMockSport, createMockSportLevel, createMockProfileSport } from '../utils/testUtils';
+import ProfileSports from '@/components/profile/sports/ProfileSports';
+import { createMockProfile, createMockSport, createMockSportLevel, createMockProfileSport } from '@/__tests__/utils/testUtils';
 
 const mockSports = [
   createMockSport({ id: '1', name: 'Football' }),

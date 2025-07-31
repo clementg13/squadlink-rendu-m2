@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import ProfileForm from '../../profile/ProfileForm';
+import ProfileForm from '@/components/profile/ProfileForm';
 
 // Mock DateTimePicker
 jest.mock('@react-native-community/datetimepicker', () => ({

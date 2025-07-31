@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import HobbyChip from '../../../profile/hobbies/HobbyChip';
+import HobbyChip from '@/components/profile/hobbies/HobbyChip';
 import { ProfileHobby } from '@/types/profile';
 
 const mockUserHobby: ProfileHobby = {

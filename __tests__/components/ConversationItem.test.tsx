@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import ConversationItem from '../../ConversationItem';
+import ConversationItem from '@/components/ConversationItem';
 
 const mockOnPress = jest.fn();
 

@@ -1,11 +1,11 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
-import OnboardingContainer from '../../onboarding/OnboardingContainer';
+import OnboardingContainer from '@/components/onboarding/OnboardingContainer';
 
 // Mock useAuth
 const mockSetIsOnboarding = jest.fn();
-jest.mock('../../../stores/authStore', () => ({
+jest.mock('@/stores/authStore', () => ({
   useAuth: () => ({
     setIsOnboarding: mockSetIsOnboarding,
   }),
@@ -26,7 +26,7 @@ const mockSupabase = {
   })),
 };
 
-jest.mock('../../../lib/supabase', () => ({
+jest.mock('@/lib/supabase', () => ({
   supabase: mockSupabase,
 }));
 
@@ -35,7 +35,7 @@ const mockLocationService = {
   updateLocationInDatabase: jest.fn(),
 };
 
-jest.mock('../../../services/locationService', () => ({
+jest.mock('@/services/locationService', () => ({
   locationService: mockLocationService,
 }));
 
@@ -43,7 +43,7 @@ jest.mock('../../../services/locationService', () => ({
 jest.spyOn(Alert, 'alert');
 
 // Mock child components with React Native compatible elements
-jest.mock('../../onboarding/steps/OnboardingWelcome', () => {
+jest.mock('@/components/onboarding/steps/OnboardingWelcome', () => {
   const React = require('react');
   const { View, Text, TouchableOpacity } = require('react-native');
   
@@ -58,7 +58,7 @@ jest.mock('../../onboarding/steps/OnboardingWelcome', () => {
   };
 });
 
-jest.mock('../../onboarding/steps/OnboardingCredentials', () => {
+jest.mock('@/components/onboarding/steps/OnboardingCredentials', () => {
   const React = require('react');
   const { View, Text, TouchableOpacity } = require('react-native');
   
@@ -73,7 +73,7 @@ jest.mock('../../onboarding/steps/OnboardingCredentials', () => {
   };
 });
 
-jest.mock('../../onboarding/steps/OnboardingProfile', () => {
+jest.mock('@/components/onboarding/steps/OnboardingProfile', () => {
   const React = require('react');
   const { View, Text, TouchableOpacity } = require('react-native');
   
@@ -103,7 +103,7 @@ jest.mock('../../onboarding/steps/OnboardingProfile', () => {
   };
 });
 
-jest.mock('../../onboarding/steps/OnboardingSports', () => {
+jest.mock('@/components/onboarding/steps/OnboardingSports', () => {
   const React = require('react');
   const { View, Text, TouchableOpacity } = require('react-native');
   
@@ -129,7 +129,7 @@ jest.mock('../../onboarding/steps/OnboardingSports', () => {
   };
 });
 
-jest.mock('../../onboarding/steps/OnboardingHobbies', () => {
+jest.mock('@/components/onboarding/steps/OnboardingHobbies', () => {
   const React = require('react');
   const { View, Text, TouchableOpacity } = require('react-native');
   
@@ -153,7 +153,7 @@ jest.mock('../../onboarding/steps/OnboardingHobbies', () => {
   };
 });
 
-jest.mock('../../onboarding/steps/OnboardingCompletion', () => {
+jest.mock('@/components/onboarding/steps/OnboardingCompletion', () => {
   const React = require('react');
   const { View, Text } = require('react-native');
   
@@ -166,7 +166,7 @@ jest.mock('../../onboarding/steps/OnboardingCompletion', () => {
   };
 });
 
-jest.mock('../../onboarding/OnboardingProgress', () => {
+jest.mock('@/components/onboarding/OnboardingProgress', () => {
   const React = require('react');
   const { View, Text } = require('react-native');
   

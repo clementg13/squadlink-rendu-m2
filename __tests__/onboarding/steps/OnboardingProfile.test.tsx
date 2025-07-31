@@ -28,7 +28,7 @@ const mockLocationService = {
   getCurrentLocation: jest.fn(),
 };
 
-jest.mock('../../../../services/locationService', () => ({
+jest.mock('../../../services/locationService', () => ({
   locationService: mockLocationService,
 }));
 
@@ -36,7 +36,7 @@ jest.mock('../../../../services/locationService', () => ({
 jest.spyOn(Alert, 'alert');
 
 // Import component after mocks are set up
-import OnboardingProfile from '../../../onboarding/steps/OnboardingProfile';
+import OnboardingProfile from '@/components/onboarding/steps/OnboardingProfile';
 
 const mockOnNext = jest.fn();
 const mockOnBack = jest.fn();

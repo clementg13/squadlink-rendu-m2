@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
-import CreateWorkoutModal from '../../../workout/CreateWorkoutModal';
+import CreateWorkoutModal from '@/components/workout/CreateWorkoutModal';
 
 const mockSports = [
   { id: 'sport1', name: 'Football' },

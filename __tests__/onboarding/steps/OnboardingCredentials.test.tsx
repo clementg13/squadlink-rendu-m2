@@ -9,14 +9,14 @@ const mockSupabase = {
   },
 };
 
-jest.mock('../../../../lib/supabase', () => ({
+jest.mock('@/lib/supabase', () => ({
   supabase: mockSupabase,
 }));
 
 // Mock Alert
 jest.spyOn(Alert, 'alert');
 
-import OnboardingCredentials from '../../../onboarding/steps/OnboardingCredentials';
+import OnboardingCredentials from '@/components/onboarding/steps/OnboardingCredentials';
 
 const mockOnNext = jest.fn();
 

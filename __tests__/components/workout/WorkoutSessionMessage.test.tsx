@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import WorkoutSessionMessage from '../../../workout/WorkoutSessionMessage';
+import WorkoutSessionMessage from '@/components/workout/WorkoutSessionMessage';
 
 const mockOnJoin = jest.fn();
 const mockOnLeave = jest.fn();

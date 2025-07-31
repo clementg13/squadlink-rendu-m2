@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import SocialMediaChip from '../../../profile/socialMedias/SocialMediaChip';
+import SocialMediaChip from '@/components/profile/socialMedias/SocialMediaChip';
 import { ProfileSocialMedia } from '@/types/profile';
 
 const mockUserSocialMedia: ProfileSocialMedia = {

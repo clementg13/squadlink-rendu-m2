@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import GroupMembersModal from '../../../group/GroupMembersModal';
+import GroupMembersModal from '@/components/group/GroupMembersModal';
 
 const mockMembers = [
   {

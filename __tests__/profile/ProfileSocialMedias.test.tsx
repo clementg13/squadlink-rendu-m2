@@ -1,7 +1,7 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '../utils/testUtils';
+import { render, fireEvent, waitFor } from '@/__tests__/utils/testUtils';
 import { Alert } from 'react-native';
-import ProfileSocialMedias from '../../profile/socialMedias/ProfileSocialMedias';
+import ProfileSocialMedias from '@/components/profile/socialMedias/ProfileSocialMedias';
 import { UserProfile, SocialMedia } from '@/types/profile';
 
 // Mock Alert

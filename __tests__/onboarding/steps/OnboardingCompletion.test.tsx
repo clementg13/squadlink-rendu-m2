@@ -3,7 +3,7 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 
 // Mock useAuth
 const mockSetIsOnboarding = jest.fn();
-jest.mock('../../../../stores/authStore', () => ({
+jest.mock('@/stores/authStore', () => ({
   useAuth: () => ({
     setIsOnboarding: mockSetIsOnboarding,
   }),
@@ -52,7 +52,7 @@ describe('OnboardingCompletion', () => {
   });
 
   // Import après les mocks pour éviter les problèmes de hoisting
-  const OnboardingCompletion = require('../../../onboarding/steps/OnboardingCompletion').default;
+  const OnboardingCompletion = require('@/components/onboarding/steps/OnboardingCompletion').default;
 
   it('renders completion content correctly', () => {
     const { getByText } = render(<OnboardingCompletion />);

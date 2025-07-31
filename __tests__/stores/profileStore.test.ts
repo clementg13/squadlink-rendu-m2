@@ -19,11 +19,10 @@ const mockStore = {
   cleanup: jest.fn(),
 };
 
-jest.mock('../../../stores/profileStore', () => ({
+jest.mock('../../stores/profileStore', () => ({
   useProfileStore: {
     getState: () => mockStore,
   },
-  useProfile: () => mockStore,
 }));
 
 describe('ProfileStore', () => {

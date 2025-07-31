@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import SportPickerModal from '../../../profile/sports/SportPickerModal';
+import SportPickerModal from '@/components/profile/sports/SportPickerModal';
 import { Sport, SportLevel } from '@/types/profile';
 
 const mockSports: Sport[] = [

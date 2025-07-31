@@ -25,9 +25,12 @@
   "jest": {
     "preset": "jest-expo",
     "testPathIgnorePatterns": [
-      "<rootDir>/components/__tests__/setup.ts",
-      "<rootDir>/components/__tests__/utils/testUtils.tsx"
-    ]
+      "<rootDir>/__tests__/setup.ts",
+      "<rootDir>/__tests__/utils/testUtils.tsx"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1"
+    }
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

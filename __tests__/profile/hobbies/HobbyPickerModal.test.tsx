@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import HobbyPickerModal from '../../../profile/hobbies/HobbyPickerModal';
+import HobbyPickerModal from '@/components/profile/hobbies/HobbyPickerModal';
 // Define Hobby type locally since it's not exported from '@/types/profile'
 type Hobby = {
   id: string;

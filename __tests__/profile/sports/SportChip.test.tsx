@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import SportChip from '../../../profile/sports/SportChip';
+import SportChip from '@/components/profile/sports/SportChip';
 import { ProfileSport } from '@/types/profile';
 
 const mockUserSport: ProfileSport = {

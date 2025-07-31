@@ -12,7 +12,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 
 // Mock authStore
 const mockSignOut = jest.fn();
-jest.mock('../../../stores/authStore', () => ({
+jest.mock('@/stores/authStore', () => ({
   useAuth: jest.fn(() => ({
     user: null,
     session: null,
@@ -29,7 +29,7 @@ jest.mock('expo-router', () => ({
 }));
 
 // Mock supabase
-jest.mock('../../../lib/supabase', () => ({
+jest.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
       signOut: jest.fn(),
@@ -40,7 +40,7 @@ jest.mock('../../../lib/supabase', () => ({
 // Mock Alert
 jest.spyOn(Alert, 'alert');
 
-import ProfileActions from '../../profile/ProfileActions';
+import ProfileActions from '@/components/profile/ProfileActions';
 
 const mockOnSave = jest.fn();
 const mockOnCancel = jest.fn();

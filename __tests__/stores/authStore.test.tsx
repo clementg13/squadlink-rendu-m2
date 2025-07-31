@@ -18,7 +18,7 @@ const mockSupabase = {
 };
 
 // Mock avant tous les imports
-jest.mock('../../../lib/supabase', () => ({
+jest.mock('../../lib/supabase', () => ({
   supabase: mockSupabase,
 }));
 

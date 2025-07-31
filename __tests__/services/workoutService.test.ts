@@ -1,13 +1,13 @@
 // Mock Supabase avant les imports
-jest.mock('../../../lib/supabase', () => ({
+jest.mock('../../lib/supabase', () => ({
   supabase: {
     from: jest.fn(),
     rpc: jest.fn()
   }
 }));
 
-import { workoutService } from '../../../services/workoutService';
-import { supabase } from '../../../lib/supabase';
+import { workoutService } from '@/services/workoutService';
+import { supabase } from '@/lib/supabase';
 
 const mockSupabase = supabase as jest.Mocked<typeof supabase>;
 

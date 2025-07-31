@@ -1,4 +1,4 @@
-import { locationService, LocationData } from '../../../services/locationService';
+import { locationService, LocationData } from '@/services/locationService';
 import * as Location from 'expo-location';
 import { Alert, Linking } from 'react-native';
 
@@ -34,7 +34,7 @@ const mockSupabase = {
   })),
 };
 
-jest.mock('../../../lib/supabase', () => ({
+jest.mock('../../lib/supabase', () => ({
   supabase: mockSupabase,
 }));
 

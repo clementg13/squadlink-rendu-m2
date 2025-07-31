@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import OnboardingWelcome from '../../../onboarding/steps/OnboardingWelcome';
+import OnboardingWelcome from '@/components/onboarding/steps/OnboardingWelcome';
 
 const mockOnNext = jest.fn();
 

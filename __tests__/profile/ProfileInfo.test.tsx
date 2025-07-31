@@ -1,7 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
-import ProfileInfo from '../../profile/ProfileInfo';
-import { createMockProfile, createMockProfileSport, createMockProfileSocialMedia } from '../utils/testUtils';
+import ProfileInfo from '@/components/profile/ProfileInfo';
+import { createMockProfile, createMockProfileSport, createMockProfileSocialMedia } from '@/__tests__/utils/testUtils';
 
 describe('ProfileInfo', () => {
   it('renders basic profile information', () => {

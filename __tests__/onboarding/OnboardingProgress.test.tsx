@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
-import OnboardingProgress from '../../onboarding/OnboardingProgress';
+import OnboardingProgress from '@/components/onboarding/OnboardingProgress';
 
 describe('OnboardingProgress', () => {
   it('renders with correct step count', () => {

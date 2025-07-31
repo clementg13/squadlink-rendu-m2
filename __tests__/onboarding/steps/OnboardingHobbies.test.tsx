@@ -19,13 +19,13 @@ const mockSupabase = {
   from: jest.fn(),
 };
 
-jest.mock('../../../../lib/supabase', () => ({
+jest.mock('@/lib/supabase', () => ({
   supabase: mockSupabase,
 }));
 
 jest.spyOn(Alert, 'alert');
 
-import OnboardingHobbies from '../../../onboarding/steps/OnboardingHobbies';
+import OnboardingHobbies from '@/components/onboarding/steps/OnboardingHobbies';
 
 const mockOnNext = jest.fn();
 const mockOnBack = jest.fn();

@@ -1,6 +1,6 @@
 import React from 'react';
-import { render } from '../utils/testUtils';
-import ProfileHeader from '../../profile/ProfileHeader';
+import { render } from '@/__tests__/utils/testUtils';
+import ProfileHeader from '@/components/profile/ProfileHeader';
 
 describe('ProfileHeader', () => {
   it('renders title correctly', () => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import ProfileLocation from '../../profile/location/ProfileLocation';
+import ProfileLocation from '@/components/profile/location/ProfileLocation';
 
 // Define interface locally
 interface UserProfile {
@@ -14,7 +14,7 @@ interface UserProfile {
 }
 
 // Mock locationService
-jest.mock('../../../services/locationService', () => ({
+jest.mock('@/services/locationService', () => ({
   locationService: {
     showLocationExplanation: jest.fn(),
     getCurrentLocation: jest.fn(),

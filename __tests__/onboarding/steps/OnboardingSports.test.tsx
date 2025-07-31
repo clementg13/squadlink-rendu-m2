@@ -28,7 +28,7 @@ const mockSupabase = {
     .mockReturnValueOnce(createMockChain(mockSportLevels)),
 };
 
-jest.mock('../../../../lib/supabase', () => ({
+jest.mock('../../../lib/supabase', () => ({
   supabase: mockSupabase,
 }));
 
@@ -36,7 +36,7 @@ jest.mock('../../../../lib/supabase', () => ({
 jest.spyOn(Alert, 'alert');
 
 // Import component after mocks
-import OnboardingSports from '../../../onboarding/steps/OnboardingSports';
+import OnboardingSports from '@/components/onboarding/steps/OnboardingSports';
 
 const mockOnNext = jest.fn();
 const mockOnBack = jest.fn();

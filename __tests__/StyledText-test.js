@@ -2,10 +2,10 @@ import * as React from 'react';
 import renderer from 'react-test-renderer';
 import { act } from 'react-test-renderer';
 
-import { MonoText } from '../StyledText';
+import { MonoText } from '@/components/StyledText';
 
 // Mock useColorScheme pour éviter les problèmes en CI
-jest.mock('../useColorScheme', () => ({
+jest.mock('../components/useColorScheme', () => ({
   useColorScheme: () => 'light'
 }));
 
