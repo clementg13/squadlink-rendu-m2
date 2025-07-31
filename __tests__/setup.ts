@@ -115,16 +115,26 @@ jest.mock('react-native', () => ({
   StatusBar: 'StatusBar',
   KeyboardAvoidingView: 'KeyboardAvoidingView',
   SafeAreaView: 'SafeAreaView',
-  // Animated
-  Animated: {
-    Value: jest.fn(),
-    timing: jest.fn(),
-    spring: jest.fn(),
-    View: 'Animated.View',
-    Text: 'Animated.Text',
-    Image: 'Animated.Image',
-    ScrollView: 'Animated.ScrollView',
-  },
+                // Animated
+              Animated: {
+                Value: jest.fn(() => ({
+                  setValue: jest.fn(),
+                  start: jest.fn(),
+                })),
+                timing: jest.fn(() => ({
+                  start: jest.fn(),
+                })),
+                spring: jest.fn(() => ({
+                  start: jest.fn(),
+                })),
+                sequence: jest.fn(() => ({
+                  start: jest.fn(),
+                })),
+                View: 'Animated.View',
+                Text: 'Animated.Text',
+                Image: 'Animated.Image',
+                ScrollView: 'Animated.ScrollView',
+              },
   // Layout
   LayoutAnimation: {
     configureNext: jest.fn(),
