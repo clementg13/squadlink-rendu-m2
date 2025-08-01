@@ -15,7 +15,7 @@ interface ConversationData {
   participants: Set<string>;
 }
 
-export class ImprovedMessageService {
+export class MessageService {
   
   // Méthode principale pour récupérer toutes les conversations
   static async getUserConversations(userId: string): Promise<Conversation[]> {
