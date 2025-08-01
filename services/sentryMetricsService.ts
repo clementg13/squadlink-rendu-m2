@@ -29,7 +29,10 @@ export class SentryMetricsService {
   private appMetrics: AppMetrics | null = null;
   private performanceMetrics: PerformanceMetrics | null = null;
 
-  private constructor() {}
+  // Constructeur privé pour le pattern Singleton
+  private constructor() {
+    // Constructeur vide pour le pattern Singleton
+  }
 
   static getInstance(): SentryMetricsService {
     if (!SentryMetricsService.instance) {
@@ -47,7 +50,7 @@ export class SentryMetricsService {
     addSentryTag('actions_performed', metrics.actionsPerformed.toString());
     addSentryTag('errors_encountered', metrics.errorsEncountered.toString());
     
-    addSentryContext('user_metrics', metrics);
+    addSentryContext('user_metrics', metrics as unknown as Record<string, unknown>);
     
     addSentryBreadcrumb(
       'User Metrics Updated',
@@ -66,7 +69,7 @@ export class SentryMetricsService {
     addSentryTag('api_calls', metrics.apiCalls.toString());
     addSentryTag('crash_count', metrics.crashCount.toString());
     
-    addSentryContext('app_metrics', metrics);
+    addSentryContext('app_metrics', metrics as unknown as Record<string, unknown>);
   }
 
   // Métriques de performance
@@ -81,11 +84,11 @@ export class SentryMetricsService {
       addSentryTag('battery_level', metrics.batteryLevel.toString());
     }
     
-    addSentryContext('performance_metrics', metrics);
+    addSentryContext('performance_metrics', metrics as unknown as Record<string, unknown>);
   }
 
   // Suivi des événements utilisateur
-  trackUserAction(action: string, details?: Record<string, any>) {
+  trackUserAction(action: string, details?: Record<string, unknown>) {
     addSentryBreadcrumb(
       `User Action: ${action}`,
       'user_action',
@@ -142,7 +145,7 @@ export class SentryMetricsService {
   }
 
   // Suivi des erreurs
-  trackError(error: Error, context?: Record<string, any>) {
+  trackError(error: Error, context?: Record<string, unknown>) {
     addSentryBreadcrumb(
       `Error Tracked: ${error.message}`,
       'error',

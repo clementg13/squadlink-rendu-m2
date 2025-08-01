@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { addSentryBreadcrumb, captureSentryException } from '@/lib/sentry';
 
 interface NetworkRequest {
@@ -11,10 +11,15 @@ interface NetworkRequest {
   error?: string;
 }
 
+// Extension de XMLHttpRequest pour stocker l'ID de requête Sentry
+interface SentryXMLHttpRequest extends XMLHttpRequest {
+  _sentryRequestId?: string;
+}
+
 export const useSentryNetworkMonitoring = () => {
   const requestsRef = useRef<Map<string, NetworkRequest>>(new Map());
 
-  const startRequest = (url: string, method: string = 'GET') => {
+  const startRequest = useCallback((url: string, method: string = 'GET') => {
     const requestId = `${method}_${url}_${Date.now()}`;
     const request: NetworkRequest = {
       url,
@@ -37,9 +42,9 @@ export const useSentryNetworkMonitoring = () => {
     );
     
     return requestId;
-  };
+  }, []);
 
-  const endRequest = (requestId: string, status: number, error?: string) => {
+  const endRequest = useCallback((requestId: string, status: number, error?: string) => {
     const request = requestsRef.current.get(requestId);
     if (!request) return;
 
@@ -79,9 +84,9 @@ export const useSentryNetworkMonitoring = () => {
 
     // Nettoyer la requête
     requestsRef.current.delete(requestId);
-  };
+  }, []);
 
-  const monitorFetch = () => {
+  const monitorFetch = useCallback(() => {
     const originalFetch = global.fetch;
     
     global.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -102,49 +107,52 @@ export const useSentryNetworkMonitoring = () => {
         throw error;
       }
     };
-  };
+  }, [startRequest, endRequest]);
 
-  const monitorXMLHttpRequest = () => {
+  const monitorXMLHttpRequest = useCallback(() => {
     if (typeof XMLHttpRequest !== 'undefined') {
       const originalOpen = XMLHttpRequest.prototype.open;
       const originalSend = XMLHttpRequest.prototype.send;
       
       XMLHttpRequest.prototype.open = function(method: string, url: string) {
-        this._sentryRequestId = startRequest(url, method);
+        (this as SentryXMLHttpRequest)._sentryRequestId = startRequest(url, method);
         return originalOpen.call(this, method, url);
       };
       
-      XMLHttpRequest.prototype.send = function(data?: any) {
-        const xhr = this;
+      XMLHttpRequest.prototype.send = function(data?: unknown) {
+        const xhr = this as SentryXMLHttpRequest;
         const requestId = xhr._sentryRequestId;
         
         const originalOnReadyStateChange = xhr.onreadystatechange;
         
         xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {
+          if (xhr.readyState === 4 && requestId) {
             endRequest(requestId, xhr.status, xhr.statusText);
           }
           
           if (originalOnReadyStateChange) {
-            originalOnReadyStateChange.call(xhr);
+            originalOnReadyStateChange.call(xhr, new Event('readystatechange'));
           }
         };
         
         return originalSend.call(this, data);
       };
     }
-  };
+  }, [startRequest, endRequest]);
 
   useEffect(() => {
+    // Capturer la référence au début pour éviter les warnings
+    const requests = requestsRef.current;
+    
     // Activer le monitoring réseau
     monitorFetch();
     monitorXMLHttpRequest();
     
     // Nettoyer les requêtes en cours lors du démontage
     return () => {
-      requestsRef.current.clear();
+      requests.clear();
     };
-  }, []);
+  }, [monitorFetch, monitorXMLHttpRequest]);
 
   return {
     startRequest,

@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    width: '100%',
+    width: '100%', // Added to ensure it takes full width within scrollContent
   },
   content: {
     backgroundColor: 'white',
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
 
 // Hook pour utiliser l'Error Boundary avec Sentry
 export const useSentryErrorBoundary = () => {
-  const captureError = (error: Error, context?: Record<string, any>) => {
+  const captureError = (error: Error, context?: Record<string, unknown>) => {
     captureSentryException(error, context);
   };
 

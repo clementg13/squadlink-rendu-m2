@@ -116,11 +116,11 @@ export const addSentryTag = (key: string, value: string) => {
   Sentry.setTag(key, value);
 };
 
-export const addSentryContext = (name: string, context: Record<string, any>) => {
+export const addSentryContext = (name: string, context: Record<string, unknown>) => {
   Sentry.setContext(name, context);
 };
 
-export const captureSentryException = (error: Error, context?: Record<string, any>) => {
+export const captureSentryException = (error: Error, context?: Record<string, unknown>) => {
   if (context) {
     Sentry.setContext('error_context', context);
   }
@@ -131,7 +131,7 @@ export const captureSentryMessage = (message: string, level: Sentry.SeverityLeve
   Sentry.captureMessage(message, level);
 };
 
-export const addSentryBreadcrumb = (message: string, category: string, data?: Record<string, any>) => {
+export const addSentryBreadcrumb = (message: string, category: string, data?: Record<string, unknown>) => {
   Sentry.addBreadcrumb({
     message,
     category,

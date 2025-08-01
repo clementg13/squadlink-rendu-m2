@@ -38,7 +38,7 @@ export const useSentryMetrics = () => {
   }, []);
 
   // Suivi des actions utilisateur
-  const trackUserAction = (action: string, details?: Record<string, any>) => {
+  const trackUserAction = (action: string, details?: Record<string, unknown>) => {
     sentryMetricsService.trackUserAction(action, details);
   };
 
@@ -55,7 +55,7 @@ export const useSentryMetrics = () => {
   };
 
   // Suivi des erreurs
-  const trackError = (error: Error, context?: Record<string, any>) => {
+  const trackError = (error: Error, context?: Record<string, unknown>) => {
     errorCount.current++;
     sentryMetricsService.trackError(error, context);
   };
