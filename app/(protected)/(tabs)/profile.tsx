@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   ScrollView,
@@ -66,23 +66,44 @@ export default function ProfileScreen() {
     biography: '',
   });
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Ref pour tracker l'état d'initialisation et éviter les appels répétés
+  const initializationRef = useRef({
+    hasInitialized: false,
+    lastSportsLength: 0,
+    lastSportLevelsLength: 0,
+    lastSocialMediasLength: 0,
+  });
 
   useEffect(() => {
     const initializeStore = async () => {
-      // Forcer la re-initialisation si nécessaire
-      if (sports.length === 0 && sportLevels.length === 0 && socialMedias.length === 0) {
-        await initialize();
-      }
+      // Vérifier si l'initialisation est nécessaire
+      const currentState = {
+        sportsLength: sports.length,
+        sportLevelsLength: sportLevels.length,
+        socialMediasLength: socialMedias.length,
+      };
       
-      if (!initialized) {
+      const needsInitialization = !initialized || 
+                                 !initializationRef.current.hasInitialized ||
+                                 currentState.sportsLength === 0 || 
+                                 currentState.sportLevelsLength === 0 || 
+                                 currentState.socialMediasLength === 0;
+      
+      if (needsInitialization) {
+        console.log('🔄 ProfileScreen: Initializing store...');
         await initialize();
+        initializationRef.current.hasInitialized = true;
+        initializationRef.current.lastSportsLength = currentState.sportsLength;
+        initializationRef.current.lastSportLevelsLength = currentState.sportLevelsLength;
+        initializationRef.current.lastSocialMediasLength = currentState.socialMediasLength;
       }
       
       await loadProfile();
     };
     
     initializeStore();
-  }, [initialized, initialize, loadProfile]); // Suppression des dépendances qui changent trop souvent
+  }, [initialized, initialize, loadProfile, sports.length, sportLevels.length, socialMedias.length]);
 
   useEffect(() => {
     if (profile) {
