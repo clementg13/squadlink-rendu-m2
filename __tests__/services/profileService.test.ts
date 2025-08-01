@@ -137,6 +137,45 @@ describe('ProfileService', () => {
       const result = await profileService.updateProfile('user1', { firstname: 'John' });
       expect(result).toEqual(mockUpdatedProfile);
     });
+
+    it('should not update profile if only empty strings or invalid birthdate are provided', async () => {
+      // Simule un profil existant
+      const mockProfile = { id: '1', id_user: 'user1', firstname: 'Jane', birthdate: '1990-01-01' };
+
+      // updateProfile doit retourner le profil courant si rien à mettre à jour
+      mockSupabase.from.mockReturnValue({
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            select: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: mockProfile,
+                error: null
+              })
+            })
+          })
+        }),
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: mockProfile,
+              error: null
+            })
+          })
+        })
+      } as any);
+
+      // Cas 1 : uniquement des champs vides
+      const result1 = await profileService.updateProfile('user1', { firstname: '', lastname: '' });
+      expect(result1).toEqual(mockProfile);
+
+      // Cas 2 : birthdate invalide
+      const result2 = await profileService.updateProfile('user1', { birthdate: 'not-a-date' });
+      expect(result2).toEqual(mockProfile);
+
+      // Cas 3 : birthdate vide
+      const result3 = await profileService.updateProfile('user1', { birthdate: '' });
+      expect(result3).toEqual(mockProfile);
+    });
   });
 
   describe('getAllGyms', () => {
@@ -220,6 +259,103 @@ describe('ProfileService', () => {
 
       const result = await profileService.getLocationDetails('1');
       expect(result).toBeNull();
+    });
+  });
+
+  describe('deleteAccountAndData', () => {
+    it('should delete profile and call RPC for user deletion', async () => {
+      // Mock getUser
+      mockSupabase.auth = {
+        getUser: jest.fn().mockResolvedValue({
+          data: { user: { id: 'user1' } },
+          error: null
+        })
+      } as any;
+
+      // Mock profile deletion
+      mockSupabase.from.mockReturnValueOnce({
+        delete: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({ error: null })
+        })
+      } as any);
+
+      // Mock RPC
+      mockSupabase.rpc = jest.fn().mockResolvedValue({ error: null, data: null });
+
+      const result = await profileService.deleteAccountAndData();
+      expect(result).toEqual({});
+      expect(mockSupabase.from).toHaveBeenCalledWith('profile');
+      expect(mockSupabase.rpc).toHaveBeenCalledWith('auth_delete_current_user');
+    });
+
+    it('should return error if getUser fails', async () => {
+      mockSupabase.auth = {
+        getUser: jest.fn().mockResolvedValue({
+          data: { user: null },
+          error: { message: 'fail' }
+        })
+      } as any;
+
+      const result = await profileService.deleteAccountAndData();
+      expect(result.error).toBeDefined();
+    });
+
+    it('should return error if profile deletion fails', async () => {
+      mockSupabase.auth = {
+        getUser: jest.fn().mockResolvedValue({
+          data: { user: { id: 'user1' } },
+          error: null
+        })
+      } as any;
+
+      mockSupabase.from.mockReturnValueOnce({
+        delete: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({ error: { message: 'fail' } })
+        })
+      } as any);
+
+      const result = await profileService.deleteAccountAndData();
+      expect(result.error).toBeDefined();
+    });
+
+    it('should return error if RPC fails', async () => {
+      mockSupabase.auth = {
+        getUser: jest.fn().mockResolvedValue({
+          data: { user: { id: 'user1' } },
+          error: null
+        })
+      } as any;
+
+      mockSupabase.from.mockReturnValueOnce({
+        delete: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({ error: null })
+        })
+      } as any);
+
+      mockSupabase.rpc = jest.fn().mockResolvedValue({ error: { code: '123', message: 'fail' }, data: null });
+
+      const result = await profileService.deleteAccountAndData();
+      expect(result.error).toBeDefined();
+    });
+
+    it('should return specific error if RPC returns code 23503', async () => {
+      mockSupabase.auth = {
+        getUser: jest.fn().mockResolvedValue({
+          data: { user: { id: 'user1' } },
+          error: null
+        })
+      } as any;
+
+      mockSupabase.from.mockReturnValueOnce({
+        delete: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({ error: null })
+        })
+      } as any);
+
+      mockSupabase.rpc = jest.fn().mockResolvedValue({ error: { code: '23503', message: 'foreign key' }, data: null });
+
+      const result = await profileService.deleteAccountAndData();
+      expect(result.error).toMatch(/Impossible de supprimer votre compte/);
     });
   });
 });

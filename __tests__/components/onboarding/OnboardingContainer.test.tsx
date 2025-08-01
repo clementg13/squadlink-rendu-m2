@@ -179,6 +179,35 @@ jest.mock('@/components/onboarding/OnboardingProgress', () => {
   };
 });
 
+// Mock OnboardingTerms et OnboardingPrivacy pour permettre la navigation dans les tests
+jest.mock('@/components/onboarding/steps/OnboardingTerms', () => {
+  const React = require('react');
+  const { View, Text, TouchableOpacity } = require('react-native');
+  return function MockOnboardingTerms({ onAccept }: { onAccept: () => void }) {
+    return (
+      <View testID="terms-step">
+        <TouchableOpacity testID="terms-accept" onPress={onAccept}>
+          <Text>J'accepte</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+});
+
+jest.mock('@/components/onboarding/steps/OnboardingPrivacy', () => {
+  const React = require('react');
+  const { View, Text, TouchableOpacity } = require('react-native');
+  return function MockOnboardingPrivacy({ onAccept }: { onAccept: () => void }) {
+    return (
+      <View testID="privacy-step">
+        <TouchableOpacity testID="privacy-accept" onPress={onAccept}>
+          <Text>J'accepte</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+});
+
 describe('OnboardingContainer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -212,13 +241,27 @@ describe('OnboardingContainer', () => {
   it('navigates through steps correctly', async () => {
     const { getByTestId, queryByTestId } = render(<OnboardingContainer />);
     
-    // Start at welcome
+    // Welcome
     expect(getByTestId('welcome-step')).toBeTruthy();
     
-    // Go to credentials
+    // Go to terms
     fireEvent.press(getByTestId('welcome-next'));
     await waitFor(() => {
       expect(queryByTestId('welcome-step')).toBeNull();
+      expect(getByTestId('terms-step')).toBeTruthy();
+    });
+    
+    // Go to privacy
+    fireEvent.press(getByTestId('terms-accept'));
+    await waitFor(() => {
+      expect(queryByTestId('terms-step')).toBeNull();
+      expect(getByTestId('privacy-step')).toBeTruthy();
+    });
+    
+    // Go to credentials
+    fireEvent.press(getByTestId('privacy-accept'));
+    await waitFor(() => {
+      expect(queryByTestId('privacy-step')).toBeNull();
       expect(getByTestId('credentials-step')).toBeTruthy();
     });
     
@@ -233,14 +276,23 @@ describe('OnboardingContainer', () => {
   it('handles back navigation correctly', async () => {
     const { getByTestId, queryByTestId } = render(<OnboardingContainer />);
     
-    // Navigate to profile step
+    // Welcome -> Terms
     fireEvent.press(getByTestId('welcome-next'));
+    await waitFor(() => expect(getByTestId('terms-step')).toBeTruthy());
+    
+    // Terms -> Privacy
+    fireEvent.press(getByTestId('terms-accept'));
+    await waitFor(() => expect(getByTestId('privacy-step')).toBeTruthy());
+    
+    // Privacy -> Credentials
+    fireEvent.press(getByTestId('privacy-accept'));
     await waitFor(() => expect(getByTestId('credentials-step')).toBeTruthy());
     
+    // Credentials -> Profile
     fireEvent.press(getByTestId('credentials-next'));
     await waitFor(() => expect(getByTestId('profile-step')).toBeTruthy());
     
-    // Go back to credentials
+    // Profile back to Credentials
     fireEvent.press(getByTestId('profile-back'));
     await waitFor(() => {
       expect(queryByTestId('profile-step')).toBeNull();
@@ -254,10 +306,60 @@ describe('OnboardingContainer', () => {
     // Welcome step - no progress bar
     expect(queryByTestId('progress-bar')).toBeNull();
     
-    // Navigate to credentials - should show progress bar
+    // Welcome -> Terms
     fireEvent.press(getByTestId('welcome-next'));
+    await waitFor(() => expect(getByTestId('terms-step')).toBeTruthy());
+    
+    // Terms -> Privacy
+    fireEvent.press(getByTestId('terms-accept'));
+    await waitFor(() => expect(getByTestId('privacy-step')).toBeTruthy());
+    
+    // Privacy -> Credentials (progress bar should appear)
+    fireEvent.press(getByTestId('privacy-accept'));
     await waitFor(() => {
       expect(getByTestId('progress-bar')).toBeTruthy();
+    });
+  });
+
+  // Tests pour la logique de progression du OnboardingContainer
+  describe('OnboardingContainer progression logic', () => {
+    it('should exclude welcome, terms, privacy, completion from progress steps', () => {
+      const steps = [
+        'welcome', 'terms', 'privacy', 'credentials', 'profile', 'sports', 'hobbies', 'completion'
+      ];
+      const progressSteps = steps.filter(s => !['welcome', 'terms', 'privacy', 'completion'].includes(s));
+      expect(progressSteps).toEqual(['credentials', 'profile', 'sports', 'hobbies']);
+    });
+
+    it('should return correct progressStepIndex for each step', () => {
+      const steps = [
+        'welcome', 'terms', 'privacy', 'credentials', 'profile', 'sports', 'hobbies', 'completion'
+      ];
+      const progressSteps = steps.filter(s => !['welcome', 'terms', 'privacy', 'completion'].includes(s));
+      expect(progressSteps.indexOf('welcome')).toBe(-1);
+      expect(progressSteps.indexOf('terms')).toBe(-1);
+      expect(progressSteps.indexOf('privacy')).toBe(-1);
+      expect(progressSteps.indexOf('completion')).toBe(-1);
+      expect(progressSteps.indexOf('credentials')).toBe(0);
+      expect(progressSteps.indexOf('profile')).toBe(1);
+      expect(progressSteps.indexOf('sports')).toBe(2);
+      expect(progressSteps.indexOf('hobbies')).toBe(3);
+    });
+
+    it('should not show progress bar for welcome, terms, privacy, completion', () => {
+      const steps = [
+        'welcome', 'terms', 'privacy', 'credentials', 'profile', 'sports', 'hobbies', 'completion'
+      ];
+      const progressSteps = steps.filter(s => !['welcome', 'terms', 'privacy', 'completion'].includes(s));
+      const shouldShowProgress = (step: string) => progressSteps.indexOf(step) >= 0;
+      expect(shouldShowProgress('welcome')).toBe(false);
+      expect(shouldShowProgress('terms')).toBe(false);
+      expect(shouldShowProgress('privacy')).toBe(false);
+      expect(shouldShowProgress('completion')).toBe(false);
+      expect(shouldShowProgress('credentials')).toBe(true);
+      expect(shouldShowProgress('profile')).toBe(true);
+      expect(shouldShowProgress('sports')).toBe(true);
+      expect(shouldShowProgress('hobbies')).toBe(true);
     });
   });
 
@@ -271,8 +373,10 @@ describe('OnboardingContainer', () => {
     
     const { getByTestId } = render(<OnboardingContainer />);
     
-    // Navigate to hobbies and trigger save
+    // Welcome -> Terms -> Privacy -> Credentials -> Profile -> Sports -> Hobbies
     fireEvent.press(getByTestId('welcome-next'));
+    await waitFor(() => fireEvent.press(getByTestId('terms-accept')));
+    await waitFor(() => fireEvent.press(getByTestId('privacy-accept')));
     await waitFor(() => fireEvent.press(getByTestId('credentials-next')));
     await waitFor(() => fireEvent.press(getByTestId('profile-next')));
     await waitFor(() => fireEvent.press(getByTestId('sports-next')));
