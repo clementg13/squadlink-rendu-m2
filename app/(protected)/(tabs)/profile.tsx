@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -82,7 +82,7 @@ export default function ProfileScreen() {
     };
     
     initializeStore();
-  }, [initialized, initialize, loadProfile, socialMedias.length, sportLevels.length, sports.length]);
+  }, [initialized, initialize, loadProfile]); // Suppression des dépendances qui changent trop souvent
 
   useEffect(() => {
     if (profile) {
@@ -95,16 +95,16 @@ export default function ProfileScreen() {
     }
   }, [profile]);
 
-  const handleFieldChange = (field: string, value: string) => {
+  const handleFieldChange = useCallback((field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setHasChanges(true);
     
     if (error) {
       clearError();
     }
-  };
+  }, [error, clearError]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     // Validation des champs requis
     if (!formData.firstname || !formData.lastname) {
       Alert.alert('Erreur', 'Le prénom et le nom sont requis');
@@ -131,9 +131,9 @@ export default function ProfileScreen() {
       // Recharger le profil pour s'assurer que les données sont à jour
       await loadProfile();
     }
-  };
+  }, [formData, updateProfile, loadProfile]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     if (profile) {
       const resetData = {
         lastname: profile.lastname || '',
@@ -146,78 +146,78 @@ export default function ProfileScreen() {
     }
     setHasChanges(false);
     clearError();
-  };
+  }, [profile, clearError]);
 
-  const handleAddHobby = async (hobbyId: string) => {
+  const handleAddHobby = useCallback(async (hobbyId: string) => {
     const { error } = await addUserHobby(hobbyId);
     if (error) {
       Alert.alert('Erreur', error.message);
     }
-  };
+  }, [addUserHobby]);
 
-  const handleRemoveHobby = async (hobbyId: string) => {
+  const handleRemoveHobby = useCallback(async (hobbyId: string) => {
     const { error } = await removeUserHobby(hobbyId);
     if (error) {
       Alert.alert('Erreur', error.message);
     }
-  };
+  }, [removeUserHobby]);
 
-  const handleToggleHighlight = async (hobbyId: string) => {
+  const handleToggleHighlight = useCallback(async (hobbyId: string) => {
     const { error } = await toggleHighlightHobby(hobbyId);
     if (error) {
       Alert.alert('Erreur', error.message);
     }
-  };
+  }, [toggleHighlightHobby]);
 
-  const handleAddSport = async (sportId: string, levelId: string) => {
+  const handleAddSport = useCallback(async (sportId: string, levelId: string) => {
     const { error } = await addUserSport(sportId, levelId);
     if (error) {
       Alert.alert('Erreur', error.message);
     }
-  };
+  }, [addUserSport]);
 
-  const handleRemoveSport = async (sportId: string) => {
+  const handleRemoveSport = useCallback(async (sportId: string) => {
     const { error } = await removeUserSport(sportId);
     if (error) {
       Alert.alert('Erreur', error.message);
     }
-  };
+  }, [removeUserSport]);
 
-  const handleAddSocialMedia = async (socialMediaId: string, username: string) => {
+  const handleAddSocialMedia = useCallback(async (socialMediaId: string, username: string) => {
     const { error } = await addUserSocialMedia(socialMediaId, username);
     if (error) {
       Alert.alert('Erreur', error.message);
     }
-  };
+  }, [addUserSocialMedia]);
 
-  const handleUpdateSocialMedia = async (socialMediaId: string, username: string) => {
+  const handleUpdateSocialMedia = useCallback(async (socialMediaId: string, username: string) => {
     const { error } = await updateUserSocialMedia(socialMediaId, username);
     if (error) {
       Alert.alert('Erreur', error.message);
     }
-  };
+  }, [updateUserSocialMedia]);
 
-  const handleRemoveSocialMedia = async (socialMediaId: string) => {
+  const handleRemoveSocialMedia = useCallback(async (socialMediaId: string) => {
     const { error } = await removeUserSocialMedia(socialMediaId);
     if (error) {
       Alert.alert('Erreur', error.message);
     }
-  };
+  }, [removeUserSocialMedia]);
 
-  const handleUpdateGym = async (subscriptionId: string | null, gymId?: string | null) => {
+  const handleUpdateGym = useCallback(async (subscriptionId: string | null, gymId?: string | null) => {
     try {
-      const updateData: Partial<{ id_gymsubscription?: string | null; id_gym?: string | null }> = {};
+      const updateData: Partial<{ id_gymsubscription?: string | undefined; id_gym?: string | undefined }> = {};
       
       // Handle subscription ID
       if (subscriptionId === null) {
-        updateData.id_gymsubscription = null;
+        updateData.id_gymsubscription = undefined;
       } else if (subscriptionId) {
         updateData.id_gymsubscription = subscriptionId;
       }
       
       // Handle gym ID
       if (gymId === null) {
-        updateData.id_gym = null;
+        updateData.id_gym = undefined;
       } else if (gymId) {
         updateData.id_gym = gymId;
       }
@@ -243,21 +243,21 @@ export default function ProfileScreen() {
       console.error('❌ ProfileScreen: Unexpected error during gym update:', err);
       Alert.alert('Erreur', 'Une erreur inattendue est survenue lors de la mise à jour de la salle');
     }
-  };
+  }, [updateProfile, loadProfile]);
 
-  const handleLoadGymSubscriptions = async () => {
+  const handleLoadGymSubscriptions = useCallback(async () => {
     await loadGymSubscriptions();
-  };
+  }, [loadGymSubscriptions]);
 
-  const handleUpdateLocation = async (locationData: { town: string; postal_code: number; latitude: number; longitude: number }) => {
+  const handleUpdateLocation = useCallback(async (locationData: { town: string; postal_code: number; latitude: number; longitude: number }) => {
     const { error } = await updateLocation(locationData);
     
     if (error) {
       Alert.alert('Erreur', error.message);
     }
-  };
+  }, [updateLocation]);
 
-  const handleOpenLegal = () => {
+  const handleOpenLegal = useCallback(() => {
     // Utilise ActionSheetIOS uniquement sur iOS, sinon fallback simple pour Android/web
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -294,7 +294,7 @@ export default function ProfileScreen() {
         ]
       );
     }
-  };
+  }, []);
 
   if (loading && !profile) {
     return (
