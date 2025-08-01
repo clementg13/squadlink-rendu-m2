@@ -1,0 +1,19 @@
+appId: com.clementgexpo.squadlink
+---
+- launchApp
+- runFlow: auth-flow.yaml
+- tapOn: "Profile"
+- assertVisible: "Profil"
+- scroll
+- assertVisible: "Localisation"
+- scroll
+- assertVisible: "Salle de sport"
+- scroll
+- assertVisible: "Sports"
+- scroll
+- assertVisible: "Réseaux sociaux"
+- scroll
+- assertVisible: "Centres d'intérêt"
+- scroll:
+    direction: UP
+- assertVisible: "Prénom"

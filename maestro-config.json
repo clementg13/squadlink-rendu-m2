@@ -1,0 +1,12 @@
+{
+  "flows": [
+    ".maestro/smoke-test.yaml",
+    ".maestro/auth-flow.yaml"
+  ],
+  "includeTags": ["smoke", "critical"],
+  "excludeTags": ["skip"],
+  "env": {
+    "TEST_EMAIL": "test@example.com",
+    "TEST_PASSWORD": "password123"
+  }
+}

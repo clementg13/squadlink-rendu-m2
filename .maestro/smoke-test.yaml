@@ -1,0 +1,18 @@
+appId: com.clementgexpo.squadlink
+---
+- launchApp
+- assertVisible: "Connexion en cours..."
+- runFlow: auth-flow.yaml
+- assertVisible: "Bonjour"
+
+# Test navigation tabs
+- tapOn: "Profile"
+- assertVisible: "Profil"
+- tapOn: "Home"
+- assertVisible: "Profils compatibles"
+
+# Test settings
+- tapOn: 
+    point: "90%,10%"
+- assertVisible: "Informations légales"
+- tapOn: "Annuler"

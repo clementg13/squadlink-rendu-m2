@@ -1,0 +1,29 @@
+maestro:
+  timeout: 30000
+  retries: 2
+  screenshot_on_failure: true
+  
+env:
+  TEST_EMAIL: "test@example.com"
+  TEST_PASSWORD: "password123"
+  
+flows:
+  - name: "Smoke Test"
+    file: "smoke-test.yaml"
+    tags: ["smoke", "critical"]
+  
+  - name: "Authentication Flow"
+    file: "auth-flow.yaml"
+    tags: ["auth", "critical"]
+    
+  - name: "Profile Completion"
+    file: "profile-completion.yaml"
+    tags: ["profile", "regression"]
+    
+  - name: "Profile Navigation"
+    file: "profile-navigation.yaml"
+    tags: ["navigation", "regression"]
+    
+  - name: "Home Screen"
+    file: "home-screen.yaml"
+    tags: ["home", "regression"]

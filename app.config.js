@@ -71,4 +71,4 @@ export default {
       EXPO_PUBLIC_SUPABASE_KEY: process.env.EXPO_PUBLIC_SUPABASE_KEY,
     }
   }
-}; 
+};
