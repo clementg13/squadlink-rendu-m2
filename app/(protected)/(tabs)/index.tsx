@@ -57,7 +57,6 @@ export default function HomeScreen() {
           compact={true}
         />
       )}
-      
       {/* Notification des demandes d'amis reçues */}
       <PendingMatchesNotification />
       
