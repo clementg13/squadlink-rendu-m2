@@ -123,15 +123,9 @@ export const useSentryNetworkMonitoring = () => {
         const xhr = this as SentryXMLHttpRequest;
         const requestId = xhr._sentryRequestId;
         
-        const originalOnReadyStateChange = xhr.onreadystatechange;
-        
         xhr.onreadystatechange = function() {
           if (xhr.readyState === 4 && requestId) {
             endRequest(requestId, xhr.status, xhr.statusText);
-          }
-          
-          if (originalOnReadyStateChange) {
-            originalOnReadyStateChange.call(xhr, new Event('readystatechange'));
           }
         };
         
