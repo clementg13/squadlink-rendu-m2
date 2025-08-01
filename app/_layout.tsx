@@ -8,7 +8,9 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAuth } from '@/stores/authStore';
-import { initSentry, useSentryNavigationConfig } from '@/lib/sentry';
+import { initSentry, useSentryNavigationConfig, setSentryUser, clearSentryUser } from '@/lib/sentry';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useSentryNetworkMonitoring } from '@/hooks/useSentryNetworkMonitoring';
 import * as Sentry from '@sentry/react-native';
 
 initSentry();
@@ -30,6 +32,7 @@ function RootLayout() {
   const { user, session, loading, initialize, isOnboarding, initialized } = useAuth();
   const [isReady, setIsReady] = useState(false);
   useSentryNavigationConfig();
+  useSentryNetworkMonitoring(); // Activer le monitoring réseau
 
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -56,6 +59,18 @@ function RootLayout() {
       setIsReady(true);
     }
   }, [loading, isReady]);
+
+  // Gestion de l'utilisateur Sentry
+  useEffect(() => {
+    if (user && session) {
+      setSentryUser({
+        id: user.id,
+        email: user.email,
+      });
+    } else {
+      clearSentryUser();
+    }
+  }, [user, session]);
 
   useEffect(() => {
     // Navigation uniquement quand tout est prêt
@@ -86,7 +101,11 @@ function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <ErrorBoundary>
+      <RootLayoutNav />
+    </ErrorBoundary>
+  );
 }
 
 function RootLayoutNav() {
