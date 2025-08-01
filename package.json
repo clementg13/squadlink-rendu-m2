@@ -23,16 +23,7 @@
     "release:changelog": "./scripts/generate-changelog.sh",
     "release:help": "echo 'Étape 1: npm run release:prepare <version> | Étape 2: Créer MR avec version code/name | Étape 3: npm run release:finalize <version> | Changelog: npm run release:changelog'"
   },
-  "jest": {
-    "preset": "jest-expo",
-    "testPathIgnorePatterns": [
-      "<rootDir>/__tests__/setup.ts",
-      "<rootDir>/__tests__/utils/testUtils.tsx"
-    ],
-    "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/$1"
-    }
-  },
+
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
