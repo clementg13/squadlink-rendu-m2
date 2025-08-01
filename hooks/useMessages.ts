@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { RealtimePostgresInsertPayload } from '@supabase/supabase-js';
 import { Conversation, Message, DatabaseMessage } from '@/types/messaging';
-import { ImprovedMessageService } from '@/services/improvedMessagesService';
+import { MessageService } from '@/services/MessagesService';
 import { ConversationService } from '@/services/conversationService';
 import { useAuthUser } from '@/stores/authStore';
 import { supabase } from '@/lib/supabase';
@@ -28,7 +28,7 @@ export function useConversations(_useImprovedService: boolean = false) {
       setLoading(true);
       setError(null);
       
-      const data = await ImprovedMessageService.getUserConversations(user.id);
+      const data = await MessageService.getUserConversations(user.id);
       console.log('📋 Conversations reçues:', data);
       setConversations(data);
       
@@ -73,7 +73,7 @@ export function useConversations(_useImprovedService: boolean = false) {
           
           updateTimeout = setTimeout(async () => {
             try {
-              const updatedConversations = await ImprovedMessageService.getUserConversations(user.id);
+              const updatedConversations = await MessageService.getUserConversations(user.id);
               setConversations(updatedConversations);
               console.log('✅ Conversations mises à jour en temps réel');
             } catch (error) {

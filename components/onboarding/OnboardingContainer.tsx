@@ -54,7 +54,7 @@ export default function OnboardingContainer() {
     () => ['welcome', 'terms', 'privacy', 'credentials', 'profile', 'sports', 'hobbies', 'completion'] as OnboardingStep[],
     []
   );
-  const currentStepIndex = steps.indexOf(currentStep);
+  // const currentStepIndex = steps.indexOf(currentStep); // Variable non utilisée
 
   // Calcule les étapes à afficher dans la barre de progression (exclut welcome, terms, privacy, completion)
   const progressSteps = useMemo(

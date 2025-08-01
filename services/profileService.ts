@@ -302,7 +302,7 @@ export class ProfileService {
       // data est null si la fonction SQL retourne void ou rien, mais la suppression a réussi
       // On considère donc la suppression comme un succès si rpcError est null
       return {};
-    } catch (err) {
+    } catch {
       return { error: 'Une erreur est survenue lors de la suppression du compte.' };
     }
   }

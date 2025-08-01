@@ -19,7 +19,7 @@ export {
 } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
+  // Ensure that reloading keeps a back button present.
   initialRouteName: 'index',
 };
 
@@ -103,16 +103,6 @@ function RootLayoutNav() {
         
         {/* Routes protégées */}
         <Stack.Screen name="(protected)" />
-        
-        {/* Modals globaux */}
-        <Stack.Screen 
-          name="modal" 
-          options={{ 
-            presentation: 'modal',
-            headerShown: true,
-            title: 'Modal'
-          }} 
-        />
       </Stack>
     </ThemeProvider>
   );

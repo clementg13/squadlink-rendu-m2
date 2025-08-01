@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
 
 interface OnboardingTermsProps {
   onAccept: () => void;
@@ -8,7 +7,7 @@ interface OnboardingTermsProps {
 }
 
 export default function OnboardingTerms({ onAccept, onBack }: OnboardingTermsProps) {
-  const router = useRouter();
+  // const router = useRouter(); // Variable non utilisée
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Conditions d'utilisation</Text>

@@ -15,7 +15,6 @@ import {
 import { useProfile } from '@/stores/profileStore';
 import { useCurrentUserProfileCompletion } from '@/hooks/useCurrentUserProfileCompletion';
 import { router } from 'expo-router';
-import { Linking } from 'react-native';
 
 // Composants
 import ProfileHeader from '@/components/profile/ProfileHeader';
@@ -206,28 +205,43 @@ export default function ProfileScreen() {
   };
 
   const handleUpdateGym = async (subscriptionId: string | null, gymId?: string | null) => {
-    const updateData: Partial<{ id_gymsubscription?: string; id_gym?: string }> = {};
-    
-    if (subscriptionId !== null) {
-      updateData.id_gymsubscription = subscriptionId;
-    } else {
-      updateData.id_gymsubscription = undefined;
-    }
-    
-    if (gymId !== undefined && gymId !== null) {
-      updateData.id_gym = gymId;
-    } else if (gymId === null) {
-      updateData.id_gym = undefined;
-    }
+    try {
+      const updateData: Partial<{ id_gymsubscription?: string | null; id_gym?: string | null }> = {};
+      
+      // Handle subscription ID
+      if (subscriptionId === null) {
+        updateData.id_gymsubscription = null;
+      } else if (subscriptionId) {
+        updateData.id_gymsubscription = subscriptionId;
+      }
+      
+      // Handle gym ID
+      if (gymId === null) {
+        updateData.id_gym = null;
+      } else if (gymId) {
+        updateData.id_gym = gymId;
+      }
 
-    console.log('🔄 ProfileScreen: Updating gym data:', updateData);
+      console.log('🔄 ProfileScreen: Updating gym data:', updateData);
 
-    const { error } = await updateProfile(updateData);
-    if (error) {
-      Alert.alert('Erreur', error.message);
-    } else {
-      // Recharger le profil après mise à jour de la salle
-      await loadProfile();
+      // Ensure we have valid update data
+      if (Object.keys(updateData).length === 0) {
+        console.warn('⚠️ ProfileScreen: No gym data to update');
+        return;
+      }
+
+      const { error } = await updateProfile(updateData);
+      if (error) {
+        console.error('❌ ProfileScreen: Gym update failed:', error);
+        Alert.alert('Erreur', `Erreur lors de la mise à jour de la salle: ${error.message}`);
+      } else {
+        console.log('✅ ProfileScreen: Gym updated successfully');
+        // Recharger le profil après mise à jour de la salle
+        await loadProfile();
+      }
+    } catch (err) {
+      console.error('❌ ProfileScreen: Unexpected error during gym update:', err);
+      Alert.alert('Erreur', 'Une erreur inattendue est survenue lors de la mise à jour de la salle');
     }
   };
 
@@ -260,7 +274,7 @@ export default function ProfileScreen() {
         }
       );
     } else {
-      // Fallback Android/web : simple Alert avec liens
+      // Fallback Android/web: simple Alert avec liens
       Alert.alert(
         'Informations légales',
         'Choisissez une option',

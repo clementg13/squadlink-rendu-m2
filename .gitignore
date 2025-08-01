@@ -37,4 +37,3 @@ yarn-error.*
 *.tsbuildinfo
 .env
 .env.local
-components/__tests__/__snapshots__/StyledText-test.js.snap

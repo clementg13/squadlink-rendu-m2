@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
 
 interface OnboardingPrivacyProps {
   onAccept: () => void;
@@ -8,7 +7,7 @@ interface OnboardingPrivacyProps {
 }
 
 export default function OnboardingPrivacy({ onAccept, onBack }: OnboardingPrivacyProps) {
-  const router = useRouter();
+  // const router = useRouter(); // Variable non utilisée
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Politique de confidentialité</Text>
