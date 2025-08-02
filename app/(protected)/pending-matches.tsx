@@ -14,6 +14,7 @@ import { router } from 'expo-router';
 import { MatchService, Match } from '@/services/matchService';
 import { profileService } from '@/services/profileService';
 import { useMatchRefreshStore } from '@/stores/matchRefreshStore';
+import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 interface PendingMatchWithUser extends Match {
   id_user_initiator_details?: {
@@ -128,109 +129,113 @@ export default function PendingMatchesScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Chargement des demandes...</Text>
-      </View>
+      <SafeAreaWrapper backgroundColor="#F8F9FA" statusBarStyle="dark">
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>Chargement des demandes...</Text>
+        </View>
+      </SafeAreaWrapper>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#007AFF" />
-        </TouchableOpacity>
-        
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Demandes d'amis</Text>
-          <Text style={styles.headerSubtitle}>
-            {pendingMatches.length} demande{pendingMatches.length !== 1 ? 's' : ''} en attente
-          </Text>
-        </View>
-      </View>
-
-      {/* Content */}
-      <ScrollView 
-        style={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {pendingMatches.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="people-outline" size={64} color="#CCCCCC" />
-            <Text style={styles.emptyTitle}>Aucune demande d'ami</Text>
-            <Text style={styles.emptySubtitle}>
-              Vous n'avez pas de demandes d'amis en attente pour le moment.
+    <SafeAreaWrapper backgroundColor="#F8F9FA" statusBarStyle="dark">
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#007AFF" />
+          </TouchableOpacity>
+          
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Demandes d'amis</Text>
+            <Text style={styles.headerSubtitle}>
+              {pendingMatches.length} demande{pendingMatches.length !== 1 ? 's' : ''} en attente
             </Text>
           </View>
-        ) : (
-          pendingMatches.map((match) => {
-            const user = match.id_user_initiator_details;
-            if (!user) return null;
+        </View>
 
-            return (
-              <View key={match.id} style={styles.matchCard}>
-                <TouchableOpacity 
-                  style={styles.userInfoContainer}
-                  onPress={() => handleProfilePress(match)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.userInfo}>
-                    <View style={styles.avatar}>
-                      <Text style={styles.avatarText}>
-                        {user.firstname?.charAt(0)?.toUpperCase() || '?'}
-                      </Text>
-                    </View>
-                    
-                    <View style={styles.userDetails}>
-                      <Text style={styles.userName}>
-                        {user.firstname} {user.lastname}
-                      </Text>
-                      {user.birthdate && (
-                        <Text style={styles.userAge}>
-                          {new Date().getFullYear() - new Date(user.birthdate).getFullYear()} ans
+        {/* Content */}
+        <ScrollView 
+          style={styles.content}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {pendingMatches.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="people-outline" size={64} color="#CCCCCC" />
+              <Text style={styles.emptyTitle}>Aucune demande d'ami</Text>
+              <Text style={styles.emptySubtitle}>
+                Vous n'avez pas de demandes d'amis en attente pour le moment.
+              </Text>
+            </View>
+          ) : (
+            pendingMatches.map((match) => {
+              const user = match.id_user_initiator_details;
+              if (!user) return null;
+
+              return (
+                <View key={match.id} style={styles.matchCard}>
+                  <TouchableOpacity 
+                    style={styles.userInfoContainer}
+                    onPress={() => handleProfilePress(match)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.userInfo}>
+                      <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>
+                          {user.firstname?.charAt(0)?.toUpperCase() || '?'}
                         </Text>
-                      )}
-                      {user.biography && (
-                        <Text style={styles.biography} numberOfLines={2}>
-                          "{user.biography}"
+                      </View>
+                      
+                      <View style={styles.userDetails}>
+                        <Text style={styles.userName}>
+                          {user.firstname} {user.lastname}
                         </Text>
-                      )}
+                        {user.birthdate && (
+                          <Text style={styles.userAge}>
+                            {new Date().getFullYear() - new Date(user.birthdate).getFullYear()} ans
+                          </Text>
+                        )}
+                        {user.biography && (
+                          <Text style={styles.biography} numberOfLines={2}>
+                            "{user.biography}"
+                          </Text>
+                        )}
+                      </View>
+                      
+                      <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
                     </View>
+                  </TouchableOpacity>
+
+                  <View style={styles.actions}>
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.acceptButton]}
+                      onPress={() => handleAcceptMatch(match.id)}
+                    >
+                      <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                      <Text style={styles.acceptButtonText}>Accepter</Text>
+                    </TouchableOpacity>
                     
-                    <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.rejectButton]}
+                      onPress={() => handleRejectMatch(match.id)}
+                    >
+                      <Ionicons name="close" size={16} color="#FFFFFF" />
+                      <Text style={styles.rejectButtonText}>Refuser</Text>
+                    </TouchableOpacity>
                   </View>
-                </TouchableOpacity>
-
-                <View style={styles.actions}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.acceptButton]}
-                    onPress={() => handleAcceptMatch(match.id)}
-                  >
-                    <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                    <Text style={styles.acceptButtonText}>Accepter</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.rejectButton]}
-                    onPress={() => handleRejectMatch(match.id)}
-                  >
-                    <Ionicons name="close" size={16} color="#FFFFFF" />
-                    <Text style={styles.rejectButtonText}>Refuser</Text>
-                  </TouchableOpacity>
                 </View>
-              </View>
-            );
-          })
-        )}
-      </ScrollView>
-    </View>
+              );
+            })
+          )}
+        </ScrollView>
+      </View>
+    </SafeAreaWrapper>
   );
 }
 

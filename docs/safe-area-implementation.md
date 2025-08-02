@@ -2,7 +2,7 @@
 
 ## Problème résolu
 
-Sur Android, les éléments de l'interface utilisateur passaient derrière la barre de navigation (camera notch, boutons home/retour) car les écrans publics n'utilisaient pas correctement `react-native-safe-area-context`.
+Sur Android, les éléments de l'interface utilisateur passaient derrière la barre de navigation (camera notch, boutons home/retour) car les écrans n'utilisaient pas correctement `react-native-safe-area-context`.
 
 ## Solution implémentée
 
@@ -29,7 +29,21 @@ Tous les écrans du dossier `app/(public)/` ont été mis à jour pour utiliser 
 - `privacy.tsx` - Page de politique de confidentialité
 - `terms.tsx` - Page de conditions d'utilisation
 
-### 4. Mise à jour du composant OnboardingContainer
+### 4. Mise à jour des écrans protégés
+
+Tous les écrans du dossier `app/(protected)/` ont également été mis à jour :
+
+#### Écrans des onglets (`app/(protected)/(tabs)/`)
+- `index.tsx` - Écran d'accueil
+- `messages.tsx` - Écran des messages
+- `profile.tsx` - Écran du profil
+
+#### Écrans de navigation (`app/(protected)/`)
+- `conversation.tsx` - Écran de conversation
+- `pending-matches.tsx` - Écran des demandes d'amis en attente
+- `profile-detail.tsx` - Écran de détail du profil
+
+### 5. Mise à jour du composant OnboardingContainer
 
 Le composant `OnboardingContainer` a également été mis à jour pour utiliser `SafeAreaWrapper` au lieu de `SafeAreaView`.
 
@@ -61,4 +75,21 @@ export default function MonEcran() {
 
 - `backgroundColor` : Couleur de fond (défaut: '#fff')
 - `statusBarStyle` : Style de la StatusBar ('light' | 'dark' | 'auto', défaut: 'dark')
-- `statusBarBackgroundColor` : Couleur de fond de la StatusBar (optionnel) 
+- `statusBarBackgroundColor` : Couleur de fond de la StatusBar (optionnel)
+
+## Couleurs utilisées par écran
+
+### Écrans publics
+- `auth.tsx` : `#fff` (blanc)
+- `forgot-password.tsx` : `#fff` (blanc)
+- `onboarding.tsx` : `#fff` (blanc)
+- `privacy.tsx` : `#fff` (blanc)
+- `terms.tsx` : `#fff` (blanc)
+
+### Écrans protégés
+- `index.tsx` : `#FFFFFF` (blanc)
+- `messages.tsx` : `#f5f5f5` (gris clair)
+- `profile.tsx` : `#f8f9fa` (gris très clair)
+- `conversation.tsx` : `#f5f5f5` (gris clair)
+- `pending-matches.tsx` : `#F8F9FA` (gris très clair)
+- `profile-detail.tsx` : `#f8f9fa` (gris très clair) 

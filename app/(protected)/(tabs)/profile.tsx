@@ -8,13 +8,13 @@ import {
   Platform,
   StyleSheet,
   Text,
-  SafeAreaView,
   TouchableOpacity,
   ActionSheetIOS
 } from 'react-native';
 import { useProfile } from '@/stores/profileStore';
 import { useCurrentUserProfileCompletion } from '@/hooks/useCurrentUserProfileCompletion';
 import { router } from 'expo-router';
+import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 // Composants
 import ProfileHeader from '@/components/profile/ProfileHeader';
@@ -331,15 +331,17 @@ export default function ProfileScreen() {
 
   if (loading && !profile) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Chargement du profil...</Text>
-      </View>
+      <SafeAreaWrapper backgroundColor="#f8f9fa" statusBarStyle="dark">
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>Chargement du profil...</Text>
+        </View>
+      </SafeAreaWrapper>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaWrapper backgroundColor="#f8f9fa" statusBarStyle="dark">
       {/* Header fixe avec roue crantée */}
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }} />
@@ -431,15 +433,11 @@ export default function ProfileScreen() {
           />
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',

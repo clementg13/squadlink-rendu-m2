@@ -4,13 +4,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  SafeAreaView,
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { CompatibleProfile } from '@/services/compatibleProfileService';
 import { ProfileSport, ProfileHobby, ProfileSocialMedia } from '@/types/profile';
+import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 // Composants pour l'affichage
 import MatchButton from '@/components/profile/MatchButton';
@@ -57,17 +57,17 @@ export default function ProfileDetailScreen() {
 
   if (loading || !profileData) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaWrapper backgroundColor="#f8f9fa" statusBarStyle="dark">
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
           <Text style={styles.loadingText}>Chargement des informations...</Text>
         </View>
-      </SafeAreaView>
+      </SafeAreaWrapper>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaWrapper backgroundColor="#f8f9fa" statusBarStyle="dark">
       {/* Header avec bouton retour */}
       <View style={styles.headerBar}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -245,14 +245,23 @@ export default function ProfileDetailScreen() {
         {/* Espace en bas */}
         <View style={styles.bottomSpace} />
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
+  scrollView: {
+    flex: 1,
   },
   headerBar: {
     flexDirection: 'row',
@@ -280,19 +289,6 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 60,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  scrollView: {
-    flex: 1,
   },
   profileHeaderSection: {
     backgroundColor: '#FFFFFF',

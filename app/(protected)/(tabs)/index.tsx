@@ -11,6 +11,7 @@ import ProfileIncompleteAlert from '@/components/profile/ProfileIncompleteAlert'
 import PendingMatchesNotification from '@/components/profile/PendingMatchesNotification';
 import { CompatibleProfile } from '@/services/compatibleProfileService';
 import { useCurrentUserProfileCompletion } from '@/hooks/useCurrentUserProfileCompletion';
+import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 export default function HomeScreen() {
   const user = useAuthUser();
@@ -39,33 +40,37 @@ export default function HomeScreen() {
   // Affichage pendant le chargement initial de l'authentification
   if (authLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Connexion en cours...</Text>
-      </View>
+      <SafeAreaWrapper backgroundColor="#FFFFFF" statusBarStyle="dark">
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>Connexion en cours...</Text>
+        </View>
+      </SafeAreaWrapper>
     );
   }
 
   // Interface principale - utilisons la liste de profils compatibles
   return (
-    <View style={styles.container}>
-      {/* Alerte profil incomplet */}
-      {!isLoading && !isComplete && (
-        <ProfileIncompleteAlert 
-          completionPercentage={completionPercentage}
-          missingFields={missingFields}
-          compact={true}
+    <SafeAreaWrapper backgroundColor="#FFFFFF" statusBarStyle="dark">
+      <View style={styles.container}>
+        {/* Alerte profil incomplet */}
+        {!isLoading && !isComplete && (
+          <ProfileIncompleteAlert 
+            completionPercentage={completionPercentage}
+            missingFields={missingFields}
+            compact={true}
+          />
+        )}
+        {/* Notification des demandes d'amis reçues */}
+        <PendingMatchesNotification />
+        
+        <CompatibleProfilesList 
+          onProfilePress={handleProfilePress}
+          showWelcomeHeader={true}
+          userName={user?.email?.split('@')[0] || 'Utilisateur'}
         />
-      )}
-      {/* Notification des demandes d'amis reçues */}
-      <PendingMatchesNotification />
-      
-      <CompatibleProfilesList 
-        onProfilePress={handleProfilePress}
-        showWelcomeHeader={true}
-        userName={user?.email?.split('@')[0] || 'Utilisateur'}
-      />
-    </View>
+      </View>
+    </SafeAreaWrapper>
   );
 }
 
