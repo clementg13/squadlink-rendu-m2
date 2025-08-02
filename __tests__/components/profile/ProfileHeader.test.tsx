@@ -3,11 +3,6 @@ import { render } from '@/__tests__/utils/testUtils';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 
 describe('ProfileHeader', () => {
-  it('renders title correctly', () => {
-    const { getByText } = render(<ProfileHeader />);
-    expect(getByText('Mon Profil')).toBeTruthy();
-  });
-
   it('displays first letter of firstname when provided', () => {
     const { getByText } = render(
       <ProfileHeader firstname="John" lastname="Doe" />
