@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/stores/authStore';
+import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 export default function AuthScreen() {
   const router = useRouter();
@@ -41,9 +41,7 @@ export default function AuthScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      
+    <SafeAreaWrapper backgroundColor="#fff" statusBarStyle="dark">
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.logo} importantForAccessibility="no">🏋️‍♂️</Text>
@@ -114,24 +112,16 @@ export default function AuthScreen() {
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* Espacement supplémentaire pour éviter la barre de navigation */}
-        <View style={styles.bottomSpacer} />
       </View>
-    </SafeAreaView>
+    </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   content: {
     flex: 1,
     justifyContent: 'center',
     padding: 16,
-    paddingBottom: 40, // Espacement supplémentaire en bas
   },
   header: {
     alignItems: 'center',
@@ -187,7 +177,7 @@ const styles = StyleSheet.create({
   },
   forgotPasswordContainer: {
     alignSelf: 'flex-end',
-    marginBottom: 20, // Réduit l'espacement
+    marginBottom: 20,
   },
   forgotPasswordText: {
     fontSize: 14,
@@ -198,8 +188,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16, // Réduit l'espacement
-    marginBottom: 20, // Ajout d'espace en bas
+    marginTop: 16,
   },
   signupLinkText: {
     fontSize: 14,
@@ -209,8 +198,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#007AFF',
     fontWeight: '600',
-  },
-  bottomSpacer: {
-    height: 20, // Espacement supplémentaire
   },
 });

@@ -2,15 +2,13 @@ import React from 'react';
 import { StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 export default function PrivacyScreen() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
-      
+    <SafeAreaWrapper backgroundColor="#fff" statusBarStyle="dark">
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Politique de confidentialité</Text>
@@ -70,15 +68,11 @@ export default function PrivacyScreen() {
           <Text style={styles.buttonText}>Retour</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   content: {
     padding: 20,
     paddingTop: 60,

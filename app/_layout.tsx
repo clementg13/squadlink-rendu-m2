@@ -5,6 +5,7 @@ import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAuth } from '@/stores/authStore';
@@ -102,9 +103,11 @@ function RootLayout() {
   }
 
   return (
-    <ErrorBoundary>
-      <RootLayoutNav />
-    </ErrorBoundary>
+    <SafeAreaProvider>
+      <ErrorBoundary>
+        <RootLayoutNav />
+      </ErrorBoundary>
+    </SafeAreaProvider>
   );
 }
 
