@@ -85,24 +85,24 @@ export const createDataActions = (set: any, get: any): DataActions => ({
   initialize: async () => {
     try {
       const currentState = get();
+      
+      // Éviter les appels répétés si déjà en cours d'initialisation
+      if (currentState.loading) {
+        console.log('⏳ ProfileStore: Already initializing, skipping...');
+        return;
+      }
+      
       const needsReinit = currentState.sports.length === 0 || 
                          currentState.sportLevels.length === 0 || 
                          currentState.socialMedias.length === 0;
       
       if (currentState.initialized && !needsReinit) {
+        console.log('✅ ProfileStore: Already initialized, skipping...');
         return;
       }
 
+      console.log('🔄 ProfileStore: Starting initialization...');
       set({ loading: true, error: null, initialized: false });
-      
-      set({ 
-        sports: [],
-        sportLevels: [],
-        hobbies: [],
-        gyms: [],
-        gymSubscriptions: [],
-        socialMedias: []
-      });
       
       // Charger toutes les données en parallèle
       const [sportsResult, sportLevelsResult, socialMediasResult] = await Promise.allSettled([
@@ -110,6 +110,15 @@ export const createDataActions = (set: any, get: any): DataActions => ({
         sportService.getAllSportLevels(),
         socialMediaService.getAllSocialMedias()
       ]);
+
+      // Vérifier s'il y a des erreurs dans les résultats
+      const hasErrors = [sportsResult, sportLevelsResult, socialMediasResult].some(
+        result => result.status === 'rejected'
+      );
+
+      if (hasErrors) {
+        throw new Error('Erreur lors du chargement des données');
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       set((state: any) => ({ 
@@ -119,20 +128,18 @@ export const createDataActions = (set: any, get: any): DataActions => ({
         socialMedias: socialMediasResult.status === 'fulfilled' ? socialMediasResult.value : []
       }));
 
+      // Charger les autres données en parallèle
       await Promise.allSettled([
-        get().loadAllGyms(),
-        get().loadGymSubscriptions(),
-        get().loadAllHobbies(),
+        profileService.getAllGyms().then(gyms => set({ gyms })).catch(() => set({ gyms: [] })),
+        profileService.getGymSubscriptions().then(gymSubscriptions => set({ gymSubscriptions })).catch(() => set({ gymSubscriptions: [] })),
+        profileService.getAllHobbies().then(hobbies => set({ hobbies })).catch(() => set({ hobbies: [] })),
       ]);
       
-      const { user } = useAuthStore.getState();
-      if (user) {
-        await get().loadProfile();
-      } else {
-        set({ loading: false });
-      }
+      // Note: loadProfile est géré par profileActions, pas dataActions
+      // L'initialisation des données de base est terminée ici
       
-      set({ initialized: true });
+      set({ initialized: true, loading: false });
+      console.log('✅ ProfileStore: Initialization completed');
 
     } catch (error) {
       console.error('❌ ProfileStore - initialize:', error);
