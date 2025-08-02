@@ -81,5 +81,9 @@
     <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>SquadLink a besoin d'accéder à votre localisation pour vous aider à trouver des partenaires d'entraînement à proximité et des salles de sport.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>SquadLink a besoin d'accéder à votre localisation pour vous aider à trouver des partenaires d'entraînement à proximité et des salles de sport.</string>
   </dict>
 </plist>
