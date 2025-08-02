@@ -70,40 +70,52 @@ export default function ProfileScreen() {
   // Ref pour tracker l'état d'initialisation et éviter les appels répétés
   const initializationRef = useRef({
     hasInitialized: false,
-    lastSportsLength: 0,
-    lastSportLevelsLength: 0,
-    lastSocialMediasLength: 0,
+    isInitializing: false,
+    hasLoadedProfile: false,
   });
+
+  // Stocker les fonctions dans des refs pour éviter les re-créations
+  const initializeRef = useRef(initialize);
+  const loadProfileRef = useRef(loadProfile);
+  
+  // Mettre à jour les refs quand les fonctions changent
+  useEffect(() => {
+    initializeRef.current = initialize;
+    loadProfileRef.current = loadProfile;
+  }, [initialize, loadProfile]);
 
   useEffect(() => {
     const initializeStore = async () => {
+      // Éviter les appels répétés
+      if (initializationRef.current.isInitializing) {
+        return;
+      }
+
       // Vérifier si l'initialisation est nécessaire
-      const currentState = {
-        sportsLength: sports.length,
-        sportLevelsLength: sportLevels.length,
-        socialMediasLength: socialMedias.length,
-      };
-      
       const needsInitialization = !initialized || 
                                  !initializationRef.current.hasInitialized ||
-                                 currentState.sportsLength === 0 || 
-                                 currentState.sportLevelsLength === 0 || 
-                                 currentState.socialMediasLength === 0;
+                                 sports.length === 0 || 
+                                 sportLevels.length === 0 || 
+                                 socialMedias.length === 0;
       
       if (needsInitialization) {
+        initializationRef.current.isInitializing = true;
         console.log('🔄 ProfileScreen: Initializing store...');
-        await initialize();
+        await initializeRef.current();
         initializationRef.current.hasInitialized = true;
-        initializationRef.current.lastSportsLength = currentState.sportsLength;
-        initializationRef.current.lastSportLevelsLength = currentState.sportLevelsLength;
-        initializationRef.current.lastSocialMediasLength = currentState.socialMediasLength;
+        initializationRef.current.isInitializing = false;
       }
       
-      await loadProfile();
+      // Charger le profil seulement si pas déjà chargé et pas en cours de chargement
+      if (!loading && !error && !initializationRef.current.hasLoadedProfile) {
+        console.log('🔄 ProfileScreen: Loading profile...');
+        await loadProfileRef.current();
+        initializationRef.current.hasLoadedProfile = true;
+      }
     };
     
     initializeStore();
-  }, [initialized, initialize, loadProfile, sports.length, sportLevels.length, socialMedias.length]);
+  }, [initialized, loading, error, sports.length, sportLevels.length, socialMedias.length]);
 
   useEffect(() => {
     if (profile) {

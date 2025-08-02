@@ -29,6 +29,20 @@ export const createProfileActions = (set: any, get: any): ProfileActions => ({
 
   loadProfile: async () => {
     try {
+      const currentState = get();
+      
+      // Éviter les appels répétés si déjà en cours de chargement
+      if (currentState.loading) {
+        console.log('⏳ ProfileStore: Already loading profile, skipping...');
+        return { error: null };
+      }
+      
+      // Éviter les appels répétés si le profil est déjà chargé
+      if (currentState.profile && !currentState.error) {
+        console.log('⏳ ProfileStore: Profile already loaded, skipping...');
+        return { error: null };
+      }
+      
       set({ loading: true, error: null });
       
       const { user } = useAuthStore.getState();
@@ -36,6 +50,8 @@ export const createProfileActions = (set: any, get: any): ProfileActions => ({
         throw new Error('Utilisateur non connecté');
       }
 
+      console.log('🔄 ProfileStore: Loading profile for user:', user.id);
+      
       let profileData = await profileService.getProfile(user.id);
       if (!profileData) {
         profileData = await profileService.createProfile(user.id);
@@ -64,6 +80,7 @@ export const createProfileActions = (set: any, get: any): ProfileActions => ({
       };
 
       set({ profile: enrichedProfile, loading: false });
+      console.log('✅ ProfileStore: Profile loaded successfully');
       return { error: null };
 
     } catch (error) {
