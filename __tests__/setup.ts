@@ -22,10 +22,16 @@ jest.mock('expo-location', () => ({
   hasServicesEnabledAsync: jest.fn(),
 }));
 
+// Mock expo-status-bar
+jest.mock('expo-status-bar', () => ({
+  StatusBar: 'StatusBar',
+}));
+
 // Mock react-native-safe-area-context
 jest.mock('react-native-safe-area-context', () => ({
   SafeAreaProvider: ({ children }: any) => children,
   useSafeAreaInsets: () => ({ top: 0, left: 0, right: 0, bottom: 0 }),
+  SafeAreaView: 'SafeAreaView',
 }));
 
 // Mock DateTimePicker

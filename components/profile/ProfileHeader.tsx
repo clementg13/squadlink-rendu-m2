@@ -14,10 +14,6 @@ export default function ProfileHeader({ firstname, lastname }: ProfileHeaderProp
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Mon Profil</Text>
-      </View>
-
       <View style={styles.avatarSection}>
         <View style={styles.avatarContainer}>
           <View style={styles.avatarPlaceholder}>
@@ -35,20 +31,9 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
   },
-  header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    textAlign: 'center',
-  },
   avatarSection: {
     alignItems: 'center',
-    paddingVertical: 30,
+    paddingVertical: 20,
   },
   avatarContainer: {
     position: 'relative',

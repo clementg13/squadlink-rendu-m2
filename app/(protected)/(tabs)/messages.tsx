@@ -7,15 +7,13 @@ import {
   ActivityIndicator,
   RefreshControl,
   Animated,
-  StatusBar,
-  Platform,
-  SafeAreaView
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useConversations } from '@/hooks/useMessages';
 import { Conversation } from '@/types/messaging';
+import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 export default function MessagesScreen() {
   const router = useRouter();
@@ -103,12 +101,7 @@ export default function MessagesScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="#fff" 
-        translucent={false}
-      />
+    <SafeAreaWrapper backgroundColor="#f5f5f5" statusBarStyle="dark">
       <View style={styles.container}>
       {/* Header avec barre de recherche et indicateur temps réel */}
       <View style={styles.header}>
@@ -180,17 +173,11 @@ export default function MessagesScreen() {
         />
       )}
     </View>
-    </SafeAreaView>
+    </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    // Padding pour Android pour éviter la collision avec la status bar
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-  },
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',

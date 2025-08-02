@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet, SafeAreaView } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
@@ -52,9 +52,7 @@ export default function ForgotPasswordScreen() {
 
   if (emailSent) {
     return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar style="dark" />
-        
+      <SafeAreaWrapper backgroundColor="#fff" statusBarStyle="dark">
         <View style={styles.content}>
           <View style={styles.successContainer}>
             <Text style={styles.successEmoji}>📧</Text>
@@ -86,14 +84,12 @@ export default function ForgotPasswordScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </SafeAreaView>
+      </SafeAreaWrapper>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      
+    <SafeAreaWrapper backgroundColor="#fff" statusBarStyle="dark">
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.emoji}>🔑</Text>
@@ -136,24 +132,16 @@ export default function ForgotPasswordScreen() {
           >
             <Text style={styles.cancelButtonText}>Annuler</Text>
           </TouchableOpacity>
-
-          {/* Espacement supplémentaire */}
-          <View style={styles.bottomSpacer} />
         </View>
       </View>
-    </SafeAreaView>
+    </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   content: {
     flex: 1,
     padding: 20,
-    paddingBottom: 40, // Espacement supplémentaire en bas
     justifyContent: 'center',
   },
   header: {
@@ -219,7 +207,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
-    marginBottom: 20, // Ajout d'espace en bas
   },
   cancelButtonText: {
     color: '#007AFF',
@@ -280,8 +267,5 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  bottomSpacer: {
-    height: 20, // Espacement supplémentaire
   },
 });

@@ -8,8 +8,6 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-  SafeAreaView,
-  StatusBar,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -24,6 +22,7 @@ import CreateWorkoutModal from '@/components/workout/CreateWorkoutModal';
 import WorkoutSessionMessage from '@/components/workout/WorkoutSessionMessage';
 import { groupService, GroupMember } from '@/services/groupService';
 import GroupMembersModal from '@/components/group/GroupMembersModal';
+import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 // Composant pour un message individuel
 const MessageItem = ({ message }: { message: Message }) => (
@@ -443,20 +442,12 @@ export default function ConversationScreen() {
   });
 
   return (
-    <>
-      {/* Gestion de la status bar selon la plateforme */}
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="#fff" 
-        translucent={false}
-      />
-      
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView 
-          style={styles.container}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-        >
+    <SafeAreaWrapper backgroundColor="#f5f5f5" statusBarStyle="dark">
+      <KeyboardAvoidingView 
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity 
@@ -486,126 +477,119 @@ export default function ConversationScreen() {
           </TouchableOpacity>
         </View>
 
-      {/* Messages */}
-      {error ? (
-        <View style={styles.errorContainer}>
-          <FontAwesome name="exclamation-triangle" size={48} color="#ff6b6b" />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={refreshMessages}>
-            <Text style={styles.retryButtonText}>Réessayer</Text>
-          </TouchableOpacity>
-        </View>
-      ) : loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Chargement des messages...</Text>
-        </View>
-      ) : (
-        <View style={styles.messagesContainer}>
-          <FlatList
-            ref={flatListRef}
-            data={combinedData}
-            renderItem={renderMessage}
-            keyExtractor={(item) => {
-              if ('start_date' in item) {
-                return `workout-${item.id}`;
-              }
-              return `message-${item.id}`;
-            }}
-            style={styles.messagesList}
-            contentContainerStyle={[
-              styles.messagesContent,
-              combinedData.length === 0 && styles.emptyMessagesContent
-            ]}
-            showsVerticalScrollIndicator={false}
-            onContentSizeChange={() => {
-              if (combinedData.length > 0) {
-                flatListRef.current?.scrollToEnd({ animated: false });
-              }
-            }}
-            onLayout={() => {
-              if (combinedData.length > 0) {
-                setTimeout(() => {
+        {/* Messages */}
+        {error ? (
+          <View style={styles.errorContainer}>
+            <FontAwesome name="exclamation-triangle" size={48} color="#ff6b6b" />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={refreshMessages}>
+              <Text style={styles.retryButtonText}>Réessayer</Text>
+            </TouchableOpacity>
+          </View>
+        ) : loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={styles.loadingText}>Chargement des messages...</Text>
+          </View>
+        ) : (
+          <View style={styles.messagesContainer}>
+            <FlatList
+              ref={flatListRef}
+              data={combinedData}
+              renderItem={renderMessage}
+              keyExtractor={(item) => {
+                if ('start_date' in item) {
+                  return `workout-${item.id}`;
+                }
+                return `message-${item.id}`;
+              }}
+              style={styles.messagesList}
+              contentContainerStyle={[
+                styles.messagesContent,
+                combinedData.length === 0 && styles.emptyMessagesContent
+              ]}
+              showsVerticalScrollIndicator={false}
+              onContentSizeChange={() => {
+                if (combinedData.length > 0) {
                   flatListRef.current?.scrollToEnd({ animated: false });
-                }, 100);
-              }
-            }}
-            ListEmptyComponent={() => (
-              <View style={styles.emptyContainer}>
-                <FontAwesome name="comments-o" size={48} color="#ccc" />
-                <Text style={styles.emptyText}>Aucun message</Text>
-                <Text style={styles.emptySubtext}>Commencez la conversation !</Text>
-              </View>
-            )}
-          />
+                }
+              }}
+              onLayout={() => {
+                if (combinedData.length > 0) {
+                  setTimeout(() => {
+                    flatListRef.current?.scrollToEnd({ animated: false });
+                  }, 100);
+                }
+              }}
+              ListEmptyComponent={() => (
+                <View style={styles.emptyContainer}>
+                  <FontAwesome name="comments-o" size={48} color="#ccc" />
+                  <Text style={styles.emptyText}>Aucun message</Text>
+                  <Text style={styles.emptySubtext}>Commencez la conversation !</Text>
+                </View>
+              )}
+            />
 
-          {/* Bouton flottant pour créer une séance */}
-          <TouchableOpacity
-            style={styles.floatingButton}
-            onPress={() => setShowCreateWorkout(true)}
-          >
-            <FontAwesome name="plus" size={24} color="#fff" />
-          </TouchableOpacity>
+            {/* Bouton flottant pour créer une séance */}
+            <TouchableOpacity
+              style={styles.floatingButton}
+              onPress={() => setShowCreateWorkout(true)}
+            >
+              <FontAwesome name="plus" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Zone de saisie */}
+        <View style={styles.inputContainer}>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Tapez votre message..."
+              placeholderTextColor="#666"
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+              maxLength={1000}
+            />
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                (!inputText.trim() || sending) && styles.sendButtonDisabled
+              ]}
+              onPress={handleSendMessage}
+              disabled={!inputText.trim() || sending}
+            >
+              {sending ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <FontAwesome name="send" size={16} color="#fff" />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-      )}
 
-      {/* Zone de saisie */}
-      <View style={styles.inputContainer}>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.textInput}
-            placeholder="Tapez votre message..."
-            placeholderTextColor="#666"
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-            maxLength={1000}
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!inputText.trim() || sending) && styles.sendButtonDisabled
-            ]}
-            onPress={handleSendMessage}
-            disabled={!inputText.trim() || sending}
-          >
-            {sending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <FontAwesome name="send" size={16} color="#fff" />
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+        {/* Modal de création de séance */}
+        <CreateWorkoutModal
+          visible={showCreateWorkout}
+          sports={sports}
+          onClose={() => setShowCreateWorkout(false)}
+          onCreateSession={handleCreateWorkoutSession}
+        />
 
-      {/* Modal de création de séance */}
-      <CreateWorkoutModal
-        visible={showCreateWorkout}
-        sports={sports}
-        onClose={() => setShowCreateWorkout(false)}
-        onCreateSession={handleCreateWorkoutSession}
-      />
-
-      {/* Modal des membres du groupe */}
-      <GroupMembersModal
-        visible={showGroupMembers}
-        members={groupMembers}
-        groupName={conversationName}
-        onClose={() => setShowGroupMembers(false)}
-      />
-    </KeyboardAvoidingView>
-    </SafeAreaView>
-    </>
+        {/* Modal des membres du groupe */}
+        <GroupMembersModal
+          visible={showGroupMembers}
+          members={groupMembers}
+          groupName={conversationName}
+          onClose={() => setShowGroupMembers(false)}
+        />
+      </KeyboardAvoidingView>
+    </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    // Padding pour Android pour éviter la collision avec la status bar
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-  },
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
