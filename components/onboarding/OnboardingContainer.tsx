@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, StyleSheet, SafeAreaView, Alert, ActivityIndicator, Text } from 'react-native';
+import { View, StyleSheet, Alert, ActivityIndicator, Text } from 'react-native';
 import { useAuth } from '@/stores/authStore';
 import { supabase } from '@/lib/supabase';
 import { locationService } from '@/services/locationService';
+import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 // Composants des étapes d'onboarding
 import OnboardingWelcome from './steps/OnboardingWelcome';
@@ -366,17 +367,17 @@ export default function OnboardingContainer() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaWrapper backgroundColor="#fff" statusBarStyle="dark">
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
           <Text style={styles.loadingText}>Finalisation de votre profil...</Text>
         </View>
-      </SafeAreaView>
+      </SafeAreaWrapper>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaWrapper backgroundColor="#fff" statusBarStyle="dark">
       {/* Affiche la barre de progression uniquement pour les étapes concernées */}
       {progressStepIndex >= 0 && (
         <OnboardingProgress 
@@ -387,15 +388,11 @@ export default function OnboardingContainer() {
       <View style={styles.content}>
         {renderCurrentStep()}
       </View>
-    </SafeAreaView>
+    </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   content: {
     flex: 1,
   },
@@ -405,9 +402,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 16,
+    marginTop: 12,
     fontSize: 16,
     color: '#666',
-    textAlign: 'center',
   },
 });

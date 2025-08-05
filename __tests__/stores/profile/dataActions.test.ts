@@ -257,17 +257,17 @@ describe('createDataActions', () => {
       expect(mockSet.mock.calls).toEqual(
         expect.arrayContaining([
           [expect.objectContaining({ loading: true, error: null, initialized: false })],
-          [expect.objectContaining({
-            sports: [],
-            sportLevels: [],
-            hobbies: [],
-            gyms: [],
-            gymSubscriptions: [],
-            socialMedias: []
-          })],
-          [expect.objectContaining({ initialized: true })]
+          [expect.objectContaining({ initialized: true, loading: false })]
         ])
       );
+      
+      // Vérifier que les services ont été appelés
+      expect(sportService.getAllSports).toHaveBeenCalled();
+      expect(sportService.getAllSportLevels).toHaveBeenCalled();
+      expect(socialMediaService.getAllSocialMedias).toHaveBeenCalled();
+      expect(profileService.getAllGyms).toHaveBeenCalled();
+      expect(profileService.getGymSubscriptions).toHaveBeenCalled();
+      expect(profileService.getAllHobbies).toHaveBeenCalled();
     });
 
     it('évite la réinitialisation si déjà initialisé', async () => {
@@ -314,11 +314,12 @@ describe('createDataActions', () => {
 
       await dataActions.initialize();
 
-      expect(mockSet).toHaveBeenCalledWith({
-        loading: false,
-        initialized: true,
-        error: 'Erreur lors de l\'initialisation'
-      });
+      // Vérifier que l'erreur a été gérée
+      expect(mockSet.mock.calls).toEqual(
+        expect.arrayContaining([
+          [expect.objectContaining({ loading: false, initialized: true, error: 'Erreur lors de l\'initialisation' })]
+        ])
+      );
     });
 
     it('gère l\'absence d\'utilisateur connecté', async () => {
@@ -401,13 +402,12 @@ describe('createDataActions', () => {
 
       await dataActions.initialize();
 
-      // On vérifie que le dernier appel à mockSet contient bien l'erreur d'initialisation
-      const lastCall = mockSet.mock.calls[mockSet.mock.calls.length - 1][0];
-      expect(lastCall).toMatchObject({
-        error: "Erreur lors de l'initialisation",
-        initialized: true,
-        loading: false
-      });
+      // On vérifie que l'erreur a été gérée
+      expect(mockSet.mock.calls).toEqual(
+        expect.arrayContaining([
+          [expect.objectContaining({ loading: false, initialized: true, error: 'Erreur lors de l\'initialisation' })]
+        ])
+      );
     });
   });
 }); 

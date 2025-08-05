@@ -1,12 +1,11 @@
 import React from 'react';
-import { StatusBar } from 'expo-status-bar';
 import OnboardingContainer from '@/components/onboarding/OnboardingContainer';
+import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 export default function OnboardingScreen() {
   return (
-    <>
-      <StatusBar style="dark" />
+    <SafeAreaWrapper backgroundColor="#fff" statusBarStyle="dark">
       <OnboardingContainer />
-    </>
+    </SafeAreaWrapper>
   );
 }
