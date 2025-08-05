@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -11,6 +11,9 @@ export default function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Référence pour le champ mot de passe
+  const passwordInputRef = useRef<TextInput>(null);
 
   const handleLogin = async () => {
     setIsLoading(true);
@@ -59,6 +62,11 @@ export default function AuthScreen() {
               placeholder="votre@email.com"
               keyboardType="email-address"
               autoCapitalize="none"
+              returnKeyType="next"
+              onSubmitEditing={() => {
+                // Focus sur le champ mot de passe quand on appuie sur "next"
+                passwordInputRef.current?.focus();
+              }}
               editable={!isLoading}
             />
           </View>
@@ -66,11 +74,14 @@ export default function AuthScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Mot de passe</Text>
             <TextInput
+              ref={passwordInputRef}
               style={styles.input}
               value={password}
               onChangeText={setPassword}
               placeholder="Votre mot de passe"
               secureTextEntry
+              returnKeyType="done"
+              onSubmitEditing={handleLogin}
               editable={!isLoading}
             />
           </View>
