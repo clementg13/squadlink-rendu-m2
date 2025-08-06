@@ -43,7 +43,17 @@
     "maestro": {
       "flows": [
         ".maestro/"
-      ]
+      ],
+      "config": "maestro-config.json"
+    },
+    "maestro-ci": {
+      "flows": [
+        ".maestro/"
+      ],
+      "config": "maestro-config.json",
+      "tags": ["critical"],
+      "retries": 3,
+      "parallel": true
     }
   }
 }

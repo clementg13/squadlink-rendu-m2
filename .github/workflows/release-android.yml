@@ -77,6 +77,15 @@ jobs:
         echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" > .env
         echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
 
+    # 2.5. Run Maestro E2E tests before production build
+    - name: Run Critical Maestro E2E tests (Android)
+      run: |
+        echo "🧪 Running critical E2E tests before production build..."
+        eas test --platform android --profile maestro-ci --non-interactive
+      env:
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      continue-on-error: false
+
     # 3. Build Production AAB with EAS  
     - name: Build Android Production with EAS
       run: |
