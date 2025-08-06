@@ -1,15 +1,19 @@
 {
   "flows": [
-    "maestro-login-test.yaml"
+    ".maestro/"
   ],
-  "includeTags": ["smoke", "critical"],
-  "excludeTags": ["skip"],
+  "includeTags": ["critical"],
+  "excludeTags": ["skip", "manual"],
   "maestroVersion": "1.37.0",
   "deviceOptions": {
     "animationDuration": 0.1,
     "animationScale": 0.1
   },
-  "defaultTimeout": 5000,
+  "defaultTimeout": 10000,
   "inputDelay": 50,
-  "tapDelay": 100
+  "tapDelay": 100,
+  "retries": 2,
+  "screenshotOnFailure": true,
+  "outputFormat": "junit",
+  "continueOnFailure": false
 }
