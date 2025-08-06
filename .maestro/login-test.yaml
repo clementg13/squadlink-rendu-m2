@@ -1,0 +1,74 @@
+appId: com.clementgexpo.squadlink
+---
+- launchApp: com.clementgexpo.squadlink
+
+# Attendre que l'app se charge
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Fermer le menu debug Expo
+- tapOn:
+    text: "×"
+    optional: true
+- tapOn:
+    text: "✕"
+    optional: true
+- tapOn:
+    text: "❌"
+    optional: true
+
+# Déconnexion si connecté
+- tapOn:
+    text: "Profil"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 1000
+    optional: true
+# Scroll plusieurs fois pour aller tout en bas
+- scroll:
+    optional: true
+- scroll:
+    optional: true
+- scroll:
+    optional: true
+- scroll:
+    optional: true
+# Cliquer sur le bouton de déconnexion exact
+- tapOn:
+    text: "🚪 Se déconnecter"
+    optional: true
+# Confirmer la déconnexion
+- tapOn:
+    text: "Déconnecter"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+    optional: true
+
+# Aller à la connexion
+- tapOn: 
+    text: "Commencer"
+
+- tapOn: 
+    text: "J'accepte"
+- tapOn: 
+    text: "J'accepte"
+
+- tapOn: 
+    text: "J'ai déjà un compte"
+
+# Se connecter
+- tapOn: 
+    text: "votre@email.com"
+- inputText: "Yohan.moren@gmail.com"
+
+- tapOn: 
+    text: "Votre mot de passe"
+- inputText: "Test1234"
+
+- tapOn: 
+    text: "Se connecter"
+
+# Vérifier succès
+- assertVisible:
+    text: "Accueil"

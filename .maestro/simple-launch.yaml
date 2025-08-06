@@ -1,4 +1,0 @@
-appId: com.clementgexpo.squadlink
----
-- launchApp
-- assertVisible: "Bienvenue"

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
@@ -12,6 +12,10 @@ export default function OnboardingCredentials({ onNext }: OnboardingCredentialsP
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Références pour la navigation clavier
+  const passwordInputRef = useRef<TextInput>(null);
+  const confirmPasswordInputRef = useRef<TextInput>(null);
 
   const validateForm = () => {
     const errors = [];
@@ -118,32 +122,43 @@ export default function OnboardingCredentials({ onNext }: OnboardingCredentialsP
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
+              returnKeyType="next"
+              onSubmitEditing={() => passwordInputRef.current?.focus()}
               editable={!isLoading}
+              testID="onboarding-email-input"
             />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Mot de passe</Text>
             <TextInput
+              ref={passwordInputRef}
               style={styles.input}
               value={password}
               onChangeText={setPassword}
               placeholder="Minimum 6 caractères"
               secureTextEntry
               autoComplete="new-password"
+              returnKeyType="next"
+              onSubmitEditing={() => confirmPasswordInputRef.current?.focus()}
               editable={!isLoading}
+              testID="onboarding-password-input"
             />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Confirmer le mot de passe</Text>
             <TextInput
+              ref={confirmPasswordInputRef}
               style={styles.input}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               placeholder="Confirmez votre mot de passe"
               secureTextEntry
+              returnKeyType="done"
+              onSubmitEditing={handleCreateAccount}
               editable={!isLoading}
+              testID="onboarding-confirm-password-input"
             />
           </View>
         </View>
