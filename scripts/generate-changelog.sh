@@ -35,20 +35,37 @@ generate_changelog() {
     local current_version=$1
     local previous_version=$2
     local output_file=$3
+    local use_head=${4:-false}
     
-    log_info "Génération du changelog depuis $previous_version vers $current_version"
+    if [ "$use_head" = true ]; then
+        log_info "Génération du changelog depuis HEAD vers $previous_version"
+        header_version="HEAD (unreleased)"
+        commit_range="${previous_version}..HEAD"
+    else
+        log_info "Génération du changelog depuis $previous_version vers $current_version"
+        header_version="$current_version"
+        if [ "$previous_version" != "initial" ]; then
+            commit_range="${previous_version}..${current_version}"
+        else
+            commit_range="--all"
+        fi
+    fi
     
     # En-tête du changelog
-    echo "# 📋 Changelog - Release $current_version" > "$output_file"
+    echo "# 📋 Changelog - Release $header_version" > "$output_file"
     echo "" >> "$output_file"
     echo "**Date:** $(date '+%d/%m/%Y à %H:%M')" >> "$output_file"
     echo "**Version précédente:** $previous_version" >> "$output_file"
     echo "" >> "$output_file"
     
-    # Récupérer les commits depuis la dernière version
+    # Récupérer les commits
     if [ "$previous_version" != "initial" ]; then
-        log_debug "Récupération des commits depuis $previous_version..."
-        commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short ${previous_version}..HEAD)
+        log_debug "Récupération des commits avec range: $commit_range"
+        if [ "$use_head" = true ]; then
+            commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short ${previous_version}..HEAD)
+        else
+            commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short ${previous_version}..${current_version})
+        fi
     else
         log_debug "Première release - récupération de tous les commits..."
         commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short)
@@ -129,12 +146,45 @@ generate_changelog() {
 main() {
     # Récupérer la version actuelle
     if [ $# -eq 0 ]; then
-        # Essayer de récupérer le dernier tag
-        current_version=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        # Récupérer le dernier tag selon l'ordre des versions
+        current_version=$(git tag -l "v*" --sort=-version:refname | head -1)
         if [ -z "$current_version" ]; then
             log_error "Aucun tag trouvé et aucune version fournie"
             log_info "Usage: ./scripts/generate-changelog.sh [version]"
             exit 1
+        fi
+        
+        # Vérifier s'il y a des commits après ce tag
+        latest_tag_commit=$(git rev-list -n 1 "$current_version")
+        head_commit=$(git rev-parse HEAD)
+        
+        if [ "$latest_tag_commit" = "$head_commit" ]; then
+            log_info "HEAD est exactement sur le tag $current_version"
+            use_head=false
+        else
+            # Vérifier si HEAD est un ancêtre du tag (HEAD est derrière le tag)
+            if git merge-base --is-ancestor HEAD "$current_version"; then
+                ahead_count=$(git rev-list --count HEAD.."$current_version")
+                if [ "$ahead_count" -gt 0 ]; then
+                    log_warning "HEAD est derrière le dernier tag ($current_version) de $ahead_count commits"
+                    log_info "Le changelog sera généré pour le tag existant $current_version"
+                    use_head=false
+                else
+                    log_info "HEAD est sur le même commit que le tag $current_version"
+                    use_head=false
+                fi
+            else
+                # HEAD est en avance ou sur une branche différente
+                behind_count=$(git rev-list --count "$current_version"..HEAD)
+                if [ "$behind_count" -gt 0 ]; then
+                    log_warning "Il y a $behind_count commits après le dernier tag ($current_version)"
+                    log_warning "Le changelog sera généré depuis HEAD jusqu'au tag précédent"
+                    use_head=true
+                else
+                    log_info "HEAD et le tag $current_version sont sur la même position"
+                    use_head=false
+                fi
+            fi
         fi
     else
         current_version=$1
@@ -142,6 +192,7 @@ main() {
         if [[ ! "$current_version" =~ ^v ]]; then
             current_version="v$current_version"
         fi
+        use_head=false
     fi
     
     log_info "Génération du changelog pour la version: $current_version"
@@ -151,30 +202,41 @@ main() {
     
     # Trouver la version précédente
     previous_version=""
-    found_current=false
     
-    for tag in $tags; do
-        if [ "$found_current" = true ]; then
-            previous_version=$tag
-            break
-        fi
-        if [ "$tag" = "$current_version" ]; then
-            found_current=true
-        fi
-    done
-    
-    if [ -z "$previous_version" ]; then
-        previous_version="initial"
-        log_warning "Aucune version précédente trouvée - première release"
+    if [ "$use_head" = true ]; then
+        # On génère depuis HEAD, donc la version précédente est le dernier tag
+        previous_version=$current_version
+        log_info "Génération depuis HEAD jusqu'au tag: $previous_version"
+        # Fichier de sortie avec timestamp pour éviter les conflits
+        timestamp=$(date +%Y%m%d_%H%M%S)
+        output_file="CHANGELOG_HEAD_${timestamp}.md"
     else
-        log_info "Version précédente trouvée: $previous_version"
+        # Logique normale pour trouver la version précédente
+        found_current=false
+        
+        for tag in $tags; do
+            if [ "$found_current" = true ]; then
+                previous_version=$tag
+                break
+            fi
+            if [ "$tag" = "$current_version" ]; then
+                found_current=true
+            fi
+        done
+        
+        if [ -z "$previous_version" ]; then
+            previous_version="initial"
+            log_warning "Aucune version précédente trouvée - première release"
+        else
+            log_info "Version précédente trouvée: $previous_version"
+        fi
+        
+        # Fichier de sortie
+        output_file="CHANGELOG_${current_version}.md"
     fi
     
-    # Fichier de sortie
-    output_file="CHANGELOG_${current_version}.md"
-    
     # Générer le changelog
-    generate_changelog "$current_version" "$previous_version" "$output_file"
+    generate_changelog "$current_version" "$previous_version" "$output_file" "$use_head"
     
     log_info "✅ Changelog généré: $output_file"
     
