@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
@@ -24,6 +24,9 @@ interface ProfileData {
 export default function OnboardingProfile({ onNext, onBack }: OnboardingProfileProps) {
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
+  
+  // Références pour la navigation clavier
+  const lastnameInputRef = useRef<TextInput>(null);
   
   // Initialiser avec une date par défaut (18 ans)
   const getDefaultDate = () => {
@@ -145,18 +148,24 @@ export default function OnboardingProfile({ onNext, onBack }: OnboardingProfileP
               placeholder="Votre prénom"
               autoCapitalize="words"
               editable={!isLoading}
+              returnKeyType="next"
+              onSubmitEditing={() => lastnameInputRef.current?.focus()}
+              testID="onboarding-firstname-input"
             />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Nom *</Text>
             <TextInput
+              ref={lastnameInputRef}
               style={styles.input}
               value={lastname}
               onChangeText={setLastname}
               placeholder="Votre nom"
               autoCapitalize="words"
               editable={!isLoading}
+              returnKeyType="done"
+              testID="onboarding-lastname-input"
             />
           </View>
 
@@ -166,6 +175,7 @@ export default function OnboardingProfile({ onNext, onBack }: OnboardingProfileP
               style={styles.dateButton}
               onPress={() => setShowDatePicker(true)}
               disabled={isLoading}
+              testID="onboarding-birthdate-button"
             >
               <Text style={styles.dateText}>
                 {birthdate.toLocaleDateString('fr-FR')}

@@ -1,0 +1,14 @@
+maestro:
+  timeout: 30000
+  retries: 2
+  screenshot_on_failure: true
+
+flows:
+  - name: "Login Test"
+    file: "login-test.yaml"
+    tags: ["auth", "login", "critical"]
+    
+  - name: "Registration Test"
+    file: "register-test.yaml"
+    tags: ["auth", "registration", "critical", "keyboard-navigation"]
+    

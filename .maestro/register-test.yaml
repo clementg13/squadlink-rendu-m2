@@ -1,0 +1,152 @@
+appId: com.clementgexpo.squadlink
+---
+- launchApp: com.clementgexpo.squadlink
+
+# Attendre que l'app se charge
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Fermer le menu debug Expo
+- tapOn:
+    text: "×"
+    optional: true
+- tapOn:
+    text: "✕"
+    optional: true
+- tapOn:
+    text: "❌"
+    optional: true
+
+# Déconnexion si connecté
+- tapOn:
+    text: "Profil"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 1000
+    optional: true
+# Scroll plusieurs fois pour aller tout en bas
+- scroll:
+    optional: true
+- scroll:
+    optional: true
+- scroll:
+    optional: true
+- scroll:
+    optional: true
+# Cliquer sur le bouton de déconnexion exact
+- tapOn:
+    text: "🚪 Se déconnecter"
+    optional: true
+# Confirmer la déconnexion
+- tapOn:
+    text: "Déconnecter"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+    optional: true
+
+# Commencer l'inscription
+- tapOn: 
+    text: "Commencer"
+
+# Accepter les conditions
+- tapOn: 
+    text: "J'accepte"
+- tapOn: 
+    text: "J'accepte"
+
+# Créer un compte
+- tapOn:
+    id: "onboarding-email-input"
+- inputText: "testci.${Math.floor(Math.random() * 90000) + 10000}.${Math.random().toString(36).substring(2, 7)}@test.com"
+
+- tapOn:
+    id: "onboarding-password-input"
+- inputText: "Test1234"
+
+- tapOn:
+    id: "onboarding-confirm-password-input"  
+- inputText: "Test1234"
+
+# Valider le dernier champ en appuyant sur Entrée
+- pressKey: Enter
+
+- tapOn: 
+    text: "Créer mon compte"
+    optional: true
+
+# Vérifier arrivée sur profil
+- assertVisible:
+    text: "Créez votre profil"
+
+# Remplir le profil
+- tapOn:
+    id: "onboarding-firstname-input"
+- inputText: "TestUser"
+
+- tapOn:
+    id: "onboarding-lastname-input"
+- inputText: "TestFamily"
+
+# Fermer le clavier en validant
+- pressKey: Enter
+
+# Cliquer sur date de naissance
+- tapOn:
+    id: "onboarding-birthdate-button"
+
+# Confirmer la date dans le calendrier
+- tapOn:
+    text: "OK"
+
+# Ajouter la localisation
+- tapOn:
+    text: "📍 Ajouter ma localisation"
+
+# Autoriser la localisation
+- tapOn:
+    text: "Autoriser"
+    optional: true
+- tapOn:
+    text: "Allow"
+    optional: true
+- tapOn:
+    text: "Permettre"
+    optional: true
+
+# Confirmer la localisation
+- tapOn:
+    text: "OK"
+    optional: true
+
+# Continuer
+- tapOn: 
+    text: "Continuer"
+
+# Choisir un sport
+- assertVisible:
+    text: "Vos sports"
+- tapOn: 
+    text: "Cyclisme"
+
+- tapOn: 
+    text: "Continuer"
+
+# Choisir hobbies
+- assertVisible:
+    text: "Vos centres d'intérêt"
+- tapOn: 
+    text: "Jeux Vidéos"
+
+- tapOn: 
+    text: "Continuer"
+
+# Finaliser
+- assertVisible:
+    text: "Bienvenue dans SquadLink !"
+- tapOn: 
+    text: "Découvrir SquadLink"
+
+# Vérifier succès
+- assertVisible:
+    text: "Accueil"
