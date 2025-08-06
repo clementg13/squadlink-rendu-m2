@@ -251,12 +251,25 @@ main() {
     fi
     echo "----------------------------------------"
     
-    # Option pour afficher le changelog complet
-    echo ""
-    read -p "Voulez-vous afficher le changelog complet ? (y/N): " show_full
-    if [[ $show_full == [yY] || $show_full == [yY][eE][sS] ]]; then
+    # Option pour afficher le changelog complet (seulement en mode interactif)
+    if [ -z "${CI}" ] && [ -t 0 ]; then
         echo ""
-        cat "$output_file"
+        read -p "Voulez-vous afficher le changelog complet ? (y/N): " show_full
+        if [[ $show_full == [yY] || $show_full == [yY][eE][sS] ]]; then
+            echo ""
+            cat "$output_file"
+        fi
+    else
+        # En mode CI, on affiche toujours un résumé plus détaillé
+        echo ""
+        log_info "🤖 Mode CI détecté - aperçu étendu du changelog:"
+        echo "----------------------------------------"
+        head -30 "$output_file"
+        if [ $(wc -l < "$output_file") -gt 30 ]; then
+            echo "..."
+            echo "(voir $output_file pour le contenu complet)"
+        fi
+        echo "----------------------------------------"
     fi
 }
 
