@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
+import PasswordInput from '@/components/ui/PasswordInput';
 
 interface OnboardingCredentialsProps {
   onNext: (userId: string) => void;
@@ -131,13 +132,12 @@ export default function OnboardingCredentials({ onNext }: OnboardingCredentialsP
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Mot de passe</Text>
-            <TextInput
+            <PasswordInput
               ref={passwordInputRef}
-              style={styles.input}
+              inputStyle={styles.input}
               value={password}
               onChangeText={setPassword}
               placeholder="Minimum 6 caractères"
-              secureTextEntry
               autoComplete="new-password"
               returnKeyType="next"
               onSubmitEditing={() => confirmPasswordInputRef.current?.focus()}
@@ -148,13 +148,12 @@ export default function OnboardingCredentials({ onNext }: OnboardingCredentialsP
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Confirmer le mot de passe</Text>
-            <TextInput
+            <PasswordInput
               ref={confirmPasswordInputRef}
-              style={styles.input}
+              inputStyle={styles.input}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               placeholder="Confirmez votre mot de passe"
-              secureTextEntry
               returnKeyType="done"
               onSubmitEditing={handleCreateAccount}
               editable={!isLoading}
@@ -232,6 +231,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     backgroundColor: '#fff',
+    color: '#2c3e50',
   },
   signupButton: {
     backgroundColor: '#007AFF',

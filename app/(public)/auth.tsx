@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/stores/authStore';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
+import PasswordInput from '@/components/ui/PasswordInput';
 
 export default function AuthScreen() {
   const router = useRouter();
@@ -73,13 +74,12 @@ export default function AuthScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Mot de passe</Text>
-            <TextInput
+            <PasswordInput
               ref={passwordInputRef}
-              style={styles.input}
+              inputStyle={styles.input}
               value={password}
               onChangeText={setPassword}
               placeholder="Votre mot de passe"
-              secureTextEntry
               returnKeyType="done"
               onSubmitEditing={handleLogin}
               editable={!isLoading}
@@ -170,6 +170,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 16,
+    color: '#333',
   },
   loginButton: {
     backgroundColor: '#007AFF',
