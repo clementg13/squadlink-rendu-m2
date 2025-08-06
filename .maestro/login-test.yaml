@@ -55,7 +55,7 @@ appId: com.clementgexpo.squadlink
     text: "J'accepte"
 
 - tapOn: 
-    text: "J'ai déjà un compte"
+    text: "Se connecter"
 
 # Se connecter
 - tapOn: 

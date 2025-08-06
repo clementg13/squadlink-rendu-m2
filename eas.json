@@ -17,8 +17,17 @@
       }
     },
     "production": {
+      "distribution": "store",
+      "env": {
+        "NODE_ENV": "production",
+        "EAS_BUILD_AUTOINSTALL": "eas-hooks"
+      },
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:assembleDebug && ./scripts/run-maestro-in-build.sh && :app:bundleRelease"
       }
     },
     "test": {
@@ -38,22 +47,5 @@
   },
   "submit": {
     "production": {}
-  },
-  "test": {
-    "maestro": {
-      "flows": [
-        ".maestro/"
-      ],
-      "config": "maestro-config.json"
-    },
-    "maestro-ci": {
-      "flows": [
-        ".maestro/"
-      ],
-      "config": "maestro-config.json",
-      "tags": ["critical"],
-      "retries": 3,
-      "parallel": true
-    }
   }
 }
