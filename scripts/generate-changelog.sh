@@ -144,6 +144,12 @@ generate_changelog() {
 
 # Script principal
 main() {
+    # En mode CI, s'assurer que tous les tags sont récupérés
+    if [ -n "${CI}" ] || [ -n "${GITHUB_ACTIONS}" ]; then
+        log_info "Mode CI détecté - récupération de tous les tags..."
+        git fetch --tags --force 2>/dev/null || log_warning "Impossible de récupérer les tags"
+    fi
+    
     # Récupérer la version actuelle
     if [ $# -eq 0 ]; then
         # Récupérer le dernier tag selon l'ordre des versions
@@ -199,6 +205,7 @@ main() {
     
     # Récupérer les tags existants triés par version
     tags=$(git tag -l "v*" --sort=-version:refname)
+    log_debug "Tags disponibles: $tags"
     
     # Trouver la version précédente
     previous_version=""
@@ -213,13 +220,17 @@ main() {
     else
         # Logique normale pour trouver la version précédente
         found_current=false
+        log_debug "Recherche de la version précédente pour: $current_version"
         
         for tag in $tags; do
+            log_debug "Comparaison avec tag: $tag"
             if [ "$found_current" = true ]; then
                 previous_version=$tag
+                log_debug "Version précédente trouvée: $previous_version"
                 break
             fi
             if [ "$tag" = "$current_version" ]; then
+                log_debug "Tag courant trouvé: $tag"
                 found_current=true
             fi
         done
