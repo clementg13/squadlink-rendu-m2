@@ -61,14 +61,14 @@ generate_changelog() {
     # Récupérer les commits
     if [ "$previous_version" != "initial" ]; then
         log_debug "Récupération des commits avec range: $commit_range"
-        if [ "$use_head" = true ]; then
-            commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short ${previous_version}..HEAD)
-        else
-            commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short ${previous_version}..${current_version})
-        fi
+        commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short $commit_range)
     else
         log_debug "Première release - récupération de tous les commits..."
-        commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short)
+        if [ "$commit_range" = "--all" ]; then
+            commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short)
+        else
+            commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short $commit_range)
+        fi
     fi
     
     if [ -z "$commits" ]; then
