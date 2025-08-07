@@ -68,7 +68,11 @@ generate_changelog() {
         fi
     else
         log_debug "Première release - récupération de tous les commits..."
-        commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short)
+        if [ "$use_head" = true ]; then
+            commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short)
+        else
+            commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short ${current_version})
+        fi
     fi
     
     if [ -z "$commits" ]; then
