@@ -37,23 +37,33 @@ generate_changelog() {
     local output_file=$3
     local use_head=${4:-false}
     
-    log_info "Génération du changelog depuis $previous_version vers $current_version"
+    if [ "$use_head" = true ]; then
+        log_info "Génération du changelog depuis HEAD vers $previous_version"
+        header_version="HEAD (unreleased)"
+        commit_range="${previous_version}..HEAD"
+    else
+        log_info "Génération du changelog depuis $previous_version vers $current_version"
+        header_version="$current_version"
+        if [ "$previous_version" != "initial" ]; then
+            commit_range="${previous_version}..${current_version}"
+        else
+            commit_range="--all"
+        fi
+    fi
     
     # En-tête du changelog
-    echo "# 📋 Changelog - Release $current_version" > "$output_file"
+    echo "# 📋 Changelog - Release $header_version" > "$output_file"
     echo "" >> "$output_file"
     echo "**Date:** $(date '+%d/%m/%Y à %H:%M')" >> "$output_file"
     echo "**Version précédente:** $previous_version" >> "$output_file"
     echo "" >> "$output_file"
     
-    # Récupérer les commits depuis la dernière version
+    # Récupérer les commits
     if [ "$previous_version" != "initial" ]; then
-        log_debug "Récupération des commits depuis $previous_version..."
+        log_debug "Récupération des commits avec range: $commit_range"
         if [ "$use_head" = true ]; then
-            # On génère depuis HEAD jusqu'au tag précédent
             commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short ${previous_version}..HEAD)
         else
-            # On génère entre deux tags
             commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short ${previous_version}..${current_version})
         fi
     else
@@ -245,12 +255,25 @@ main() {
     fi
     echo "----------------------------------------"
     
-    # Option pour afficher le changelog complet
-    echo ""
-    read -p "Voulez-vous afficher le changelog complet ? (y/N): " show_full
-    if [[ $show_full == [yY] || $show_full == [yY][eE][sS] ]]; then
+    # Option pour afficher le changelog complet (seulement en mode interactif)
+    if [ -z "${CI}" ] && [ -t 0 ]; then
         echo ""
-        cat "$output_file"
+        read -p "Voulez-vous afficher le changelog complet ? (y/N): " show_full
+        if [[ $show_full == [yY] || $show_full == [yY][eE][sS] ]]; then
+            echo ""
+            cat "$output_file"
+        fi
+    else
+        # En mode CI, on affiche toujours un résumé plus détaillé
+        echo ""
+        log_info "🤖 Mode CI détecté - aperçu étendu du changelog:"
+        echo "----------------------------------------"
+        head -30 "$output_file"
+        if [ $(wc -l < "$output_file") -gt 30 ]; then
+            echo "..."
+            echo "(voir $output_file pour le contenu complet)"
+        fi
+        echo "----------------------------------------"
     fi
 }
 
