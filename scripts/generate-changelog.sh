@@ -4,7 +4,10 @@
 # Usage: ./scripts/generate-changelog.sh [version]
 # Si aucune version n'est fournie, utilise le dernier tag
 
-set -e
+# Mode debug pour CI
+if [ -n "${CI}" ] || [ -n "${GITHUB_ACTIONS}" ]; then
+    set -x
+fi
 
 # Couleurs pour les messages
 GREEN='\033[0;32m'
@@ -61,13 +64,21 @@ generate_changelog() {
     # Récupérer les commits
     if [ "$previous_version" != "initial" ]; then
         log_debug "Récupération des commits avec range: $commit_range"
-        commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short $commit_range)
+        commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short $commit_range 2>/dev/null)
+        if [ $? -ne 0 ]; then
+            log_error "Erreur lors de la récupération des commits avec range: $commit_range"
+            return 1
+        fi
     else
         log_debug "Première release - récupération de tous les commits..."
         if [ "$commit_range" = "--all" ]; then
-            commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short)
+            commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short 2>/dev/null)
         else
-            commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short $commit_range)
+            commits=$(git log --pretty=format:"%h|%s|%an|%ad" --date=short $commit_range 2>/dev/null)
+        fi
+        if [ $? -ne 0 ]; then
+            log_error "Erreur lors de la récupération des commits"
+            return 1
         fi
     fi
     
@@ -82,11 +93,11 @@ generate_changelog() {
     echo "" >> "$output_file"
     echo "- **Nombre total de commits:** $commit_count" >> "$output_file"
     
-    # Analyser les types de commits
-    features=$(echo "$commits" | grep -i "feat\|feature\|add" | wc -l | tr -d ' ')
-    fixes=$(echo "$commits" | grep -i "fix\|bug\|patch" | wc -l | tr -d ' ')
-    refactor=$(echo "$commits" | grep -i "refactor\|clean\|improve" | wc -l | tr -d ' ')
-    docs=$(echo "$commits" | grep -i "doc\|readme" | wc -l | tr -d ' ')
+    # Analyser les types de commits (avec gestion d'erreur)
+    features=$(echo "$commits" | grep -i -E "(feat|feature|add)" | wc -l | tr -d ' ' || echo "0")
+    fixes=$(echo "$commits" | grep -i -E "(fix|bug|patch)" | wc -l | tr -d ' ' || echo "0")
+    refactor=$(echo "$commits" | grep -i -E "(refactor|clean|improve)" | wc -l | tr -d ' ' || echo "0")
+    docs=$(echo "$commits" | grep -i -E "(doc|readme)" | wc -l | tr -d ' ' || echo "0")
     
     echo "- **Nouvelles fonctionnalités:** $features" >> "$output_file"
     echo "- **Corrections de bugs:** $fixes" >> "$output_file"
@@ -98,9 +109,9 @@ generate_changelog() {
     if [ "$features" -gt 0 ]; then
         echo "## ✨ Nouvelles fonctionnalités" >> "$output_file"
         echo "" >> "$output_file"
-        echo "$commits" | grep -i "feat\|feature\|add" | while IFS='|' read -r hash subject author date; do
+        echo "$commits" | grep -i -E "(feat|feature|add)" | while IFS='|' read -r hash subject author date; do
             echo "- $subject"
-        done >> "$output_file"
+        done >> "$output_file" || true
         echo "" >> "$output_file"
     fi
     
@@ -108,9 +119,9 @@ generate_changelog() {
     if [ "$fixes" -gt 0 ]; then
         echo "## 🐛 Corrections de bugs" >> "$output_file"
         echo "" >> "$output_file"
-        echo "$commits" | grep -i "fix\|bug\|patch" | while IFS='|' read -r hash subject author date; do
+        echo "$commits" | grep -i -E "(fix|bug|patch)" | while IFS='|' read -r hash subject author date; do
             echo "- $subject"
-        done >> "$output_file"
+        done >> "$output_file" || true
         echo "" >> "$output_file"
     fi
     
@@ -118,20 +129,20 @@ generate_changelog() {
     if [ "$refactor" -gt 0 ]; then
         echo "## 🔧 Améliorations et refactoring" >> "$output_file"
         echo "" >> "$output_file"
-        echo "$commits" | grep -i "refactor\|clean\|improve" | while IFS='|' read -r hash subject author date; do
+        echo "$commits" | grep -i -E "(refactor|clean|improve)" | while IFS='|' read -r hash subject author date; do
             echo "- $subject"
-        done >> "$output_file"
+        done >> "$output_file" || true
         echo "" >> "$output_file"
     fi
     
     # Section des autres commits
-    other_commits=$(echo "$commits" | grep -v -i "feat\|feature\|add\|fix\|bug\|patch\|refactor\|clean\|improve\|doc\|readme")
+    other_commits=$(echo "$commits" | grep -v -i -E "(feat|feature|add|fix|bug|patch|refactor|clean|improve|doc|readme)" || true)
     if [ -n "$other_commits" ]; then
         echo "## 📝 Autres modifications" >> "$output_file"
         echo "" >> "$output_file"
         echo "$other_commits" | while IFS='|' read -r hash subject author date; do
             echo "- $subject"
-        done >> "$output_file"
+        done >> "$output_file" || true
         echo "" >> "$output_file"
     fi
     
