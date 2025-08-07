@@ -99,8 +99,8 @@ generate_changelog() {
         echo "## ✨ Nouvelles fonctionnalités" >> "$output_file"
         echo "" >> "$output_file"
         echo "$commits" | grep -i "feat\|feature\|add" | while IFS='|' read -r hash subject author date; do
-            echo "- $subject" >> "$output_file"
-        done
+            echo "- $subject"
+        done >> "$output_file"
         echo "" >> "$output_file"
     fi
     
@@ -109,8 +109,8 @@ generate_changelog() {
         echo "## 🐛 Corrections de bugs" >> "$output_file"
         echo "" >> "$output_file"
         echo "$commits" | grep -i "fix\|bug\|patch" | while IFS='|' read -r hash subject author date; do
-            echo "- $subject" >> "$output_file"
-        done
+            echo "- $subject"
+        done >> "$output_file"
         echo "" >> "$output_file"
     fi
     
@@ -119,8 +119,8 @@ generate_changelog() {
         echo "## 🔧 Améliorations et refactoring" >> "$output_file"
         echo "" >> "$output_file"
         echo "$commits" | grep -i "refactor\|clean\|improve" | while IFS='|' read -r hash subject author date; do
-            echo "- $subject" >> "$output_file"
-        done
+            echo "- $subject"
+        done >> "$output_file"
         echo "" >> "$output_file"
     fi
     
@@ -130,8 +130,8 @@ generate_changelog() {
         echo "## 📝 Autres modifications" >> "$output_file"
         echo "" >> "$output_file"
         echo "$other_commits" | while IFS='|' read -r hash subject author date; do
-            echo "- $subject" >> "$output_file"
-        done
+            echo "- $subject"
+        done >> "$output_file"
         echo "" >> "$output_file"
     fi
     
