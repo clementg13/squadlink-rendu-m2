@@ -71,17 +71,9 @@ jobs:
       run: |
         echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" > .env
         echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
-    
-    - name: Add Sentry token to environment
-      if: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      run: |
+        # Ajouter SENTRY_AUTH_TOKEN si disponible (sera vide si non configuré)
         echo "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}" >> .env
-        echo "✅ SENTRY_AUTH_TOKEN configuré pour les source maps"
-    
-    - name: Sentry token not configured
-      if: ${{ !secrets.SENTRY_AUTH_TOKEN }}
-      run: |
-        echo "⚠️ SENTRY_AUTH_TOKEN non configuré - source maps Sentry désactivées"
+        echo "✅ Fichier .env créé avec les variables d'environnement"
 
     # 2. Build Android APK with Gradle
     - name: Make gradlew executable
