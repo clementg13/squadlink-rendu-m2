@@ -77,15 +77,15 @@ jobs:
         echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" > .env
         echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
 
-    # 3. Single Production Build with Maestro Tests
-    - name: Build Production with Maestro Tests
+    # 3. Production Build
+    - name: Build Production
       run: |
         # Utiliser le message de build généré par l'étape changelog
         BUILD_MESSAGE="${{ steps.changelog.outputs.build_message }}"
         echo "📋 Message de build: $BUILD_MESSAGE"
-        echo "🧪 Building production with integrated Maestro tests..."
+        echo "🏗️ Building production..."
         
-        # Utiliser le profil production qui construit et teste en une fois
+        # Build production
         eas build --platform android --profile production --non-interactive --wait --message "$BUILD_MESSAGE"
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
