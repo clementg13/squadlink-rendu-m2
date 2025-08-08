@@ -3,25 +3,8 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      [
-        'module-resolver',
-        {
-          root: ['.'],
-          alias: {
-            '@': './',
-            '@/components': './components',
-            '@/constants': './constants',
-            '@/hooks': './hooks',
-            '@/lib': './lib',
-            '@/services': './services',
-            '@/stores': './stores',
-            '@/types': './types',
-            '@/utils': './utils',
-            '@/assets': './assets',
-          },
-          extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
-        },
-      ],
+      // Note: Removed module-resolver plugin to avoid EAS Build dependency issues
+      // Module resolution is handled by metro.config.js resolver.alias instead
       [
         '@babel/plugin-transform-export-namespace-from'
       ],

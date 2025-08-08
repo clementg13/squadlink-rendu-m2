@@ -13,25 +13,24 @@ echo "⚙️ Vérification de metro.config.js..."
 if [ ! -f metro.config.js ]; then
     echo "❌ metro.config.js manquant, création..."
     cat > metro.config.js << 'EOF'
-const { getSentryExpoConfig } = require("@sentry/react-native/metro");
+const { getDefaultConfig } = require('@expo/metro-config');
 const path = require('path');
 
-const config = getSentryExpoConfig(__dirname);
+// Configuration Metro standard Expo avec alias pour résolution des modules
+const config = getDefaultConfig(__dirname);
 
-config.resolver = {
-  ...config.resolver,
-  alias: {
-    '@': path.resolve(__dirname),
-    '@/components': path.resolve(__dirname, 'components'),
-    '@/constants': path.resolve(__dirname, 'constants'),
-    '@/hooks': path.resolve(__dirname, 'hooks'),
-    '@/lib': path.resolve(__dirname, 'lib'),
-    '@/services': path.resolve(__dirname, 'services'),
-    '@/stores': path.resolve(__dirname, 'stores'),
-    '@/types': path.resolve(__dirname, 'types'),
-    '@/utils': path.resolve(__dirname, 'utils'),
-    '@/assets': path.resolve(__dirname, 'assets'),
-  },
+// Ajouter la résolution des alias
+config.resolver.alias = {
+  '@': path.resolve(__dirname),
+  '@/components': path.resolve(__dirname, 'components'),
+  '@/constants': path.resolve(__dirname, 'constants'),
+  '@/hooks': path.resolve(__dirname, 'hooks'),
+  '@/lib': path.resolve(__dirname, 'lib'),
+  '@/services': path.resolve(__dirname, 'services'),
+  '@/stores': path.resolve(__dirname, 'stores'),
+  '@/types': path.resolve(__dirname, 'types'),
+  '@/utils': path.resolve(__dirname, 'utils'),
+  '@/assets': path.resolve(__dirname, 'assets'),
 };
 
 module.exports = config;
@@ -48,25 +47,8 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      [
-        'module-resolver',
-        {
-          root: ['.'],
-          alias: {
-            '@': './',
-            '@/components': './components',
-            '@/constants': './constants',
-            '@/hooks': './hooks',
-            '@/lib': './lib',
-            '@/services': './services',
-            '@/stores': './stores',
-            '@/types': './types',
-            '@/utils': './utils',
-            '@/assets': './assets',
-          },
-          extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
-        },
-      ],
+      // Note: Removed module-resolver plugin to avoid EAS Build dependency issues
+      // Module resolution is handled by metro.config.js resolver.alias instead
       [
         '@babel/plugin-transform-export-namespace-from'
       ],
