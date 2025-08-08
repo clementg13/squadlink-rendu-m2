@@ -39,6 +39,9 @@
       },
       "android": {
         "buildType": "apk"
+      },
+      "hooks": {
+        "prebuild": "./scripts/force-metro-config.sh"
       }
     }
   },

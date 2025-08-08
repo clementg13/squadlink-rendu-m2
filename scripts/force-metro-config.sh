@@ -1,3 +1,30 @@
+#!/bin/bash
+
+# Script pour forcer une configuration Metro correcte
+
+echo "🚀 Force Metro Config Fix"
+echo "========================"
+
+# Afficher l'environnement
+echo "📁 Working directory: $(pwd)"
+echo "📁 Directory contents:"
+ls -la
+
+echo ""
+echo "🔧 Environment variables:"
+echo "NODE_ENV: $NODE_ENV"
+echo "EXPO_PUBLIC_*:"
+env | grep EXPO_PUBLIC || echo "None found"
+
+# Sauvegarder l'ancien metro.config.js s'il existe
+if [ -f metro.config.js ]; then
+    echo "📄 Backing up existing metro.config.js"
+    cp metro.config.js metro.config.js.backup
+fi
+
+# Créer un metro.config.js robuste
+echo "⚙️ Creating robust metro.config.js..."
+cat > metro.config.js << 'EOF'
 const { getDefaultConfig } = require('@expo/metro-config');
 const path = require('path');
 
@@ -41,3 +68,27 @@ config.transformer.minifierConfig = {
 };
 
 module.exports = config;
+EOF
+
+echo "✅ Metro config forcibly updated"
+
+# Vérifier que les dossiers existent
+echo ""
+echo "📂 Verifying project structure:"
+for dir in components constants hooks lib services stores types assets; do
+    if [ -d "$dir" ]; then
+        echo "✅ $dir/ exists"
+    else
+        echo "❌ $dir/ missing"
+        echo "   Contents of current directory:"
+        ls -la | grep -E "^d"
+    fi
+done
+
+# Test de syntaxe
+echo ""
+echo "🧪 Testing metro.config.js syntax..."
+node -c metro.config.js && echo "✅ Syntax OK" || echo "❌ Syntax error"
+
+echo ""
+echo "🏁 Force config complete"
