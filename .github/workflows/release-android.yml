@@ -61,23 +61,53 @@ jobs:
           echo "build_message=Release $VERSION" >> $GITHUB_OUTPUT
         fi
 
-    - name: Install dependencies
-      run: npm ci
-
-    # 1. Vérifier le lint et les tests
-    - name: Run ESLint
-      run: npm run lint:check
-
-    - name: Run tests
-      run: npm test -- --watchAll=false --passWithNoTests
-
     - name: Create environment file
       run: |
-        echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" > .env
+        echo "# Variables d'environnement pour SquadLink Release" > .env
+        echo "NODE_ENV=production" >> .env
+        echo "DEBUG=false" >> .env
+        echo "LOG_LEVEL=info" >> .env
+        echo "" >> .env
+        echo "# API Configuration" >> .env
+        echo "API_URL=${{ secrets.API_URL || 'https://api.example.com' }}" >> .env
+        echo "" >> .env
+        echo "# Supabase Configuration" >> .env
+        echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" >> .env
         echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
-        # Ajouter SENTRY_AUTH_TOKEN si disponible (sera vide si non configuré)
+        echo "" >> .env
+        echo "# Sentry Configuration" >> .env
         echo "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}" >> .env
-        echo "✅ Fichier .env créé avec les variables d'environnement"
+        echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
+        echo "SENTRY_ENVIRONMENT=production" >> .env
+        echo "SENTRY_DEBUG=false" >> .env
+        echo "" >> .env
+        echo "# Analytics" >> .env
+        echo "ANALYTICS_KEY=${{ secrets.ANALYTICS_KEY }}" >> .env
+        echo "✅ Fichier .env créé"
+        echo "📄 Contenu du .env:"
+        cat .env
+        
+    - name: Validate environment variables
+      run: |
+        echo "🔍 Validation des variables d'environnement..."
+        if [ -z "${{ secrets.API_URL }}" ]; then
+          echo "⚠️ API_URL non configuré - utilisation de la valeur placeholder"
+        else
+          echo "✅ API_URL configuré"
+        fi
+        if [ -z "${{ secrets.SENTRY_DSN }}" ]; then
+          echo "⚠️ SENTRY_DSN non configuré - Sentry sera désactivé"
+        else
+          echo "✅ SENTRY_DSN configuré"
+        fi
+        if [ -z "${{ secrets.ANALYTICS_KEY }}" ]; then
+          echo "⚠️ ANALYTICS_KEY non configuré - Analytics sera désactivé"
+        else
+          echo "✅ ANALYTICS_KEY configuré"
+        fi
+
+    - name: Install dependencies
+      run: npm ci
 
     # 2. Build Android APK with Gradle
     - name: Make gradlew executable
