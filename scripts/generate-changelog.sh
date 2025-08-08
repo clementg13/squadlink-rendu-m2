@@ -149,8 +149,7 @@ generate_changelog() {
     # Footer
     echo "---" >> "$output_file"
     echo "" >> "$output_file"
-    echo "**📱 Build disponible sur:** [EAS Builds](https://expo.dev/accounts/yohanm/projects/squadlink/builds)" >> "$output_file"
-    echo "**🔗 GitHub Release:** [Release $current_version](https://github.com/clementg13/squadlink-rendu-m2/releases/tag/$current_version)" >> "$output_file"
+    echo "** GitHub Release:** [Release $current_version](https://github.com/clementg13/squadlink-rendu-m2/releases/tag/$current_version)" >> "$output_file"
 }
 
 # Script principal
