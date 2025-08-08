@@ -26,6 +26,9 @@
       },
       "android": {
         "buildType": "app-bundle"
+      },
+      "hooks": {
+        "prebuild": "./scripts/eas-prebuild-fix.sh"
       }
     },
     "test": {
