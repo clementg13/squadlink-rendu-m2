@@ -12,9 +12,6 @@
     },
     "preview": {
       "distribution": "internal",
-      "env": {
-        "EXPO_ROUTER_APP_ROOT": "app"
-      },
       "ios": {
         "resourceClass": "m-medium"
       }
@@ -22,8 +19,7 @@
     "production": {
       "distribution": "store",
       "env": {
-        "NODE_ENV": "production",
-        "EXPO_ROUTER_APP_ROOT": "app"
+        "NODE_ENV": "production"
       },
       "ios": {
         "resourceClass": "m-medium"
@@ -35,8 +31,7 @@
     "test": {
       "distribution": "internal",
       "env": {
-        "NODE_ENV": "test",
-        "EXPO_ROUTER_APP_ROOT": "app"
+        "NODE_ENV": "test"
       },
       "ios": {
         "simulator": true,
