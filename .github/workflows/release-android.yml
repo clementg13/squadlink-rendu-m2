@@ -73,13 +73,13 @@ jobs:
         echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
     
     - name: Add Sentry token to environment
-      if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+      if: ${{ secrets.SENTRY_AUTH_TOKEN }}
       run: |
         echo "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}" >> .env
         echo "✅ SENTRY_AUTH_TOKEN configuré pour les source maps"
     
     - name: Sentry token not configured
-      if: ${{ secrets.SENTRY_AUTH_TOKEN == '' }}
+      if: ${{ !secrets.SENTRY_AUTH_TOKEN }}
       run: |
         echo "⚠️ SENTRY_AUTH_TOKEN non configuré - source maps Sentry désactivées"
 
