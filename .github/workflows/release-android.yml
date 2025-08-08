@@ -1,4 +1,4 @@
-name: Release Build with EAS
+name: Release Build with Gradle
 
 on:
   push:
@@ -18,6 +18,12 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
 
     - name: Get version from tag
       id: version
@@ -61,38 +67,65 @@ jobs:
     - name: Run tests
       run: npm test -- --watchAll=false --passWithNoTests
 
-    # 2. Setup EAS CLI
-    - name: Setup Expo and EAS CLI
-      run: |
-        npm install -g @expo/cli eas-cli
-
-    - name: Authenticate with EAS
-      run: |
-        eas whoami
-      env:
-        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
     - name: Create environment file
       run: |
         echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}" > .env
         echo "EXPO_PUBLIC_SUPABASE_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}" >> .env
-
-    # 3. Production Build
-    - name: Build Production
+    
+    - name: Add Sentry token to environment
+      if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
       run: |
-        # Utiliser le message de build généré par l'étape changelog
-        BUILD_MESSAGE="${{ steps.changelog.outputs.build_message }}"
-        echo "📋 Message de build: $BUILD_MESSAGE"
-        echo "🏗️ Building production..."
-        
-        # Build production
-        eas build --platform android --profile production --non-interactive --wait --message "$BUILD_MESSAGE"
-      env:
-        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        echo "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}" >> .env
+        echo "✅ SENTRY_AUTH_TOKEN configuré pour les source maps"
+    
+    - name: Sentry token not configured
+      if: ${{ secrets.SENTRY_AUTH_TOKEN == '' }}
+      run: |
+        echo "⚠️ SENTRY_AUTH_TOKEN non configuré - source maps Sentry désactivées"
 
-    # 4. Optionnel: Submit to Google Play Store (internal track)
-    # - name: Submit to Google Play Store
-    #   run: |
-    #     eas submit --platform android --latest --non-interactive
-    #   env:
-    #     EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    # 2. Build Android APK with Gradle
+    - name: Make gradlew executable
+      run: chmod +x android/gradlew
+
+    - name: Clean Gradle
+      run: |
+        cd android
+        ./gradlew clean
+
+    - name: Build Release APK
+      run: |
+        echo "🏗️ Building release APK with Gradle..."
+        cd android
+        ./gradlew assembleRelease
+      env:
+        NODE_ENV: production
+        SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+    - name: Find APK file
+      id: apk
+      run: |
+        APK_PATH=$(find android/app/build/outputs/apk/release -name "*.apk" -type f | head -1)
+        if [ -n "$APK_PATH" ]; then
+          echo "path=$APK_PATH" >> $GITHUB_OUTPUT
+          APK_NAME="squadlink-${VERSION}-release.apk"
+          echo "name=$APK_NAME" >> $GITHUB_OUTPUT
+          echo "✅ APK found at: $APK_PATH"
+        else
+          echo "❌ APK not found!"
+          exit 1
+        fi
+
+    # 3. Create GitHub Release with APK and changelog
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.tag }}
+        name: Release ${{ steps.version.outputs.tag }}
+        body_path: ${{ steps.changelog.outputs.file }}
+        files: |
+          ${{ steps.apk.outputs.path }}
+          ${{ steps.changelog.outputs.file }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

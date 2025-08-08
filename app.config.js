@@ -64,6 +64,7 @@ export default {
       LOG_LEVEL: process.env.LOG_LEVEL,
       NODE_ENV: process.env.NODE_ENV,
       SENTRY_DSN: process.env.SENTRY_DSN,
+      SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
       ANALYTICS_KEY: process.env.ANALYTICS_KEY,
       
       // Variables Supabase
