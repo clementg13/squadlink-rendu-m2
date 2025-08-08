@@ -14,8 +14,10 @@
     "type-check": "tsc --noEmit",
     "build:android": "eas build --platform android --profile preview",
     "build:android:production": "eas build --platform android --profile production",
+    "build:android:clear": "eas build --platform android --profile preview --clear-cache",
     "build:ios": "eas build --platform ios --profile preview",
     "build:ios:production": "eas build --platform ios --profile production",
+    "build:ios:clear": "eas build --platform ios --profile preview --clear-cache",
     "build:all": "eas build --platform all --profile preview",
     "setup:eas": "./scripts/setup-eas.sh",
     "release:prepare": "./scripts/create-release.sh",
@@ -23,6 +25,7 @@
     "release:changelog": "./scripts/generate-changelog.sh",
     "release:help": "echo 'Étape 1: npm run release:prepare <version> | Étape 2: Créer MR avec version code/name | Étape 3: npm run release:finalize <version> | Changelog: npm run release:changelog'",
     "test:build:android": "eas build --profile test --platform android",
+    "test:build:android:clear": "eas build --profile test --platform android --clear-cache",
     "test:e2e:android": "eas build --platform android --profile test --wait"
   },
   "dependencies": {
@@ -43,7 +46,7 @@
     "expo-font": "~13.3.2",
     "expo-linking": "~7.1.7",
     "expo-location": "^18.1.6",
-    "expo-router": "~5.1.3",
+    "expo-router": "~5.0.7",
     "expo-splash-screen": "~0.30.10",
     "expo-status-bar": "~2.2.3",
     "expo-system-ui": "~5.0.10",
