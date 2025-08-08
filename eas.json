@@ -19,15 +19,13 @@
     "production": {
       "distribution": "store",
       "env": {
-        "NODE_ENV": "production",
-        "EAS_BUILD_AUTOINSTALL": "eas-hooks"
+        "NODE_ENV": "production"
       },
       "ios": {
         "resourceClass": "m-medium"
       },
       "android": {
-        "buildType": "app-bundle",
-        "gradleCommand": ":app:assembleDebug && ./scripts/run-maestro-in-build.sh && :app:bundleRelease"
+        "buildType": "app-bundle"
       }
     },
     "test": {
@@ -40,8 +38,7 @@
         "resourceClass": "m-medium"
       },
       "android": {
-        "buildType": "apk",
-        "gradleCommand": ":app:assembleDebug :app:assembleAndroidTest"
+        "buildType": "apk"
       }
     }
   },
