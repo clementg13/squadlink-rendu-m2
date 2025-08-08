@@ -5,6 +5,12 @@ const fs = require('fs');
 // Configuration Metro ultra-robuste pour EAS Build
 console.log('🔧 [Metro] Loading config from:', __dirname);
 
+// Forcer EXPO_ROUTER_APP_ROOT pour résoudre require.context
+if (!process.env.EXPO_ROUTER_APP_ROOT) {
+  process.env.EXPO_ROUTER_APP_ROOT = 'app';
+  console.log('🔧 [Metro] Set EXPO_ROUTER_APP_ROOT to:', process.env.EXPO_ROUTER_APP_ROOT);
+}
+
 // Vérification de l'environnement
 const isEASBuild = process.env.EAS_BUILD_PLATFORM !== undefined;
 const isCIEnvironment = process.env.CI === 'true';
