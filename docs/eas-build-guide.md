@@ -1,6 +1,22 @@
-# Guide de Configuration EAS pour SquadLink
+# ⚠️ Guide EAS - TEMPORAIREMENT SUSPENDU
+
+> **🚨 ATTENTION** : Ce guide est **temporairement suspendu**. Le projet a migré vers un workflow **Gradle/GitHub Actions** pour Android uniquement.
+> 
+> **🍎 Retour prévu :** EAS sera **réutilisé pour iOS** dès l'obtention de la licence Apple Developer.
+> 
+> **📖 Consultez la nouvelle documentation :**
+> - [Guide de Release Android](./android-release-guide.md) - Workflow Gradle actuel
+> - [Guide de Migration](./migration-eas-to-gradle.md) - Explication de la migration
+
+---
+
+# Guide de Configuration EAS pour SquadLink (EN ATTENTE LICENCE APPLE)
 
 Ce guide explique comment configurer et utiliser EAS (Expo Application Services) pour le build et la distribution de SquadLink.
+
+**📱 Status actuel :**
+- ❌ **Android** : Migré vers Gradle/GitHub Actions
+- ⏳ **iOS** : En attente de licence Apple Developer pour réactiver EAS
 
 ## 📋 Table des matières
 
