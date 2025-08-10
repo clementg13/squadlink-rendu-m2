@@ -1,191 +1,75 @@
-# 🚀 Guide de Release - Migration vers EAS
+# 🚀 Guide de Release Android - Build Gradle avec GitHub Actions
 
-⚠️ **IMPORTANT** : Ce guide est obsolète. Le projet a migré de Firebase vers EAS (Expo Application Services).
+## 📋 Vue d'ensemble
 
-## � Nouveau Guide
+Le projet utilise maintenant un **workflow Gradle natif** avec GitHub Actions pour les releases Android, remplaçant l'ancienne solution EAS.
 
-Consultez le nouveau guide de build et release : **[EAS Build Guide](./eas-build-guide.md)**
+## 🔄 Nouvelle Architecture
 
-## 🔄 Migration vers EAS
+Le projet utilise maintenant :
+- ✅ **Build Gradle direct** (`./gradlew assembleRelease`)
+- ✅ **CI/CD GitHub Actions** automatisé sur les tags
+- ✅ **GitHub Releases** avec APK et changelog automatiques
+- ✅ **Sentry intégré** pour les source maps et monitoring
+- ✅ **Variables d'environnement sécurisées** via GitHub Secrets
+- ✅ **Changelog automatique** généré à partir des commits
 
-Le projet utilise maintenant EAS pour :
-- ✅ **Build Android/iOS** plus simple et rapide
-- ✅ **Distribution automatique** via EAS
-- ✅ **Over-the-Air Updates** pour les correctifs urgents
-- ✅ **Meilleure intégration** avec l'écosystème Expo
-- ✅ **Builds cloud** sans configuration locale complexe
+## 🛠 Workflow de Release
 
-## � Workflow Simplifié
-
-### Préparation (inchangé)
+### 1. Préparation de la release
 ```bash
 npm run release:prepare 1.2.0
 ```
 
-### Finalisation (inchangé)  
+### 2. Finalisation et push du tag
 ```bash
 npm run release:finalize 1.2.0
 ```
 
-### Nouveau : Builds disponibles
-- **Preview builds** : APK pour tests rapides
-- **Production builds** : AAB pour Play Store
-- **Development builds** : Pour développement avec hot reload
+### 3. Build automatique via GitHub Actions
+Dès que le tag est poussé, GitHub Actions :
+- 🔨 Build l'APK avec `./gradlew assembleRelease`
+- 📄 Génère le changelog automatiquement
+- 📱 Crée une GitHub Release avec l'APK
+- 🐛 Upload les source maps vers Sentry (si configuré)
 
----
+## 📱 Accès aux Builds
 
-## 📚 Ancien Processus (Firebase - Obsolète)
+Les APK sont disponibles sur :
+**[GitHub Releases](https://github.com/clementg13/squadlink-rendu-m2/releases)**
 
-### Étape 2 : Modification des Versions (MR Manuelle)
+## 🔧 Build Local (optionnel)
 
-**Sur GitHub :**
-
-1. **Créer une MR** depuis `origin/release`
-2. **Modifier les fichiers Android** dans cette MR :
-
-   **Dans `android/app/build.gradle` :**
-   ```gradle
-   android {
-       defaultConfig {
-           versionCode 23        // ← Incrémenter de +1
-           versionName "1.2.0"   // ← Nouvelle version
-       }
-   }
-   ```
-
-   **Dans `package.json` (optionnel) :**
-   ```json
-   {
-     "version": "1.2.0"
-   }
-   ```
-
-3. **Merger la MR** une fois les modifications validées
-
-### Étape 3 : Finalisation et Tag
-
-**Après merge de la MR :**
-
+Pour tester localement avant release :
 ```bash
-# Finaliser la release (crée le tag et déclenche le build)
-npm run release:finalize 1.2.0
-```
+# Build propre
+npm run build:android:clean
 
-**Ce script fait automatiquement :**
-- ✅ Bascule sur la branche `release`
-- ✅ Récupère les dernières modifications
-- ✅ Crée le tag `v1.2.0`
-- ✅ Pousse le tag sur origin
-- 🚀 **Déclenche automatiquement le workflow GitHub Actions**
-
-## ⚙️ Workflow GitHub Actions
-
-**Déclencheur :**
-```yaml
-on:
-  push:
-    tags:
-      - 'v*'
-```
-
-**Actions automatiques :**
-1. ✅ **Lint & Tests** (`npm run lint:check` + `npm test`)
-2. ✅ **Build AAB** (`./gradlew bundleRelease`)
-3. ✅ **Distribution Firebase** (vers les testeurs)
-
-## 📋 Récapitulatif des Commandes
-
-### Commandes Principales
-```bash
-# Aide complète
-npm run release:help
-
-# Étape 1: Préparer (depuis master)
-npm run release:prepare 1.2.0
-
-# Étape 2: MR manuelle sur GitHub
-
-# Étape 3: Finaliser (depuis release ou n'importe où)
-npm run release:finalize 1.2.0
-```
-
-### Commandes de Build Local
-```bash
-# Build debug local
-npm run build:android:debug
-
-# Build release local  
+# Build simple
 npm run build:android
 
-# Nettoyage
-npm run build:clean
+# Upload manuel vers GitHub
+npm run release:upload <version>
 ```
 
-## 🏷️ Gestion des Branches
+## ⚙️ Configuration
 
-### Structure des Branches
-```
-master (développement principal)
-  ↓
-release (créée pour chaque release)
-  ↓  
-tag v1.2.0 (déclenche le build)
-```
+### Variables d'environnement requises (GitHub Secrets)
+- `EXPO_PUBLIC_SUPABASE_URL` - URL Supabase
+- `EXPO_PUBLIC_SUPABASE_KEY` - Clé publique Supabase  
+- `API_URL` - URL de votre API backend
+- `SENTRY_AUTH_TOKEN` - Token Sentry (optionnel)
+- `SENTRY_DSN` - DSN Sentry (optionnel)
 
-### Cycle de Vie d'une Branche Release
-1. **Création** : Nouvelle branche `release` depuis `master`
-2. **Modification** : MR avec version code/name
-3. **Tag** : Création du tag sur `release`
-4. **Merge retour** : Lors de la prochaine release, `release` est mergée dans `master`
+### Fichiers de configuration
+- `.github/workflows/release-android.yml` - Pipeline CI/CD
+- `android/app/build.gradle` - Configuration Gradle avec Sentry conditionnel
+- `scripts/generate-changelog.sh` - Générateur de changelog
 
-## 🔧 Configuration Requise
+## 🔍 Monitoring et Debug
 
-### Secrets GitHub Actions
-Dans GitHub → Settings → Secrets and variables → Actions :
+### Logs de build
+Consultez les logs sur : https://github.com/clementg13/squadlink-rendu-m2/actions
 
-| Secret | Description | Requis |
-|--------|-------------|---------|
-| `EXPO_PUBLIC_SUPABASE_URL` | URL de votre projet Supabase | ✅ |
-| `EXPO_PUBLIC_SUPABASE_KEY` | Clé publique Supabase | ✅ |
-| `FIREBASE_APP_ID` | ID de l'app Firebase | ✅ |
-| `FIREBASE_TOKEN` | Token Firebase CLI | ✅ |
-
-### Format des Versions
-
-**Tags :** `v1.2.0`, `v2.0.1`, etc.
-**Version Code :** Incrémental (22, 23, 24...)
-**Version Name :** Semantic versioning (1.2.0, 2.0.1...)
-
-## � Avantages du Nouveau Processus
-
-### ✅ **Avantages**
-- **Contrôle rigoureux** : Chaque release passe par une MR
-- **Traçabilité** : Historique clair des versions dans Android
-- **Séparation claire** : `master` pour dev, `release` pour production
-- **Rollback facile** : Branches et tags séparés
-- **Review des versions** : Validation par l'équipe via MR
-
-### 🔍 **Sécurité**
-- **Validation manuelle** des version code/name
-- **Review obligatoire** via MR
-- **Tests automatiques** avant build
-- **Branches protégées** possibles
-
-## � Monitoring
-
-### GitHub Actions
-Surveillez le build : `https://github.com/clementg13/squadlink-rendu-m2/actions`
-
-### Firebase App Distribution
-Les testeurs recevront automatiquement la notification de nouvelle version.
-
-## 🚨 Dépannage
-
-### "Branche release existe déjà"
-Le script vous demandera si vous voulez la merger et la supprimer automatiquement.
-
-### "Tag existe déjà"
-Vérifiez que vous n'avez pas déjà créé ce tag : `git tag -l`
-
-### "MR pas encore mergée"
-Le script `finalize-release.sh` vous avertira si aucun commit récent ne concerne la version.
+### Problèmes fréquents
+1. **Variables manquantes** : Vérifiez les GitHub Secrets

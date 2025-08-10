@@ -200,8 +200,7 @@ Voici un exemple de changelog généré automatiquement :
 
 ---
 
-**📱 Build disponible sur:** [EAS Builds](https://expo.dev/accounts/yohanm/projects/squadlink/builds)
-**🔗 GitHub Release:** [Release v1.3.0](https://github.com/clementg13/squadlink-rendu-m2/releases/tag/v1.3.0)
+** GitHub Release:** [Release v1.3.0](https://github.com/clementg13/squadlink-rendu-m2/releases/tag/v1.3.0)
 ```
 
 ### Message de build EAS
