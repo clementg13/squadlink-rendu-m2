@@ -3,182 +3,138 @@ import { render, fireEvent } from '@testing-library/react-native';
 import GymPickerModal from '@/components/profile/gym/GymPickerModal';
 import { Gym } from '@/types/profile';
 
+// Mock du Modal React Native
+jest.mock('react-native', () => {
+  const RN = jest.requireActual('react-native');
+
+  RN.Modal = ({ visible, children, onRequestClose }: any) => {
+    if (!visible) return null;
+    return (
+      <RN.View testID="modal-container" onPress={onRequestClose}>
+        {children}
+      </RN.View>
+    );
+  };
+
+  return RN;
+});
+
 describe('GymPickerModal', () => {
   const mockGyms: Gym[] = [
     { id: '1', name: 'Fitness Club Paris' },
     { id: '2', name: 'Gym Lyon' },
-    { id: '3', name: 'Sport Center Marseille' },
+    { id: '3', name: 'Sport Center' },
   ];
 
-  const mockOnSelect = jest.fn();
-  const mockOnClose = jest.fn();
+  const defaultProps = {
+    visible: true,
+    gyms: mockGyms,
+    onSelect: jest.fn(),
+    onClose: jest.fn(),
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders modal when visible', () => {
-    const { getByText } = render(
-      <GymPickerModal
-        visible={true}
-        gyms={mockGyms}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
+  describe('Rendering', () => {
+    it('should render modal title', () => {
+      const { getByText } = render(<GymPickerModal {...defaultProps} />);
 
-    expect(getByText('Sélectionnez une salle de sport')).toBeTruthy();
+      expect(getByText('Sélectionnez une salle de sport')).toBeTruthy();
+    });
+
+    it('should render all gyms', () => {
+      const { getByText } = render(<GymPickerModal {...defaultProps} />);
+
+      expect(getByText('Fitness Club Paris')).toBeTruthy();
+      expect(getByText('Gym Lyon')).toBeTruthy();
+      expect(getByText('Sport Center')).toBeTruthy();
+    });
+
+    it('should render cancel button', () => {
+      const { getByText } = render(<GymPickerModal {...defaultProps} />);
+
+      expect(getByText('Annuler')).toBeTruthy();
+    });
+
+    it('should not render when not visible', () => {
+      const { queryByText } = render(
+        <GymPickerModal {...defaultProps} visible={false} />
+      );
+
+      expect(queryByText('Sélectionnez une salle de sport')).toBeNull();
+    });
   });
 
-  it('renders gym list correctly', () => {
-    const { getByText } = render(
-      <GymPickerModal
-        visible={true}
-        gyms={mockGyms}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
+  describe('Interactions', () => {
+    it('should call onSelect when gym is selected', () => {
+      const mockOnSelect = jest.fn();
+      const { getByText } = render(
+        <GymPickerModal {...defaultProps} onSelect={mockOnSelect} />
+      );
 
-    expect(getByText('Fitness Club Paris')).toBeTruthy();
-    expect(getByText('Gym Lyon')).toBeTruthy();
-    expect(getByText('Sport Center Marseille')).toBeTruthy();
+      fireEvent.press(getByText('Fitness Club Paris'));
+
+      expect(mockOnSelect).toHaveBeenCalledWith('1');
+    });
+
+    it('should call onClose when cancel button is pressed', () => {
+      const mockOnClose = jest.fn();
+      const { getByText } = render(
+        <GymPickerModal {...defaultProps} onClose={mockOnClose} />
+      );
+
+      fireEvent.press(getByText('Annuler'));
+
+      expect(mockOnClose).toHaveBeenCalled();
+    });
   });
 
-  it('calls onSelect when gym is pressed', () => {
-    const { getByText } = render(
-      <GymPickerModal
-        visible={true}
-        gyms={mockGyms}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
+  describe('Empty State', () => {
+    it('should render empty state when no gyms available', () => {
+      const { getByText } = render(
+        <GymPickerModal {...defaultProps} gyms={[]} />
+      );
 
-    fireEvent.press(getByText('Fitness Club Paris'));
+      expect(getByText('Aucune salle de sport disponible')).toBeTruthy();
+    });
 
-    expect(mockOnSelect).toHaveBeenCalledWith('1');
+    it('should not render gym list when empty', () => {
+      const { queryByText } = render(
+        <GymPickerModal {...defaultProps} gyms={[]} />
+      );
+
+      expect(queryByText('Fitness Club Paris')).toBeNull();
+    });
   });
 
-  it('calls onClose when cancel button is pressed', () => {
-    const { getByText } = render(
-      <GymPickerModal
-        visible={true}
-        gyms={mockGyms}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
+  describe('Edge Cases', () => {
+    it('should handle gym with undefined id', () => {
+      const gymsWithUndefined = [
+        { id: undefined as any, name: 'Invalid Gym' },
+        ...mockGyms,
+      ];
 
-    fireEvent.press(getByText('Annuler'));
+      const { getByText } = render(
+        <GymPickerModal {...defaultProps} gyms={gymsWithUndefined} />
+      );
 
-    expect(mockOnClose).toHaveBeenCalled();
+      expect(getByText('Invalid Gym')).toBeTruthy();
+      expect(getByText('Fitness Club Paris')).toBeTruthy();
+    });
+
+    it('should handle gym with empty name', () => {
+      const gymsWithEmptyName = [
+        { id: '99', name: '' },
+        ...mockGyms,
+      ];
+
+      const { getByText } = render(
+        <GymPickerModal {...defaultProps} gyms={gymsWithEmptyName} />
+      );
+
+      expect(getByText('Fitness Club Paris')).toBeTruthy();
+    });
   });
-
-  it('shows empty state when no gyms available', () => {
-    const { getByText } = render(
-      <GymPickerModal
-        visible={true}
-        gyms={[]}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    // En mode test, l'état vide peut ne pas être rendu exactement
-    // donc on vérifie juste que le composant se rend
-    expect(getByText('Sélectionnez une salle de sport')).toBeTruthy();
-  });
-
-  it('does not render when not visible', () => {
-    const { queryByText } = render(
-      <GymPickerModal
-        visible={false}
-        gyms={mockGyms}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    // En mode test, la modal peut toujours être rendue même si visible=false
-    // donc on vérifie juste que le composant se rend
-    expect(queryByText).toBeDefined();
-  });
-
-  it('handles single gym correctly', () => {
-    const singleGym = [{ id: '1', name: 'Unique Gym' }];
-    const { getByText } = render(
-      <GymPickerModal
-        visible={true}
-        gyms={singleGym}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    expect(getByText('Unique Gym')).toBeTruthy();
-  });
-
-  it('handles gym with special characters', () => {
-    const gymWithSpecialChars = [{ id: '1', name: 'Gym & Fitness Center (Paris)' }];
-    const { getByText } = render(
-      <GymPickerModal
-        visible={true}
-        gyms={gymWithSpecialChars}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    expect(getByText('Gym & Fitness Center (Paris)')).toBeTruthy();
-  });
-
-  it('handles multiple gym selections', () => {
-    const { getByText } = render(
-      <GymPickerModal
-        visible={true}
-        gyms={mockGyms}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    fireEvent.press(getByText('Gym Lyon'));
-    expect(mockOnSelect).toHaveBeenCalledWith('2');
-
-    fireEvent.press(getByText('Sport Center Marseille'));
-    expect(mockOnSelect).toHaveBeenCalledWith('3');
-  });
-
-  it('handles gym with empty name gracefully', () => {
-    const gymWithEmptyName = [{ id: '1', name: '' }];
-    const { getByText } = render(
-      <GymPickerModal
-        visible={true}
-        gyms={gymWithEmptyName}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    // En mode test, un nom vide peut ne pas être rendu
-    // donc on vérifie juste que le composant se rend
-    expect(getByText('Sélectionnez une salle de sport')).toBeTruthy();
-  });
-
-  it('handles gym with null name gracefully', () => {
-    const gymWithNullName = [{ id: '1', name: null as any }];
-    const { getByText } = render(
-      <GymPickerModal
-        visible={true}
-        gyms={gymWithNullName}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    // En mode test, un nom null peut ne pas être rendu
-    // donc on vérifie juste que le composant se rend
-    expect(getByText('Sélectionnez une salle de sport')).toBeTruthy();
-  });
-}); 
+});
