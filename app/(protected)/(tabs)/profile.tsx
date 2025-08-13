@@ -54,6 +54,7 @@ export default function ProfileScreen() {
     updateUserSocialMedia,
     removeUserSocialMedia,
     loadGymSubscriptions,
+    loadAllGyms, // Ajouter cette fonction
     updateLocation
   } = useProfile();
 
@@ -86,36 +87,48 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     const initializeStore = async () => {
-      // Éviter les appels répétés
       if (initializationRef.current.isInitializing) {
         return;
       }
 
-      // Vérifier si l'initialisation est nécessaire
-      const needsInitialization = !initialized || 
-                                 !initializationRef.current.hasInitialized ||
-                                 sports.length === 0 || 
-                                 sportLevels.length === 0 || 
-                                 socialMedias.length === 0;
+      const needsFullInit = !initialized || 
+                           sports.length === 0 || 
+                           sportLevels.length === 0 || 
+                           socialMedias.length === 0;
       
-      if (needsInitialization) {
+      const needsGyms = gyms.length === 0;
+
+      if (needsFullInit) {
         initializationRef.current.isInitializing = true;
-        console.log('🔄 ProfileScreen: Initializing store...');
-        await initializeRef.current();
-        initializationRef.current.hasInitialized = true;
-        initializationRef.current.isInitializing = false;
+        
+        try {
+          await initializeRef.current();
+          initializationRef.current.hasInitialized = true;
+        } catch (error) {
+          console.error('❌ ProfileScreen: Initialization failed:', error);
+        } finally {
+          initializationRef.current.isInitializing = false;
+        }
+      } else if (needsGyms && !initializationRef.current.isInitializing) {
+        initializationRef.current.isInitializing = true;
+        
+        try {
+          await loadAllGyms();
+        } catch (error) {
+          console.error('❌ ProfileScreen: Gyms loading failed:', error);
+        } finally {
+          initializationRef.current.isInitializing = false;
+        }
       }
       
-      // Charger le profil seulement si pas déjà chargé et pas en cours de chargement
-      if (!loading && !error && !initializationRef.current.hasLoadedProfile) {
-        console.log('🔄 ProfileScreen: Loading profile...');
+      if (!loading && !error && !initializationRef.current.hasLoadedProfile && initialized) {
         await loadProfileRef.current();
         initializationRef.current.hasLoadedProfile = true;
       }
     };
     
     initializeStore();
-  }, [initialized, loading, error, sports.length, sportLevels.length, socialMedias.length]);
+  }, [initialized, loading, error, sports.length, sportLevels.length, socialMedias.length, gyms.length, loadAllGyms]);
 
   useEffect(() => {
     if (profile) {
@@ -239,48 +252,43 @@ export default function ProfileScreen() {
 
   const handleUpdateGym = useCallback(async (subscriptionId: string | null, gymId?: string | null) => {
     try {
-      const updateData: Partial<{ id_gymsubscription?: string | undefined; id_gym?: string | undefined }> = {};
-      
-      // Handle subscription ID
-      if (subscriptionId === null) {
-        updateData.id_gymsubscription = undefined;
-      } else if (subscriptionId) {
-        updateData.id_gymsubscription = subscriptionId;
-      }
-      
-      // Handle gym ID
-      if (gymId === null) {
-        updateData.id_gym = undefined;
-      } else if (gymId) {
-        updateData.id_gym = gymId;
-      }
-
-      console.log('🔄 ProfileScreen: Updating gym data:', updateData);
-
-      // Ensure we have valid update data
-      if (Object.keys(updateData).length === 0) {
-        console.warn('⚠️ ProfileScreen: No gym data to update');
-        return;
-      }
-
-      const { error } = await updateProfile(updateData);
-      if (error) {
-        console.error('❌ ProfileScreen: Gym update failed:', error);
-        Alert.alert('Erreur', `Erreur lors de la mise à jour de la salle: ${error.message}`);
-      } else {
-        console.log('✅ ProfileScreen: Gym updated successfully');
-        // Recharger le profil après mise à jour de la salle
-        await loadProfile();
+      if (subscriptionId === null && gymId === null) {
+        const updateData = {
+          id_gymsubscription: undefined,
+          id_gym: undefined
+        };
+        
+        const { error } = await updateProfile(updateData);
+        if (error) {
+          Alert.alert('Erreur', `Erreur lors de la suppression: ${error.message}`);
+        } else {
+          await loadProfile();
+        }
+      } else if (subscriptionId && gymId) {
+        const updateData = {
+          id_gymsubscription: subscriptionId,
+          id_gym: gymId
+        };
+        
+        const { error } = await updateProfile(updateData);
+        if (error) {
+          Alert.alert('Erreur', `Erreur lors de la mise à jour: ${error.message}`);
+        } else {
+          await loadProfile();
+        }
       }
     } catch (err) {
       console.error('❌ ProfileScreen: Unexpected error during gym update:', err);
-      Alert.alert('Erreur', 'Une erreur inattendue est survenue lors de la mise à jour de la salle');
+      Alert.alert('Erreur', 'Une erreur inattendue est survenue');
     }
   }, [updateProfile, loadProfile]);
 
   const handleLoadGymSubscriptions = useCallback(async () => {
+    if (gyms.length === 0) {
+      await loadAllGyms();
+    }
     await loadGymSubscriptions();
-  }, [loadGymSubscriptions]);
+  }, [loadGymSubscriptions, loadAllGyms, gyms.length]);
 
   const handleUpdateLocation = useCallback(async (locationData: { town: string; postal_code: number; latitude: number; longitude: number }) => {
     const { error } = await updateLocation(locationData);

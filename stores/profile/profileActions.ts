@@ -1,6 +1,8 @@
 import { UserProfile } from '@/types/profile';
 import { profileService } from '@/services/profileService';
+import { supabase } from '@/lib/supabase'; // ✅ Ajouter cet import
 import { useAuthStore } from '../authStore';
+
 
 export interface ProfileActions {
   setProfile: (profile: UserProfile | null) => void;
@@ -31,112 +33,101 @@ export const createProfileActions = (set: any, get: any): ProfileActions => ({
     try {
       const currentState = get();
       
-      // Éviter les appels répétés si déjà en cours de chargement
       if (currentState.loading) {
         console.log('⏳ ProfileStore: Already loading profile, skipping...');
         return { error: null };
       }
-      
-      // Éviter les appels répétés si le profil est déjà chargé
-      if (currentState.profile && !currentState.error) {
-        console.log('⏳ ProfileStore: Profile already loaded, skipping...');
-        return { error: null };
-      }
-      
-      set({ loading: true, error: null });
-      
-      const { user } = useAuthStore.getState();
+
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error('Utilisateur non connecté');
+        set({ profile: null, loading: false });
+        return { error: new Error('Utilisateur non connecté') };
       }
 
       console.log('🔄 ProfileStore: Loading profile for user:', user.id);
+      set({ loading: true, error: null });
+
+      // Forcer le rechargement depuis la base de données
+      const profile = await profileService.getProfile(user.id, true);
       
-      let profileData = await profileService.getProfile(user.id);
-      if (!profileData) {
-        profileData = await profileService.createProfile(user.id);
-        set({ profile: profileData, loading: false });
-        return { error: null };
+      if (profile) {
+        console.log('✅ ProfileStore: Profile loaded successfully');
+        console.log('🔍 ProfileStore: Profile data:', {
+          id_user: profile.id_user,
+          firstname: profile.firstname,
+          lastname: profile.lastname,
+          hasLocation: !!profile.location,
+          hasGym: !!profile.gym,
+          hasGymSubscription: !!profile.gymsubscription,
+          sportsCount: profile.sports?.length || 0,
+          hobbiesCount: profile.hobbies?.length || 0,
+          socialMediasCount: profile.socialMedias?.length || 0
+        });
+        
+        set({ profile, loading: false });
+      } else {
+        console.log('📝 ProfileStore: No profile found, will create one');
+        set({ profile: null, loading: false });
       }
 
-      // Charger les relations
-      const [location, gym, gymsubscription, userHobbies, userSports, userSocialMedias] = await Promise.allSettled([
-        profileData.id_location ? profileService.getLocationDetails(profileData.id_location) : Promise.resolve(null),
-        profileData.id_gym ? profileService.getGymDetails(profileData.id_gym) : Promise.resolve(null),
-        profileData.id_gymsubscription ? profileService.getGymSubscriptionDetails(profileData.id_gymsubscription) : Promise.resolve(null),
-        import('@/services/hobbyService').then(({ hobbyService }) => hobbyService.getUserHobbies(profileData.id_user)),
-        import('@/services/sportService').then(({ sportService }) => sportService.getUserSports(profileData.id_user)),
-        import('@/services/socialMediaService').then(({ socialMediaService }) => socialMediaService.getUserSocialMedias(profileData.id_user))
-      ]);
-
-      const enrichedProfile: UserProfile = {
-        ...profileData,
-        location: location.status === 'fulfilled' ? location.value || undefined : undefined,
-        gym: gym.status === 'fulfilled' ? gym.value || undefined : undefined,
-        gymsubscription: gymsubscription.status === 'fulfilled' ? gymsubscription.value || undefined : undefined,
-        hobbies: userHobbies.status === 'fulfilled' ? userHobbies.value : [],
-        sports: userSports.status === 'fulfilled' ? userSports.value : [],
-        socialMedias: userSocialMedias.status === 'fulfilled' ? userSocialMedias.value : []
-      };
-
-      set({ profile: enrichedProfile, loading: false });
-      console.log('✅ ProfileStore: Profile loaded successfully');
       return { error: null };
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur de chargement du profil';
-      console.error('❌ ProfileStore - loadProfile:', error);
-      set({ error: errorMessage, loading: false });
+      console.error('❌ ProfileStore: Failed to load profile:', error);
+      set({ loading: false, error: 'Erreur lors du chargement du profil' });
       return { error: error as Error };
     }
   },
 
   updateProfile: async (updates: Partial<UserProfile>) => {
     try {
+      const currentState = get();
+      
+      if (currentState.saving) {
+        console.log('⏳ ProfileStore: Already saving, skipping...');
+        return { error: new Error('Sauvegarde en cours...') };
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { error: new Error('Utilisateur non connecté') };
+      }
+
+      console.log('💾 ProfileStore: Updating profile with:', updates);
       set({ saving: true, error: null });
+
+      // Effectuer la mise à jour
+      const updatedProfile = await profileService.updateProfile(user.id, updates);
       
-      const { profile } = get();
-      if (!profile) {
-        throw new Error('Profil non chargé');
+      console.log('✅ ProfileStore: Profile updated in database');
+      
+      // Forcer un rechargement complet pour récupérer toutes les relations
+      console.log('🔄 ProfileStore: Force reloading complete profile...');
+      const completeProfile = await profileService.getProfile(user.id, true);
+      
+      if (completeProfile) {
+        console.log('✅ ProfileStore: Complete profile reloaded with all relations');
+        console.log('🔍 ProfileStore: Updated profile data:', {
+          id_user: completeProfile.id_user,
+          firstname: completeProfile.firstname,
+          lastname: completeProfile.lastname,
+          hasLocation: !!completeProfile.location,
+          hasGym: !!completeProfile.gym,
+          hasGymSubscription: !!completeProfile.gymsubscription,
+          sportsCount: completeProfile.sports?.length || 0,
+          hobbiesCount: completeProfile.hobbies?.length || 0,
+          socialMediasCount: completeProfile.socialMedias?.length || 0
+        });
+        
+        set({ profile: completeProfile, saving: false });
+      } else {
+        set({ profile: updatedProfile, saving: false });
       }
-
-      // Valider et nettoyer les données avant envoi
-      const cleanUpdates = { ...updates };
-      
-      // Valider la date de naissance spécifiquement
-      if ('birthdate' in cleanUpdates) {
-        if (!cleanUpdates.birthdate || cleanUpdates.birthdate === '') {
-          // Supprimer les dates vides
-          delete cleanUpdates.birthdate;
-        }
-      }
-
-      // Valider les champs texte
-      ['firstname', 'lastname', 'biography'].forEach(field => {
-        if (field in cleanUpdates && typeof cleanUpdates[field as keyof UserProfile] === 'string') {
-          const value = cleanUpdates[field as keyof UserProfile] as string;
-          if (value.trim() === '') {
-            delete cleanUpdates[field as keyof UserProfile];
-          } else {
-            // Nettoyer les espaces
-            (cleanUpdates as Record<string, unknown>)[field] = value.trim();
-          }
-        }
-      });
-
-      console.log('📝 ProfileActions: Updating profile with cleaned data:', cleanUpdates);
-      
-      const updatedProfile = await profileService.updateProfile(profile.id_user, cleanUpdates);
-      
-      set({ 
-        profile: updatedProfile,
-        saving: false 
-      });
 
       return { error: null };
-
     } catch (error) {
-      return get().handleError('updateProfile', error, 'Erreur lors de la mise à jour du profil');
+      console.error('❌ ProfileStore: Failed to update profile:', error);
+      set({ saving: false, error: (error as Error).message });
+      return { error: error as Error };
     }
   },
 

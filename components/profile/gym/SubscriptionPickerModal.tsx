@@ -38,9 +38,11 @@ export default function SubscriptionPickerModal({
               </TouchableOpacity>
             )}
             ListEmptyComponent={
-              <Text style={styles.noSubscriptionsText}>
-                Veuillez d'abord sélectionner une salle de sport
-              </Text>
+              <View style={styles.emptyContainer}>
+                <Text style={styles.noSubscriptionsText}>
+                  Aucun abonnement disponible pour cette salle
+                </Text>
+              </View>
             }
           />
           <TouchableOpacity
@@ -95,6 +97,11 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 16,
     color: '#2c3e50',
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
   },
   noSubscriptionsText: {
     fontSize: 14,

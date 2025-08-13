@@ -38,7 +38,9 @@ export default function GymPickerModal({
               </TouchableOpacity>
             )}
             ListEmptyComponent={
-              <Text style={styles.noGymsText}>Aucune salle de sport disponible</Text>
+              <View style={styles.emptyContainer}>
+                <Text style={styles.noGymsText}>Aucune salle de sport disponible</Text>
+              </View>
             }
           />
           <TouchableOpacity
@@ -93,6 +95,10 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 16,
     color: '#2c3e50',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
   },
   noGymsText: {
     fontSize: 14,

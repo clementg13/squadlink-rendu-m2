@@ -1,6 +1,7 @@
 import * as Location from 'expo-location';
 import { Alert, Linking } from 'react-native';
 import { supabase } from '@/lib/supabase';
+import { profileService } from '@/services/profileService';
 
 export interface LocationData {
   town: string;
@@ -254,7 +255,85 @@ class LocationService {
       console.log('✅ LocationService: Location created successfully:', locationId);
     }
 
+    // Invalider le cache du profil après mise à jour de la localisation
+    profileService.invalidateProfileCache(userId);
+
     return locationId;
+  }
+
+  // Nouvelle méthode pour mettre à jour la localisation d'un profil
+  async updateUserLocation(userId: string, locationData: LocationData): Promise<void> {
+    try {
+      // 1. Créer ou mettre à jour la localisation
+      const locationId = await this.updateLocationInDatabase(userId, locationData);
+      
+      // 2. Mettre à jour le profil avec la nouvelle localisation
+      const { error } = await supabase
+        .from('profile')
+        .update({ id_location: locationId })
+        .eq('id_user', userId);
+
+      if (error) {
+        console.error('❌ LocationService: Profile location update failed:', error);
+        throw error;
+      }
+
+      console.log('✅ LocationService: User location updated successfully');
+      
+      // 3. Invalider le cache du profil
+      profileService.invalidateProfileCache(userId);
+      
+      // 4. Forcer le rechargement du profil
+      await profileService.nukeAndReload(userId);
+      
+    } catch (error) {
+      console.error('❌ LocationService: User location update error:', error);
+      throw error;
+    }
+  }
+
+  // Nouvelle méthode pour récupérer la localisation d'un utilisateur
+  async getUserLocation(userId: string): Promise<any> {
+    console.log('📍 LocationService: Getting location for user:', userId);
+    
+    try {
+      // 1. Récupérer le profil pour avoir l'ID de localisation
+      const { data: profile, error: profileError } = await supabase
+        .from('profile')
+        .select('id_location')
+        .eq('id_user', userId)
+        .single();
+
+      if (profileError || !profile) {
+        console.log('❌ LocationService: Profile not found for user:', userId);
+        return null;
+      }
+
+      if (!profile.id_location) {
+        console.log('📭 LocationService: No location ID in profile for user:', userId);
+        return null;
+      }
+
+      console.log('🔍 LocationService: Location ID found:', profile.id_location);
+
+      // 2. Récupérer les détails de la localisation
+      const { data: location, error: locationError } = await supabase
+        .from('location')
+        .select('*')
+        .eq('id', profile.id_location)
+        .single();
+
+      if (locationError) {
+        console.error('❌ LocationService: Error loading location:', locationError);
+        return null;
+      }
+
+      console.log('✅ LocationService: Location data from DB:', location);
+      return location;
+    } catch (error) {
+      console.error('💥 LocationService: Critical error getting location:', error);
+      return null;
+    }
   }
 }
 

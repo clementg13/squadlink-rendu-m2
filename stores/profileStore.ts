@@ -58,40 +58,52 @@ export const useProfile = () => {
   const store = useProfileStore();
   
   return {
-    // État
+    // État du profil
     profile: store.profile,
-    gyms: store.gyms,
-    gymSubscriptions: store.gymSubscriptions,
-    hobbies: store.hobbies,
-    sports: store.sports,
-    sportLevels: store.sportLevels,
-    socialMedias: store.socialMedias,
     loading: store.loading,
     saving: store.saving,
     error: store.error,
     initialized: store.initialized,
     
-    // Actions
+    // Données de référence
+    hobbies: store.hobbies,
+    gyms: store.gyms,
+    gymSubscriptions: store.gymSubscriptions,
+    sports: store.sports,
+    sportLevels: store.sportLevels,
+    socialMedias: store.socialMedias,
+    
+    // Actions du profil
     loadProfile: store.loadProfile,
     updateProfile: store.updateProfile,
+    setProfile: store.setProfile,
+    clearError: store.clearError,
+    
+    // Actions de localisation
     updateLocation: store.updateLocation,
-    addUserHobby: store.addUserHobby,
-    removeUserHobby: store.removeUserHobby,
-    toggleHighlightHobby: store.toggleHighlightHobby,
-    addUserSport: store.addUserSport,
-    removeUserSport: store.removeUserSport,
-    addUserSocialMedia: store.addUserSocialMedia,
-    updateUserSocialMedia: store.updateUserSocialMedia,
-    removeUserSocialMedia: store.removeUserSocialMedia,
+    
+    // Actions sur les données
+    initialize: store.initialize,
     loadAllGyms: store.loadAllGyms,
     loadGymSubscriptions: store.loadGymSubscriptions,
     loadAllHobbies: store.loadAllHobbies,
     loadAllSports: store.loadAllSports,
     loadAllSportLevels: store.loadAllSportLevels,
     loadAllSocialMedias: store.loadAllSocialMedias,
-    initialize: store.initialize,
-    cleanup: store.cleanup,
-    clearError: store.clearError,
+    
+    // Actions sur les hobbies
+    addUserHobby: store.addUserHobby,
+    removeUserHobby: store.removeUserHobby,
+    toggleHighlightHobby: store.toggleHighlightHobby,
+    
+    // Actions sur les sports  
+    addUserSport: store.addUserSport,
+    removeUserSport: store.removeUserSport,
+    
+    // Actions sur les réseaux sociaux
+    addUserSocialMedia: store.addUserSocialMedia,
+    updateUserSocialMedia: store.updateUserSocialMedia,
+    removeUserSocialMedia: store.removeUserSocialMedia,
   };
 };
 

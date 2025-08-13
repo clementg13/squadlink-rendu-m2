@@ -1,4 +1,5 @@
 import { profileService } from '@/services/profileService';
+import { gymService } from '@/services/gymService';
 import { sportService } from '@/services/sportService';
 import { socialMediaService } from '@/services/socialMediaService';
 
@@ -17,18 +18,22 @@ export interface DataActions {
 export const createDataActions = (set: any, get: any): DataActions => ({
   loadAllGyms: async () => {
     try {
-      const gyms = await profileService.getAllGyms();
+      const gyms = await gymService.getAllGyms();
       set({ gyms });
       return { error: null };
     } catch (error) {
-      console.error('❌ ProfileStore - loadAllGyms:', error);
+      console.error('❌ DataActions - loadAllGyms:', error);
+      set({ gyms: [] });
       return { error: error as Error };
     }
   },
 
   loadGymSubscriptions: async (gymId?: string) => {
     try {
-      const gymSubscriptions = await profileService.getGymSubscriptions(gymId);
+      const gymSubscriptions = gymId ? 
+        await profileService.getGymSubscriptions(gymId) : 
+        await profileService.getAllGymSubscriptions();
+      
       set({ gymSubscriptions });
       return { error: null };
     } catch (error) {
@@ -85,60 +90,52 @@ export const createDataActions = (set: any, get: any): DataActions => ({
     try {
       const currentState = get();
       
-      // Éviter les appels répétés si déjà en cours d'initialisation
       if (currentState.loading) {
-        console.log('⏳ ProfileStore: Already initializing, skipping...');
         return;
       }
       
       const needsReinit = currentState.sports.length === 0 || 
                          currentState.sportLevels.length === 0 || 
-                         currentState.socialMedias.length === 0;
+                         currentState.socialMedias.length === 0 ||
+                         currentState.gymSubscriptions.length === 0;
       
       if (currentState.initialized && !needsReinit) {
-        console.log('✅ ProfileStore: Already initialized, skipping...');
         return;
       }
 
-      console.log('🔄 ProfileStore: Starting initialization...');
       set({ loading: true, error: null, initialized: false });
       
-      // Charger toutes les données en parallèle
-      const [sportsResult, sportLevelsResult, socialMediasResult] = await Promise.allSettled([
+      const [sportsResult, sportLevelsResult, socialMediasResult, gymsResult, gymSubscriptionsResult, hobbiesResult] = await Promise.allSettled([
         sportService.getAllSports(),
         sportService.getAllSportLevels(),
-        socialMediaService.getAllSocialMedias()
+        socialMediaService.getAllSocialMedias(),
+        gymService.getAllGyms(),
+        gymService.getAllGymSubscriptions(),
+        profileService.getAllHobbies()
       ]);
 
-      // Vérifier s'il y a des erreurs dans les résultats
-      const hasErrors = [sportsResult, sportLevelsResult, socialMediasResult].some(
-        result => result.status === 'rejected'
-      );
-
-      if (hasErrors) {
-        throw new Error('Erreur lors du chargement des données');
+      if (gymsResult.status === 'rejected') {
+        console.error('❌ ProfileStore: Gyms loading failed:', gymsResult.reason);
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const criticalResults = [sportsResult, sportLevelsResult, socialMediasResult, gymSubscriptionsResult];
+      const hasCriticalErrors = criticalResults.some(result => result.status === 'rejected');
+
+      if (hasCriticalErrors) {
+        throw new Error('Erreur lors du chargement des données critiques');
+      }
+
       set((state: any) => ({ 
         ...state, 
         sports: sportsResult.status === 'fulfilled' ? sportsResult.value : [],
         sportLevels: sportLevelsResult.status === 'fulfilled' ? sportLevelsResult.value : [],
-        socialMedias: socialMediasResult.status === 'fulfilled' ? socialMediasResult.value : []
+        socialMedias: socialMediasResult.status === 'fulfilled' ? socialMediasResult.value : [],
+        gyms: gymsResult.status === 'fulfilled' ? gymsResult.value : [],
+        gymSubscriptions: gymSubscriptionsResult.status === 'fulfilled' ? gymSubscriptionsResult.value : [],
+        hobbies: hobbiesResult.status === 'fulfilled' ? hobbiesResult.value : []
       }));
-
-      // Charger les autres données en parallèle
-      await Promise.allSettled([
-        profileService.getAllGyms().then(gyms => set({ gyms })).catch(() => set({ gyms: [] })),
-        profileService.getGymSubscriptions().then(gymSubscriptions => set({ gymSubscriptions })).catch(() => set({ gymSubscriptions: [] })),
-        profileService.getAllHobbies().then(hobbies => set({ hobbies })).catch(() => set({ hobbies: [] })),
-      ]);
-      
-      // Note: loadProfile est géré par profileActions, pas dataActions
-      // L'initialisation des données de base est terminée ici
       
       set({ initialized: true, loading: false });
-      console.log('✅ ProfileStore: Initialization completed');
 
     } catch (error) {
       console.error('❌ ProfileStore - initialize:', error);
