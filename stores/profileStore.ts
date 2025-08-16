@@ -76,6 +76,7 @@ export const useProfile = () => {
     // Actions du profil
     loadProfile: store.loadProfile,
     updateProfile: store.updateProfile,
+    removeGymSubscription: store.removeGymSubscription,
     setProfile: store.setProfile,
     clearError: store.clearError,
     

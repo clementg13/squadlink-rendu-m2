@@ -1,7 +1,6 @@
 import { UserProfile } from '@/types/profile';
 import { profileService } from '@/services/profileService';
 import { supabase } from '@/lib/supabase'; // ✅ Ajouter cet import
-import { useAuthStore } from '../authStore';
 
 
 export interface ProfileActions {
@@ -12,6 +11,7 @@ export interface ProfileActions {
   clearError: () => void;
   loadProfile: () => Promise<{ error: Error | null }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: Error | null }>;
+  removeGymSubscription: () => Promise<{ error: Error | null }>;
   updateLocation: (locationData: {
     town: string;
     postal_code: number;
@@ -126,6 +126,54 @@ export const createProfileActions = (set: any, get: any): ProfileActions => ({
       return { error: null };
     } catch (error) {
       console.error('❌ ProfileStore: Failed to update profile:', error);
+      set({ saving: false, error: (error as Error).message });
+      return { error: error as Error };
+    }
+  },
+
+  removeGymSubscription: async () => {
+    try {
+      const currentState = get();
+      
+      if (currentState.saving) {
+        console.log('⏳ ProfileStore: Already saving, skipping...');
+        return { error: new Error('Sauvegarde en cours...') };
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { error: new Error('Utilisateur non connecté') };
+      }
+
+      console.log('🗑️ ProfileStore: Removing gym subscription...');
+      set({ saving: true, error: null });
+
+      // Supprimer l'abonnement salle de sport
+      await profileService.removeGymSubscription(user.id);
+      
+      console.log('✅ ProfileStore: Gym subscription removed');
+      
+      // Forcer un rechargement complet pour récupérer le profil mis à jour
+      console.log('🔄 ProfileStore: Force reloading complete profile...');
+      const completeProfile = await profileService.getProfile(user.id, true);
+      
+      if (completeProfile) {
+        console.log('✅ ProfileStore: Complete profile reloaded after gym subscription removal');
+        console.log('🔍 ProfileStore: Updated profile data:', {
+          id_user: completeProfile.id_user,
+          hasGym: !!completeProfile.gym,
+          hasGymSubscription: !!completeProfile.gymsubscription,
+          id_gymsubscription: completeProfile.id_gymsubscription
+        });
+        
+        set({ profile: completeProfile, saving: false });
+      } else {
+        set({ saving: false });
+      }
+
+      return { error: null };
+    } catch (error) {
+      console.error('❌ ProfileStore: Failed to remove gym subscription:', error);
       set({ saving: false, error: (error as Error).message });
       return { error: error as Error };
     }

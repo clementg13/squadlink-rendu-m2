@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { useAuthUser, useAuthLoading } from '@/stores/authStore';
+import { useProfileStore } from '@/stores/profileStore';
 import { router } from 'expo-router';
 import CompatibleProfilesList from '@/components/profile/CompatibleProfilesList';
 import ProfileIncompleteAlert from '@/components/profile/ProfileIncompleteAlert';
@@ -16,7 +17,25 @@ import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 export default function HomeScreen() {
   const user = useAuthUser();
   const authLoading = useAuthLoading();
+  const { initialize, loadProfile } = useProfileStore();
   const { isComplete, isLoading, completionPercentage, missingFields } = useCurrentUserProfileCompletion();
+
+  // Initialiser le store de profil au chargement de la page d'accueil
+  useEffect(() => {
+    const initializeHome = async () => {
+      if (user?.id) {
+        console.log('🏠 HomeScreen: Initialisation du profil pour:', user.id);
+        
+        // Charger le profil en priorité
+        await loadProfile();
+        
+        // Puis initialiser le reste des données
+        await initialize();
+      }
+    };
+
+    initializeHome();
+  }, [user?.id, initialize, loadProfile]);
 
   // Gérer la sélection d'un profil
   const handleProfilePress = (profile: CompatibleProfile) => {

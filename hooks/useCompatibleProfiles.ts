@@ -14,7 +14,6 @@ interface UseCompatibleProfilesState {
 
 export function useCompatibleProfiles(userId: string | null, pageSize: number = 10) {
   const refreshTrigger = useMatchRefreshStore((state) => state.refreshTrigger);
-  const triggerRefresh = useMatchRefreshStore((state) => state.triggerRefresh);
   const [state, setState] = useState<UseCompatibleProfilesState>({
     profiles: [],
     loading: false,
@@ -120,7 +119,7 @@ export function useCompatibleProfiles(userId: string | null, pageSize: number = 
       }));
 
       console.log('✅ useCompatibleProfiles: Liste actualisée:', response.profiles.length);
-      triggerRefresh(); // Déclencher le rafraîchissement des autres composants
+      // Note: On ne déclenche pas triggerRefresh() ici pour éviter les boucles de re-render
     } catch (error) {
       console.error('❌ useCompatibleProfiles: Erreur actualisation:', error);
       setState(prev => ({
@@ -130,7 +129,7 @@ export function useCompatibleProfiles(userId: string | null, pageSize: number = 
         isEmpty: prev.profiles.length === 0,
       }));
     }
-  }, [userId, pageSize, triggerRefresh]);
+  }, [userId, pageSize]);
 
   // Effet pour le chargement initial et rafraîchissement
   useEffect(() => {

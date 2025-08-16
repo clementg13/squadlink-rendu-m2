@@ -23,7 +23,17 @@ export function useCurrentUserProfileCompletion(): ProfileCompletionStatus {
   });
 
   useEffect(() => {
+    console.log('🔍 useCurrentUserProfileCompletion: Effect triggered', {
+      userId: user?.id,
+      hasProfile: !!profile,
+      loading,
+      profileUserId: profile?.id_user,
+      sportsCount: userSports?.length || 0,
+      hobbiesCount: userHobbies?.length || 0
+    });
+
     if (!user?.id) {
+      console.log('❌ useCurrentUserProfileCompletion: No user ID');
       setStatus({
         isComplete: false,
         isLoading: false,
@@ -35,16 +45,25 @@ export function useCurrentUserProfileCompletion(): ProfileCompletionStatus {
     }
 
     if (loading) {
+      console.log('🔄 useCurrentUserProfileCompletion: Still loading...');
+      setStatus(prev => ({ ...prev, isLoading: true }));
+      return;
+    }
+
+    // Donner plus de temps pour le chargement du profil
+    if (!profile && loading) {
+      console.log('⏳ useCurrentUserProfileCompletion: Waiting for profile...');
       setStatus(prev => ({ ...prev, isLoading: true }));
       return;
     }
 
     if (!profile) {
+      console.log('⚠️ useCurrentUserProfileCompletion: No profile found, marking as incomplete');
       setStatus({
         isComplete: false,
         isLoading: false,
         completionPercentage: 0,
-        missingFields: ['profil non créé'],
+        missingFields: ['profil en cours de chargement'],
         error: null,
       });
       return;
@@ -78,6 +97,15 @@ export function useCurrentUserProfileCompletion(): ProfileCompletionStatus {
     const completionPercentage = Math.round((validChecks / checks.length) * 100);
     const missingFields = checks.filter(check => !check.valid).map(check => check.field);
     const isComplete = validChecks === checks.length;
+
+    console.log('📊 useCurrentUserProfileCompletion: Profile completion calculated', {
+      completionPercentage,
+      validChecks,
+      totalChecks: checks.length,
+      isComplete,
+      missingFields,
+      checks: checks.map(c => ({ field: c.field, valid: c.valid }))
+    });
 
     setStatus({
       isComplete,

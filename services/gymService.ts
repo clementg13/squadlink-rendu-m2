@@ -150,7 +150,7 @@ export class GymService {
         .from('profile')
         .update({ 
           id_gym: gymIdInt,
-          id_gym_subscription: subscriptionIdInt 
+          id_gymsubscription: subscriptionIdInt 
         })
         .eq('id_user', validUserId);
 
@@ -177,7 +177,7 @@ export class GymService {
     try {
       const { data: profile, error: profileError } = await supabase
         .from('profile')
-        .select('id_gym, id_gym_subscription')
+        .select('id_gym, id_gymsubscription')
         .eq('id_user', validUserId)
         .single();
 
@@ -201,7 +201,7 @@ export class GymService {
         }
       }
 
-      const validSubscriptionId = this.validateId(profile.id_gym_subscription, 'profile subscription ID');
+      const validSubscriptionId = this.validateId(profile.id_gymsubscription, 'profile subscription ID');
       if (validSubscriptionId) {
         const { data: subData, error: subError } = await supabase
           .from('gymsubscription')

@@ -2,6 +2,7 @@ import { profileService } from '@/services/profileService';
 import { gymService } from '@/services/gymService';
 import { sportService } from '@/services/sportService';
 import { socialMediaService } from '@/services/socialMediaService';
+import { supabase } from '@/lib/supabase';
 
 export interface DataActions {
   loadAllGyms: () => Promise<{ error: Error | null }>;
@@ -103,7 +104,25 @@ export const createDataActions = (set: any, get: any): DataActions => ({
         return;
       }
 
+      console.log('🔄 ProfileStore: Starting initialization...');
       set({ loading: true, error: null, initialized: false });
+      
+      // Charger le profil en priorité pendant l'initialisation
+      const profilePromise = (async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            console.log('👤 ProfileStore: Loading profile during initialization...');
+            const profile = await profileService.getProfile(user.id, true);
+            if (profile) {
+              console.log('✅ ProfileStore: Profile loaded during initialization');
+              set({ profile });
+            }
+          }
+        } catch (error) {
+          console.error('⚠️ ProfileStore: Profile loading during init failed:', error);
+        }
+      })();
       
       const [sportsResult, sportLevelsResult, socialMediasResult, gymsResult, gymSubscriptionsResult, hobbiesResult] = await Promise.allSettled([
         sportService.getAllSports(),
@@ -113,6 +132,9 @@ export const createDataActions = (set: any, get: any): DataActions => ({
         gymService.getAllGymSubscriptions(),
         profileService.getAllHobbies()
       ]);
+
+      // Attendre que le profil soit chargé aussi
+      await profilePromise;
 
       if (gymsResult.status === 'rejected') {
         console.error('❌ ProfileStore: Gyms loading failed:', gymsResult.reason);
@@ -125,17 +147,17 @@ export const createDataActions = (set: any, get: any): DataActions => ({
         throw new Error('Erreur lors du chargement des données critiques');
       }
 
-      set((state: any) => ({ 
-        ...state, 
+      set({ 
         sports: sportsResult.status === 'fulfilled' ? sportsResult.value : [],
         sportLevels: sportLevelsResult.status === 'fulfilled' ? sportLevelsResult.value : [],
         socialMedias: socialMediasResult.status === 'fulfilled' ? socialMediasResult.value : [],
         gyms: gymsResult.status === 'fulfilled' ? gymsResult.value : [],
         gymSubscriptions: gymSubscriptionsResult.status === 'fulfilled' ? gymSubscriptionsResult.value : [],
         hobbies: hobbiesResult.status === 'fulfilled' ? hobbiesResult.value : []
-      }));
+      });
       
       set({ initialized: true, loading: false });
+      console.log('✅ ProfileStore: Initialization completed with profile');
 
     } catch (error) {
       console.error('❌ ProfileStore - initialize:', error);

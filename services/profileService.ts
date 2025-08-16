@@ -638,7 +638,10 @@ export class ProfileService {
 
       // 3. Récupérer la gym si elle existe
       let gym = null;
-      if (baseProfile.id_gym) {
+      if (baseProfile.id_gym && 
+          baseProfile.id_gym !== 'undefined' && 
+          baseProfile.id_gym !== 'null' && 
+          baseProfile.id_gym.toString().trim() !== '') {
         console.log('🏋️ Step 3: Loading gym...');
         const { data: gymData, error: gymError } = await supabase
           .from('gym')
@@ -652,16 +655,21 @@ export class ProfileService {
         } else {
           console.warn('⚠️ Failed to load gym:', gymError);
         }
+      } else {
+        console.log('ℹ️ Step 3: No gym to load (id_gym is null or invalid)');
       }
 
       // 4. Récupérer l'abonnement gym si il existe
       let gymSubscription = null;
-      if (baseProfile.id_gym_subscription) {
+      if (baseProfile.id_gymsubscription && 
+          baseProfile.id_gymsubscription !== 'undefined' && 
+          baseProfile.id_gymsubscription !== 'null' && 
+          baseProfile.id_gymsubscription.toString().trim() !== '') {
         console.log('💳 Step 4: Loading gym subscription...');
         const { data: gymSubData, error: gymSubError } = await supabase
           .from('gymsubscription')
           .select('*')
-          .eq('id', baseProfile.id_gym_subscription)
+          .eq('id', baseProfile.id_gymsubscription)
           .single();
         
         if (!gymSubError && gymSubData) {
@@ -670,6 +678,8 @@ export class ProfileService {
         } else {
           console.warn('⚠️ Failed to load gym subscription:', gymSubError);
         }
+      } else {
+        console.log('ℹ️ Step 4: No gym subscription to load (id_gymsubscription is null or invalid)');
       }
 
       // 5. Récupérer les sports
@@ -810,11 +820,11 @@ export class ProfileService {
       }
 
       // Vérifier l'abonnement gym
-      if (baseProfile.id_gym_subscription) {
+      if (baseProfile.id_gymsubscription) {
         const { data: gymSub } = await supabase
           .from('gymsubscription')
           .select('*')
-          .eq('id', baseProfile.id_gym_subscription)
+          .eq('id', baseProfile.id_gymsubscription)
           .single();
         console.log('🐛 ProfileService: Debug - Gym subscription:', gymSub);
       }
@@ -866,7 +876,7 @@ export class ProfileService {
         console.log('✅ Data:', baseProfile);
         console.log('📍 Location ID:', baseProfile?.id_location);
         console.log('🏋️ Gym ID:', baseProfile?.id_gym);
-        console.log('💳 Gym Subscription ID:', baseProfile?.id_gym_subscription);
+        console.log('💳 Gym Subscription ID:', baseProfile?.id_gymsubscription);
       }
 
       if (!baseProfile) return;
@@ -908,12 +918,12 @@ export class ProfileService {
       }
 
       // 4. Abonnement gym
-      if (baseProfile.id_gym_subscription) {
+      if (baseProfile.id_gymsubscription) {
         console.log('\n💳 GYM SUBSCRIPTION DATA:');
         const { data: gymSub, error: gymSubError } = await supabase
           .from('gymsubscription')
           .select('*')
-          .eq('id', baseProfile.id_gym_subscription)
+          .eq('id', baseProfile.id_gymsubscription)
           .single();
         
         if (gymSubError) {
@@ -1027,7 +1037,7 @@ export class ProfileService {
         .from('profile')
         .update({ 
           id_gym: cleanGymId,
-          id_gym_subscription: cleanSubscriptionId 
+          id_gymsubscription: cleanSubscriptionId 
         })
         .eq('id_user', userId);
 
@@ -1054,11 +1064,16 @@ export class ProfileService {
     try {
       console.log('💳 ProfileService: Removing gym subscription for user:', userId);
       
+      // Valider que userId est défini et valide
+      if (!userId || userId === 'undefined' || userId === 'null' || userId.trim() === '') {
+        throw new Error('User ID invalide');
+      }
+      
       const { error } = await supabase
         .from('profile')
         .update({ 
           id_gym: null,
-          id_gym_subscription: null 
+          id_gymsubscription: null 
         })
         .eq('id_user', userId);
 
@@ -1146,7 +1161,7 @@ export class ProfileService {
     try {
       const { data: profile, error: profileError } = await supabase
         .from('profile')
-        .select('id_gym, id_gym_subscription')
+        .select('id_gym, id_gymsubscription')
         .eq('id_user', userId)
         .single();
 
@@ -1173,11 +1188,11 @@ export class ProfileService {
       }
 
       // Récupérer l'abonnement si il existe et est valide
-      if (profile.id_gym_subscription && profile.id_gym_subscription !== 'undefined' && profile.id_gym_subscription !== 'null') {
+      if (profile.id_gymsubscription && profile.id_gymsubscription !== 'undefined' && profile.id_gymsubscription !== 'null') {
         const { data: subData, error: subError } = await supabase
           .from('gymsubscription')
           .select('*')
-          .eq('id', profile.id_gym_subscription)
+          .eq('id', profile.id_gymsubscription)
           .single();
         
         if (!subError && subData) {

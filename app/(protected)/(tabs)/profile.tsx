@@ -44,6 +44,7 @@ export default function ProfileScreen() {
     initialize,
     loadProfile,
     updateProfile,
+    removeGymSubscription,
     clearError,
     addUserHobby,
     removeUserHobby,
@@ -95,8 +96,19 @@ export default function ProfileScreen() {
                            sports.length === 0 || 
                            sportLevels.length === 0 || 
                            socialMedias.length === 0;
-      
+
       const needsGyms = gyms.length === 0;
+
+      // Charger le profil en priorité, même pendant l'initialisation
+      if (!loading && !error && !initializationRef.current.hasLoadedProfile) {
+        console.log('🚀 ProfileScreen: Loading profile in priority...');
+        try {
+          await loadProfileRef.current();
+          initializationRef.current.hasLoadedProfile = true;
+        } catch (error) {
+          console.error('❌ ProfileScreen: Profile loading failed:', error);
+        }
+      }
 
       if (needsFullInit) {
         initializationRef.current.isInitializing = true;
@@ -120,14 +132,7 @@ export default function ProfileScreen() {
           initializationRef.current.isInitializing = false;
         }
       }
-      
-      if (!loading && !error && !initializationRef.current.hasLoadedProfile && initialized) {
-        await loadProfileRef.current();
-        initializationRef.current.hasLoadedProfile = true;
-      }
-    };
-    
-    initializeStore();
+    };    initializeStore();
   }, [initialized, loading, error, sports.length, sportLevels.length, socialMedias.length, gyms.length, loadAllGyms]);
 
   useEffect(() => {
@@ -253,12 +258,8 @@ export default function ProfileScreen() {
   const handleUpdateGym = useCallback(async (subscriptionId: string | null, gymId?: string | null) => {
     try {
       if (subscriptionId === null && gymId === null) {
-        const updateData = {
-          id_gymsubscription: undefined,
-          id_gym: undefined
-        };
-        
-        const { error } = await updateProfile(updateData);
+        // Utiliser la méthode spécialisée pour la suppression
+        const { error } = await removeGymSubscription();
         if (error) {
           Alert.alert('Erreur', `Erreur lors de la suppression: ${error.message}`);
         } else {
@@ -281,7 +282,7 @@ export default function ProfileScreen() {
       console.error('❌ ProfileScreen: Unexpected error during gym update:', err);
       Alert.alert('Erreur', 'Une erreur inattendue est survenue');
     }
-  }, [updateProfile, loadProfile]);
+  }, [removeGymSubscription, updateProfile, loadProfile]);
 
   const handleLoadGymSubscriptions = useCallback(async () => {
     if (gyms.length === 0) {
