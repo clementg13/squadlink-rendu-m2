@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,15 +16,34 @@ export default function PendingMatchesNotification() {
   const [isLoading, setIsLoading] = useState(true);
   const [fadeAnim] = useState(new Animated.Value(0));
   const refreshTrigger = useMatchRefreshStore((state) => state.refreshTrigger);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasAnimatedRef = useRef(false);
 
   useEffect(() => {
-    loadPendingCount();
-    // Animation d'entrée
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
+    // Debounce pour éviter les refreshs trop fréquents
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      loadPendingCount();
+    }, 200); // Attendre 200ms avant de charger
+
+    // Animation d'entrée uniquement lors du premier chargement
+    if (!hasAnimatedRef.current) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+      hasAnimatedRef.current = true;
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [refreshTrigger, fadeAnim]);
 
   const loadPendingCount = async () => {

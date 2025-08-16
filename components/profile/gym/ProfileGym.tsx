@@ -26,18 +26,8 @@ export default function ProfileGym({
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Charger tous les abonnements au montage
     onLoadGymSubscriptions();
-  }, [onLoadGymSubscriptions]);
-
-  useEffect(() => {
-    // Déterminer la salle sélectionnée depuis l'abonnement
-    if (profile?.gymsubscription) {
-      setSelectedGymId(profile.gymsubscription.id_gym);
-    } else {
-      setSelectedGymId(null);
-    }
-  }, [profile?.gymsubscription]);
+  }, [onLoadGymSubscriptions, gyms.length]);
 
   const handleGymSelect = (gymId: string) => {
     setSelectedGymId(gymId);
@@ -47,29 +37,54 @@ export default function ProfileGym({
 
   const handleSubscriptionSelect = async (subscriptionId: string) => {
     setShowSubscriptionPicker(false);
-    await onUpdateGym(subscriptionId, selectedGymId); // Pass gymId
+    await onUpdateGym(subscriptionId, selectedGymId);
   };
 
   const handleRemoveSubscription = async () => {
     setSelectedGymId(null);
-    await onUpdateGym(null, null); // Remove gymId
+    await onUpdateGym(null, null);
   };
 
   const getSelectedGym = () => {
     if (!selectedGymId) return null;
-    return gyms.find(g => g.id === selectedGymId);
+    
+    const selectedGymIdStr = selectedGymId.toString();
+    return gyms.find(g => g.id.toString() === selectedGymIdStr) || null;
+  };
+
+  useEffect(() => {
+    if (profile?.gymsubscription) {
+      const gymIdFromProfile = profile.gymsubscription.id_gym;
+      setSelectedGymId(gymIdFromProfile?.toString() || null);
+    } else {
+      setSelectedGymId(null);
+    }
+  }, [profile?.gymsubscription]);
+
+  const getGymsWithSubscriptions = () => {
+    return gyms.filter(gym => 
+      gymSubscriptions.some(sub => {
+        const gymIdStr = gym.id.toString();
+        const subGymIdStr = sub.id_gym.toString();
+        return subGymIdStr === gymIdStr;
+      })
+    );
   };
 
   const getAvailableSubscriptions = () => {
     if (!selectedGymId) return [];
-    return gymSubscriptions.filter(s => s.id_gym === selectedGymId);
+    
+    const selectedGymIdStr = selectedGymId.toString();
+    return gymSubscriptions.filter(s => {
+      const subGymIdStr = s.id_gym.toString();
+      return subGymIdStr === selectedGymIdStr;
+    });
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Salle de sport</Text>
       
-      {/* Affichage de la salle et abonnement actuels */}
       {profile?.gymsubscription ? (
         <View style={styles.currentSelection}>
           <View style={styles.selectionRow}>
@@ -108,17 +123,13 @@ export default function ProfileGym({
         </View>
       )}
 
-      {/* Modal de sélection de salle */}
       <GymPickerModal
         visible={showGymPicker}
-        gyms={gyms.filter(gym => 
-          gymSubscriptions.some(sub => sub.id_gym === gym.id)
-        )}
+        gyms={getGymsWithSubscriptions()}
         onSelect={handleGymSelect}
         onClose={() => setShowGymPicker(false)}
       />
 
-      {/* Modal de sélection d'abonnement */}
       <SubscriptionPickerModal
         visible={showSubscriptionPicker}
         subscriptions={getAvailableSubscriptions()}

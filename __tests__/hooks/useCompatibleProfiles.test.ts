@@ -336,7 +336,7 @@ describe('useCompatibleProfiles', () => {
       expect(result.current.hasMore).toBe(true);
       expect(result.current.totalCount).toBe(15);
       expect(result.current.error).toBe(null);
-      expect(mockTriggerRefresh).toHaveBeenCalled();
+      // triggerRefresh is no longer called automatically to prevent infinite loops
     });
 
     it('should handle error when refreshing', async () => {

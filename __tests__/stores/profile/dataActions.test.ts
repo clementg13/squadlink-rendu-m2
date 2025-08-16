@@ -1,14 +1,14 @@
 import { createDataActions, DataActions } from '@/stores/profile/dataActions';
 import { profileService } from '@/services/profileService';
+import { gymService } from '@/services/gymService';
 import { sportService } from '@/services/sportService';
 import { socialMediaService } from '@/services/socialMediaService';
-import { useAuthStore } from '@/stores/authStore';
 
 // Mock des services
 jest.mock('@/services/profileService');
+jest.mock('@/services/gymService');
 jest.mock('@/services/sportService');
 jest.mock('@/services/socialMediaService');
-jest.mock('@/stores/authStore');
 
 // Mock console pour éviter le bruit dans les tests
 const originalConsoleError = console.error;
@@ -42,26 +42,27 @@ describe('createDataActions', () => {
         { id: '2', name: 'Gym Lyon' }
       ];
 
-      (profileService.getAllGyms as jest.Mock).mockResolvedValue(mockGyms);
+      (gymService.getAllGyms as jest.Mock).mockResolvedValue(mockGyms);
 
       const result = await dataActions.loadAllGyms();
 
       expect(result.error).toBeNull();
-      expect(profileService.getAllGyms).toHaveBeenCalled();
+      expect(gymService.getAllGyms).toHaveBeenCalled();
       expect(mockSet).toHaveBeenCalledWith({ gyms: mockGyms });
     });
 
     it('gère les erreurs lors du chargement des gyms', async () => {
       const error = new Error('Erreur réseau');
-      (profileService.getAllGyms as jest.Mock).mockRejectedValue(error);
+      (gymService.getAllGyms as jest.Mock).mockRejectedValue(error);
 
       const result = await dataActions.loadAllGyms();
 
       expect(result.error).toBe(error);
       expect(console.error).toHaveBeenCalledWith(
-        '❌ ProfileStore - loadAllGyms:',
+        '❌ DataActions - loadAllGyms:',
         error
       );
+      expect(mockSet).toHaveBeenCalledWith({ gyms: [] });
     });
   });
 
@@ -81,17 +82,18 @@ describe('createDataActions', () => {
       expect(mockSet).toHaveBeenCalledWith({ gymSubscriptions: mockSubscriptions });
     });
 
-    it('charge les abonnements sans gymId', async () => {
+    it('charge tous les abonnements sans gymId', async () => {
       const mockSubscriptions = [
         { id: '1', name: 'Premium' }
       ];
 
-      (profileService.getGymSubscriptions as jest.Mock).mockResolvedValue(mockSubscriptions);
+      (profileService.getAllGymSubscriptions as jest.Mock).mockResolvedValue(mockSubscriptions);
 
       const result = await dataActions.loadGymSubscriptions();
 
       expect(result.error).toBeNull();
-      expect(profileService.getGymSubscriptions).toHaveBeenCalledWith(undefined);
+      expect(profileService.getAllGymSubscriptions).toHaveBeenCalled();
+      expect(mockSet).toHaveBeenCalledWith({ gymSubscriptions: mockSubscriptions });
     });
 
     it('gère les erreurs lors du chargement des abonnements', async () => {
@@ -234,21 +236,19 @@ describe('createDataActions', () => {
       (sportService.getAllSports as jest.Mock).mockResolvedValue([]);
       (sportService.getAllSportLevels as jest.Mock).mockResolvedValue([]);
       (socialMediaService.getAllSocialMedias as jest.Mock).mockResolvedValue([]);
-      (profileService.getAllGyms as jest.Mock).mockResolvedValue([]);
-      (profileService.getGymSubscriptions as jest.Mock).mockResolvedValue([]);
+      (gymService.getAllGyms as jest.Mock).mockResolvedValue([]);
+      (gymService.getAllGymSubscriptions as jest.Mock).mockResolvedValue([]);
       (profileService.getAllHobbies as jest.Mock).mockResolvedValue([]);
     });
 
     it('initialise le store avec succès', async () => {
       mockGet.mockReturnValue({
+        loading: false,
         sports: [],
         sportLevels: [],
         socialMedias: [],
+        gymSubscriptions: [],
         initialized: false
-      });
-
-      (useAuthStore.getState as jest.Mock).mockReturnValue({
-        user: { id: 'user-123' }
       });
 
       await dataActions.initialize();
@@ -265,16 +265,18 @@ describe('createDataActions', () => {
       expect(sportService.getAllSports).toHaveBeenCalled();
       expect(sportService.getAllSportLevels).toHaveBeenCalled();
       expect(socialMediaService.getAllSocialMedias).toHaveBeenCalled();
-      expect(profileService.getAllGyms).toHaveBeenCalled();
-      expect(profileService.getGymSubscriptions).toHaveBeenCalled();
+      expect(gymService.getAllGyms).toHaveBeenCalled();
+      expect(gymService.getAllGymSubscriptions).toHaveBeenCalled();
       expect(profileService.getAllHobbies).toHaveBeenCalled();
     });
 
     it('évite la réinitialisation si déjà initialisé', async () => {
       mockGet.mockReturnValue({
+        loading: false,
         sports: [{ id: '1', name: 'Football' }],
         sportLevels: [{ id: '1', name: 'Débutant' }],
         socialMedias: [{ id: '1', name: 'Instagram' }],
+        gymSubscriptions: [{ id: '1', name: 'Premium' }],
         initialized: true
       });
 
@@ -288,9 +290,11 @@ describe('createDataActions', () => {
 
     it('force la réinitialisation si données manquantes', async () => {
       mockGet.mockReturnValue({
+        loading: false,
         sports: [],
         sportLevels: [{ id: '1', name: 'Débutant' }],
         socialMedias: [],
+        gymSubscriptions: [],
         initialized: true
       });
 
@@ -304,9 +308,11 @@ describe('createDataActions', () => {
 
     it('gère les erreurs lors de l\'initialisation', async () => {
       mockGet.mockReturnValue({
+        loading: false,
         sports: [],
         sportLevels: [],
         socialMedias: [],
+        gymSubscriptions: [],
         initialized: false
       });
 
@@ -322,26 +328,22 @@ describe('createDataActions', () => {
       );
     });
 
-    it('gère l\'absence d\'utilisateur connecté', async () => {
+    it('évite la réinitialisation si déjà en cours de chargement', async () => {
       mockGet.mockReturnValue({
+        loading: true,
         sports: [],
         sportLevels: [],
         socialMedias: [],
+        gymSubscriptions: [],
         initialized: false
-      });
-
-      (useAuthStore.getState as jest.Mock).mockReturnValue({
-        user: null
       });
 
       await dataActions.initialize();
 
-      // On vérifie qu'un des appels à mockSet contient loading: false
-      expect(mockSet.mock.calls).toEqual(
-        expect.arrayContaining([
-          [expect.objectContaining({ loading: false })]
-        ])
-      );
+      // Ne devrait pas appeler les services si loading est true
+      expect(sportService.getAllSports).not.toHaveBeenCalled();
+      expect(sportService.getAllSportLevels).not.toHaveBeenCalled();
+      expect(socialMediaService.getAllSocialMedias).not.toHaveBeenCalled();
     });
   });
 
@@ -367,7 +369,7 @@ describe('createDataActions', () => {
 
   describe('Intégration et cas limites', () => {
     it('gère les services qui retournent des données vides', async () => {
-      (profileService.getAllGyms as jest.Mock).mockResolvedValue([]);
+      (gymService.getAllGyms as jest.Mock).mockResolvedValue([]);
       (sportService.getAllSports as jest.Mock).mockResolvedValue([]);
 
       const gymsResult = await dataActions.loadAllGyms();
@@ -381,7 +383,7 @@ describe('createDataActions', () => {
 
     it('gère les erreurs de type non-Error', async () => {
       const stringError = 'Erreur string';
-      (profileService.getAllGyms as jest.Mock).mockRejectedValue(stringError);
+      (gymService.getAllGyms as jest.Mock).mockRejectedValue(stringError);
 
       const result = await dataActions.loadAllGyms();
 
@@ -390,15 +392,20 @@ describe('createDataActions', () => {
 
     it('gère les promesses qui échouent partiellement', async () => {
       mockGet.mockReturnValue({
+        loading: false,
         sports: [],
         sportLevels: [],
         socialMedias: [],
+        gymSubscriptions: [],
         initialized: false
       });
 
       (sportService.getAllSports as jest.Mock).mockResolvedValue([{ id: '1', name: 'Football' }]);
       (sportService.getAllSportLevels as jest.Mock).mockRejectedValue(new Error('Erreur niveaux'));
       (socialMediaService.getAllSocialMedias as jest.Mock).mockResolvedValue([{ id: '1', name: 'Instagram' }]);
+      (gymService.getAllGyms as jest.Mock).mockResolvedValue([]);
+      (gymService.getAllGymSubscriptions as jest.Mock).mockResolvedValue([]);
+      (profileService.getAllHobbies as jest.Mock).mockResolvedValue([]);
 
       await dataActions.initialize();
 
@@ -410,4 +417,4 @@ describe('createDataActions', () => {
       );
     });
   });
-}); 
+});

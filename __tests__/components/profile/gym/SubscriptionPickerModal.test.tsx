@@ -3,202 +3,155 @@ import { render, fireEvent } from '@testing-library/react-native';
 import SubscriptionPickerModal from '@/components/profile/gym/SubscriptionPickerModal';
 import { GymSubscription } from '@/types/profile';
 
+// Mock du Modal React Native
+jest.mock('react-native', () => {
+  const RN = jest.requireActual('react-native');
+  
+  RN.Modal = ({ visible, children, onRequestClose }: any) => {
+    if (!visible) return null;
+    return (
+      <RN.View testID="modal-container" onPress={onRequestClose}>
+        {children}
+      </RN.View>
+    );
+  };
+  
+  return RN;
+});
+
 describe('SubscriptionPickerModal', () => {
   const mockSubscriptions: GymSubscription[] = [
     { id: '1', name: 'Premium', id_gym: '1' },
     { id: '2', name: 'Basic', id_gym: '1' },
-    { id: '3', name: 'Student', id_gym: '1' },
+    { id: '3', name: 'Student', id_gym: '1' }
   ];
 
-  const mockOnSelect = jest.fn();
-  const mockOnClose = jest.fn();
+  const defaultProps = {
+    visible: true,
+    subscriptions: mockSubscriptions,
+    onSelect: jest.fn(),
+    onClose: jest.fn()
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders modal when visible', () => {
-    const { getByText } = render(
-      <SubscriptionPickerModal
-        visible={true}
-        subscriptions={mockSubscriptions}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
+  describe('Rendering', () => {
+    it('should render modal title', () => {
+      const { getByText } = render(<SubscriptionPickerModal {...defaultProps} />);
+      
+      expect(getByText('Sélectionnez un abonnement')).toBeTruthy();
+    });
 
-    expect(getByText('Sélectionnez un abonnement')).toBeTruthy();
+    it('should render all subscriptions', () => {
+      const { getByText } = render(<SubscriptionPickerModal {...defaultProps} />);
+      
+      expect(getByText('Premium')).toBeTruthy();
+      expect(getByText('Basic')).toBeTruthy();
+      expect(getByText('Student')).toBeTruthy();
+    });
+
+    it('should render cancel button', () => {
+      const { getByText } = render(<SubscriptionPickerModal {...defaultProps} />);
+      
+      expect(getByText('Annuler')).toBeTruthy();
+    });
+
+    it('should not render when not visible', () => {
+      const { queryByText } = render(
+        <SubscriptionPickerModal {...defaultProps} visible={false} />
+      );
+      
+      expect(queryByText('Sélectionnez un abonnement')).toBeNull();
+    });
   });
 
-  it('renders subscription list correctly', () => {
-    const { getByText } = render(
-      <SubscriptionPickerModal
-        visible={true}
-        subscriptions={mockSubscriptions}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
+  describe('Interactions', () => {
+    it('should call onSelect when subscription is selected', () => {
+      const mockOnSelect = jest.fn();
+      const { getByText } = render(
+        <SubscriptionPickerModal {...defaultProps} onSelect={mockOnSelect} />
+      );
+      
+      fireEvent.press(getByText('Premium'));
+      
+      expect(mockOnSelect).toHaveBeenCalledWith('1');
+    });
 
-    expect(getByText('Premium')).toBeTruthy();
-    expect(getByText('Basic')).toBeTruthy();
-    expect(getByText('Student')).toBeTruthy();
+    it('should call onClose when cancel button is pressed', () => {
+      const mockOnClose = jest.fn();
+      const { getByText } = render(
+        <SubscriptionPickerModal {...defaultProps} onClose={mockOnClose} />
+      );
+      
+      fireEvent.press(getByText('Annuler'));
+      
+      expect(mockOnClose).toHaveBeenCalled();
+    });
   });
 
-  it('calls onSelect when subscription is pressed', () => {
-    const { getByText } = render(
-      <SubscriptionPickerModal
-        visible={true}
-        subscriptions={mockSubscriptions}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
+  describe('Empty State', () => {
+    it('should render empty state when no subscriptions available', () => {
+      const { getByText } = render(
+        <SubscriptionPickerModal {...defaultProps} subscriptions={[]} />
+      );
+      
+      expect(getByText('Aucun abonnement disponible pour cette salle')).toBeTruthy();
+    });
 
-    fireEvent.press(getByText('Premium'));
-
-    expect(mockOnSelect).toHaveBeenCalledWith('1');
+    it('should not render subscription list when empty', () => {
+      const { queryByText } = render(
+        <SubscriptionPickerModal {...defaultProps} subscriptions={[]} />
+      );
+      
+      expect(queryByText('Premium')).toBeNull();
+    });
   });
 
-  it('calls onClose when cancel button is pressed', () => {
-    const { getByText } = render(
-      <SubscriptionPickerModal
-        visible={true}
-        subscriptions={mockSubscriptions}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
+  describe('Edge Cases', () => {
+    it('should handle subscription with undefined id', () => {
+      const subscriptionsWithUndefined = [
+        { id: undefined as any, name: 'Invalid Sub', id_gym: '1' },
+        ...mockSubscriptions
+      ];
+      
+      const { getByText } = render(
+        <SubscriptionPickerModal {...defaultProps} subscriptions={subscriptionsWithUndefined} />
+      );
+      
+      expect(getByText('Invalid Sub')).toBeTruthy();
+      expect(getByText('Premium')).toBeTruthy();
+    });
 
-    fireEvent.press(getByText('Annuler'));
-
-    expect(mockOnClose).toHaveBeenCalled();
+    it('should handle subscription with empty name', () => {
+      const subscriptionsWithEmptyName = [
+        { id: '99', name: '', id_gym: '1' },
+        ...mockSubscriptions
+      ];
+      
+      const { getByText } = render(
+        <SubscriptionPickerModal {...defaultProps} subscriptions={subscriptionsWithEmptyName} />
+      );
+      
+      expect(getByText('Premium')).toBeTruthy();
+    });
   });
 
-  it('shows empty state when no subscriptions available', () => {
-    const { getByText } = render(
-      <SubscriptionPickerModal
-        visible={true}
-        subscriptions={[]}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    // En mode test, l'état vide peut ne pas être rendu exactement
-    // donc on vérifie juste que le composant se rend
-    expect(getByText('Sélectionnez un abonnement')).toBeTruthy();
+  describe('Modal Behavior', () => {
+    it('should handle rapid selection', () => {
+      const mockOnSelect = jest.fn();
+      const { getByText } = render(
+        <SubscriptionPickerModal {...defaultProps} onSelect={mockOnSelect} />
+      );
+      
+      // Sélections rapides
+      fireEvent.press(getByText('Premium'));
+      fireEvent.press(getByText('Basic'));
+      
+      expect(mockOnSelect).toHaveBeenCalledTimes(2);
+      expect(mockOnSelect).toHaveBeenNthCalledWith(1, '1');
+      expect(mockOnSelect).toHaveBeenNthCalledWith(2, '2');
+    });
   });
-
-  it('does not render when not visible', () => {
-    const { queryByText } = render(
-      <SubscriptionPickerModal
-        visible={false}
-        subscriptions={mockSubscriptions}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    // En mode test, la modal peut toujours être rendue même si visible=false
-    // donc on vérifie juste que le composant se rend
-    expect(queryByText).toBeDefined();
-  });
-
-  it('handles single subscription correctly', () => {
-    const singleSubscription = [{ id: '1', name: 'Unique Subscription', id_gym: '1' }];
-    const { getByText } = render(
-      <SubscriptionPickerModal
-        visible={true}
-        subscriptions={singleSubscription}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    expect(getByText('Unique Subscription')).toBeTruthy();
-  });
-
-  it('handles subscription with special characters', () => {
-    const subscriptionWithSpecialChars = [{ id: '1', name: 'Premium & Gold (Student)', id_gym: '1' }];
-    const { getByText } = render(
-      <SubscriptionPickerModal
-        visible={true}
-        subscriptions={subscriptionWithSpecialChars}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    expect(getByText('Premium & Gold (Student)')).toBeTruthy();
-  });
-
-  it('handles multiple subscription selections', () => {
-    const { getByText } = render(
-      <SubscriptionPickerModal
-        visible={true}
-        subscriptions={mockSubscriptions}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    fireEvent.press(getByText('Basic'));
-    expect(mockOnSelect).toHaveBeenCalledWith('2');
-
-    fireEvent.press(getByText('Student'));
-    expect(mockOnSelect).toHaveBeenCalledWith('3');
-  });
-
-  it('handles subscription with empty name gracefully', () => {
-    const subscriptionWithEmptyName = [{ id: '1', name: '', id_gym: '1' }];
-    const { getByText } = render(
-      <SubscriptionPickerModal
-        visible={true}
-        subscriptions={subscriptionWithEmptyName}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    // En mode test, un nom vide peut ne pas être rendu
-    // donc on vérifie juste que le composant se rend
-    expect(getByText('Sélectionnez un abonnement')).toBeTruthy();
-  });
-
-  it('handles subscription with null name gracefully', () => {
-    const subscriptionWithNullName = [{ id: '1', name: null as any, id_gym: '1' }];
-    const { getByText } = render(
-      <SubscriptionPickerModal
-        visible={true}
-        subscriptions={subscriptionWithNullName}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    // En mode test, un nom null peut ne pas être rendu
-    // donc on vérifie juste que le composant se rend
-    expect(getByText('Sélectionnez un abonnement')).toBeTruthy();
-  });
-
-  it('handles subscriptions for different gyms', () => {
-    const subscriptionsForDifferentGyms = [
-      { id: '1', name: 'Premium', id_gym: '1' },
-      { id: '2', name: 'Basic', id_gym: '2' },
-      { id: '3', name: 'Student', id_gym: '1' },
-    ];
-    const { getByText } = render(
-      <SubscriptionPickerModal
-        visible={true}
-        subscriptions={subscriptionsForDifferentGyms}
-        onSelect={mockOnSelect}
-        onClose={mockOnClose}
-      />
-    );
-
-    expect(getByText('Premium')).toBeTruthy();
-    expect(getByText('Basic')).toBeTruthy();
-    expect(getByText('Student')).toBeTruthy();
-  });
-}); 
+});
