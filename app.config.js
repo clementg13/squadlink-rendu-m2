@@ -2,7 +2,7 @@ require('dotenv').config();
 
 export default {
   expo: {
-    name: 'squadlink',
+    name: 'Squadlink',
     slug: 'squadlink',
     version: '1.1.0',
     orientation: 'portrait',
@@ -16,12 +16,13 @@ export default {
       backgroundColor: '#ffffff'
     },
     ios: {
+      icon: './assets/images/icon.png',
       supportsTablet: true,
       bundleIdentifier: 'com.clementgexpo.squadlink'
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: './assets/images/adaptive-icon.png',
+        foregroundImage: './assets/images/icon.png',
         backgroundColor: '#ffffff'
       },
       edgeToEdgeEnabled: true,
