@@ -228,7 +228,7 @@ describe('GymService', () => {
       expect(mockSupabase.from).toHaveBeenCalledWith('profile');
       expect(mockSupabase.update).toHaveBeenCalledWith({
         id_gym: 1,
-        id_gym_subscription: 1
+        id_gymsubscription: 1
       });
       expect(mockSupabase.eq).toHaveBeenCalledWith('id_user', 'user1');
       expect(mockProfileService.invalidateProfileCache).toHaveBeenCalledWith('user1');
@@ -273,7 +273,7 @@ describe('GymService', () => {
 
   describe('getUserCurrentSubscription', () => {
     it('should return user current subscription', async () => {
-      const mockProfile = { id_gym: '1', id_gym_subscription: '1' };
+      const mockProfile = { id_gym: '1', id_gymsubscription: '1' };
       const mockGym = { id: '1', name: 'Test Gym' };
       const mockSubscription = { id: '1', name: 'Premium', id_gym: '1' };
 

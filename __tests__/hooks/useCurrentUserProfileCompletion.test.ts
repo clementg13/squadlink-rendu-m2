@@ -55,7 +55,7 @@ describe('useCurrentUserProfileCompletion', () => {
         isComplete: false,
         isLoading: false,
         completionPercentage: 0,
-        missingFields: ['profil non créé'],
+        missingFields: ['profil en cours de chargement'],
         error: null,
       });
     });

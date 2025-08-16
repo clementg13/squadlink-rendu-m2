@@ -293,7 +293,7 @@ class LocationService {
   }
 
   // Nouvelle méthode pour récupérer la localisation d'un utilisateur
-  async getUserLocation(userId: string): Promise<any> {
+  async getUserLocation(userId: string): Promise<Location | null> {
     console.log('📍 LocationService: Getting location for user:', userId);
     
     try {

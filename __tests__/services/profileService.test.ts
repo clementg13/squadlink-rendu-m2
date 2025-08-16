@@ -415,7 +415,7 @@ describe('ProfileService', () => {
 
         expect(mockSupabase.update).toHaveBeenCalledWith({
           id_gym: 1,
-          id_gym_subscription: 2
+          id_gymsubscription: 2
         });
       });
 
@@ -434,7 +434,7 @@ describe('ProfileService', () => {
 
         expect(mockSupabase.update).toHaveBeenCalledWith({
           id_gym: null,
-          id_gym_subscription: null
+          id_gymsubscription: null
         });
       });
     });
@@ -481,7 +481,7 @@ describe('ProfileService', () => {
 
     describe('getUserGymSubscription', () => {
       it('should return gym and subscription for user', async () => {
-        const profile = { id_gym: 'gym-1', id_gym_subscription: 'sub-1' };
+        const profile = { id_gym: 'gym-1', id_gymsubscription: 'sub-1' };
         const gym = { id: 'gym-1', name: 'Fitness Club' };
         const subscription = { id: 'sub-1', name: 'Premium' };
 

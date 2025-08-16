@@ -4,7 +4,7 @@ import { profileService } from '@/services/profileService';
 
 export class GymService {
   // === Validation Helper ===
-  private validateId(id: any, fieldName: string): string | null {
+  private validateId(id: unknown, _fieldName: string): string | null {
     if (!id || id === 'undefined' || id === 'null' || id === null || id === undefined) {
       return null;
     }
@@ -20,14 +20,14 @@ export class GymService {
   // === Gym Management ===
   async getAllGyms(): Promise<Gym[]> {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { error: userError } = await supabase.auth.getUser();
       if (userError) {
         console.error('❌ GymService: Auth error:', userError);
         return [];
       }
 
       // Essayer le schéma public d'abord
-      const { data: publicData, error: publicError } = await supabase
+      const { data: publicData } = await supabase
         .from('gym')
         .select('id, name')
         .order('name');
@@ -37,7 +37,7 @@ export class GymService {
       }
 
       // Essayer le schéma musclemeet
-      const { data: musclemeetData, error: musclemeetError } = await supabase
+      const { data: musclemeetData } = await supabase
         .schema('musclemeet')
         .from('gym')
         .select('id, name')

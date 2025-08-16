@@ -8,7 +8,7 @@ import { CompatibleProfile } from '@/services/compatibleProfileService';
  */
 export class ProfileService {
   // Cache pour stocker les profils
-  private static profileCache = new Map<string, any>();
+  private static profileCache = new Map<string, unknown>();
   private static lastCacheUpdate = new Map<string, number>();
 
   // === Profile Management ===
@@ -23,7 +23,7 @@ export class ProfileService {
         ProfileService.lastCacheUpdate.has(cacheKey) &&
         (now - ProfileService.lastCacheUpdate.get(cacheKey)!) < cacheExpiry) {
       console.log('📋 ProfileService: Returning cached profile');
-      return ProfileService.profileCache.get(cacheKey);
+      return ProfileService.profileCache.get(cacheKey) as UserProfile | null;
     }
 
     console.log('🔍 ProfileService: Loading complete profile with all relations for user:', userId);
@@ -376,7 +376,7 @@ export class ProfileService {
         ProfileService.profileCache.has(cacheKey) && 
         ProfileService.lastCacheUpdate.has(cacheKey) &&
         (now - ProfileService.lastCacheUpdate.get(cacheKey)!) < cacheExpiry) {
-      return ProfileService.profileCache.get(cacheKey);
+      return ProfileService.profileCache.get(cacheKey) as CompatibleProfile | null;
     }
 
     try {
@@ -487,7 +487,7 @@ export class ProfileService {
   }
 
   // Invalider les caches liés au profil
-  private invalidateRelatedCaches(userId: string): void {
+  private invalidateRelatedCaches(_userId: string): void {
     // Invalider le cache des profils compatibles si il existe
     const compatibleCacheKeys = Array.from(ProfileService.profileCache.keys())
       .filter(key => key.includes('compatible') || key.includes('enriched'));
