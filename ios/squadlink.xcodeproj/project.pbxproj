@@ -9,27 +9,27 @@
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		82D4116B19E31D4C1D12D865 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48E3C70ABC7CC64336FEB45 /* ExpoModulesProvider.swift */; };
-		B5BBEFC36EB2A0A703133FAD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 2349E06AE1F1D870688DC412 /* PrivacyInfo.xcprivacy */; };
+		9ABBFDB6D7B01DE4A50E52A1 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8F637F49FD7F13BEAA0B9C /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		D3E2A4B199D2AD2520D3288F /* libPods-squadlink.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CF561DCAE1868725A5F1F83D /* libPods-squadlink.a */; };
+		E8AC75685FC927D60E41361F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7CB96E523C36C937ED3416B2 /* PrivacyInfo.xcprivacy */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		F98DDB59689287CDDD8EFE38 /* libPods-Squadlink.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F21E4AF26CB05B66321B20DA /* libPods-Squadlink.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		051ADE812BA47B8334835813 /* Pods-squadlink.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-squadlink.release.xcconfig"; path = "Target Support Files/Pods-squadlink/Pods-squadlink.release.xcconfig"; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* squadlink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = squadlink.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = squadlink/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = squadlink/Info.plist; sourceTree = "<group>"; };
-		2349E06AE1F1D870688DC412 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = squadlink/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		5DE2ECEDA67CDEEEE8D39DE5 /* Pods-squadlink.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-squadlink.debug.xcconfig"; path = "Target Support Files/Pods-squadlink/Pods-squadlink.debug.xcconfig"; sourceTree = "<group>"; };
-		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = squadlink/SplashScreen.storyboard; sourceTree = "<group>"; };
+		1052A5E382CFB76BE18634BC /* Pods-Squadlink.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Squadlink.debug.xcconfig"; path = "Target Support Files/Pods-Squadlink/Pods-Squadlink.debug.xcconfig"; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* Squadlink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Squadlink.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Squadlink/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Squadlink/Info.plist; sourceTree = "<group>"; };
+		7CB96E523C36C937ED3416B2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Squadlink/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		8A8F637F49FD7F13BEAA0B9C /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Squadlink/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Squadlink/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		CF561DCAE1868725A5F1F83D /* libPods-squadlink.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-squadlink.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		D48E3C70ABC7CC64336FEB45 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-squadlink/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		E61C0C449420B34B5BCDDDB8 /* Pods-Squadlink.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Squadlink.release.xcconfig"; path = "Target Support Files/Pods-Squadlink/Pods-Squadlink.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = squadlink/AppDelegate.swift; sourceTree = "<group>"; };
-		F11748442D0722820044C1D9 /* squadlink-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "squadlink-Bridging-Header.h"; path = "squadlink/squadlink-Bridging-Header.h"; sourceTree = "<group>"; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Squadlink/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* Squadlink-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Squadlink-Bridging-Header.h"; path = "Squadlink/Squadlink-Bridging-Header.h"; sourceTree = "<group>"; };
+		F21E4AF26CB05B66321B20DA /* libPods-Squadlink.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Squadlink.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,32 +37,32 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D3E2A4B199D2AD2520D3288F /* libPods-squadlink.a in Frameworks */,
+				F98DDB59689287CDDD8EFE38 /* libPods-Squadlink.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* squadlink */ = {
+		13B07FAE1A68108700A75B9A /* Squadlink */ = {
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				F11748442D0722820044C1D9 /* squadlink-Bridging-Header.h */,
+				F11748442D0722820044C1D9 /* Squadlink-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				2349E06AE1F1D870688DC412 /* PrivacyInfo.xcprivacy */,
+				7CB96E523C36C937ED3416B2 /* PrivacyInfo.xcprivacy */,
 			);
-			name = squadlink;
+			name = Squadlink;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				CF561DCAE1868725A5F1F83D /* libPods-squadlink.a */,
+				F21E4AF26CB05B66321B20DA /* libPods-Squadlink.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -77,12 +77,12 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				13B07FAE1A68108700A75B9A /* squadlink */,
+				13B07FAE1A68108700A75B9A /* Squadlink */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				C95EFCE614A9AD9C9D8F7A36 /* Pods */,
-				D675EB1A86883145A4061324 /* ExpoModulesProviders */,
+				8BC98763ABDB086BA040FA13 /* Pods */,
+				9248C68A8469D920793E14DC /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -92,17 +92,27 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* squadlink.app */,
+				13B07F961A680F5B00A75B9A /* Squadlink.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		9D0C63EB90BEB0EFBC15E7F6 /* squadlink */ = {
+		8BC98763ABDB086BA040FA13 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				D48E3C70ABC7CC64336FEB45 /* ExpoModulesProvider.swift */,
+				1052A5E382CFB76BE18634BC /* Pods-Squadlink.debug.xcconfig */,
+				E61C0C449420B34B5BCDDDB8 /* Pods-Squadlink.release.xcconfig */,
 			);
-			name = squadlink;
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		9248C68A8469D920793E14DC /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				C869E94E70DCF157DCA16478 /* Squadlink */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -111,51 +121,41 @@
 				BB2F792C24A3F905000567C9 /* Expo.plist */,
 			);
 			name = Supporting;
-			path = squadlink/Supporting;
+			path = Squadlink/Supporting;
 			sourceTree = "<group>";
 		};
-		C95EFCE614A9AD9C9D8F7A36 /* Pods */ = {
+		C869E94E70DCF157DCA16478 /* Squadlink */ = {
 			isa = PBXGroup;
 			children = (
-				5DE2ECEDA67CDEEEE8D39DE5 /* Pods-squadlink.debug.xcconfig */,
-				051ADE812BA47B8334835813 /* Pods-squadlink.release.xcconfig */,
+				8A8F637F49FD7F13BEAA0B9C /* ExpoModulesProvider.swift */,
 			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		D675EB1A86883145A4061324 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				9D0C63EB90BEB0EFBC15E7F6 /* squadlink */,
-			);
-			name = ExpoModulesProviders;
+			name = Squadlink;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* squadlink */ = {
+		13B07F861A680F5B00A75B9A /* Squadlink */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "squadlink" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Squadlink" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				8A09FD94F1710FB2387E9728 /* [Expo] Configure project */,
+				88226C4B8043750448F4E92D /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				95AEAF291AF2E12C59F18D30 /* [CP] Embed Pods Frameworks */,
-				2931FF20CF764DB88ACD4492 /* Upload Debug Symbols to Sentry */,
+				45A198F5CDAC42F9B6BA6F39 /* Upload Debug Symbols to Sentry */,
+				1F4CB492818FF9787D67D13E /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = squadlink;
-			productName = squadlink;
-			productReference = 13B07F961A680F5B00A75B9A /* squadlink.app */;
+			name = Squadlink;
+			productName = Squadlink;
+			productReference = 13B07F961A680F5B00A75B9A /* Squadlink.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -171,7 +171,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "squadlink" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Squadlink" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -184,7 +184,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* squadlink */,
+				13B07F861A680F5B00A75B9A /* Squadlink */,
 			);
 		};
 /* End PBXProject section */
@@ -197,7 +197,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				B5BBEFC36EB2A0A703133FAD /* PrivacyInfo.xcprivacy in Resources */,
+				E8AC75685FC927D60E41361F /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -234,14 +234,32 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-squadlink-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-Squadlink-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		2931FF20CF764DB88ACD4492 /* Upload Debug Symbols to Sentry */ = {
+		1F4CB492818FF9787D67D13E /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Squadlink/Pods-Squadlink-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Squadlink/Pods-Squadlink-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		45A198F5CDAC42F9B6BA6F39 /* Upload Debug Symbols to Sentry */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -253,7 +271,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh ../node_modules/@sentry/react-native/scripts/sentry-xcode-debug-files.sh";
+			shellScript = "/bin/sh `${NODE_BINARY:-node} --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode-debug-files.sh'\"`";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -261,7 +279,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-squadlink/Pods-squadlink-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-Squadlink/Pods-Squadlink-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
@@ -294,10 +312,10 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-squadlink/Pods-squadlink-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Squadlink/Pods-Squadlink-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		8A09FD94F1710FB2387E9728 /* [Expo] Configure project */ = {
+		88226C4B8043750448F4E92D /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -314,25 +332,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-squadlink/expo-configure-project.sh\"\n";
-		};
-		95AEAF291AF2E12C59F18D30 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-squadlink/Pods-squadlink-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-squadlink/Pods-squadlink-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Squadlink/expo-configure-project.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -342,7 +342,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				82D4116B19E31D4C1D12D865 /* ExpoModulesProvider.swift in Sources */,
+				9ABBFDB6D7B01DE4A50E52A1 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -351,18 +351,18 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5DE2ECEDA67CDEEEE8D39DE5 /* Pods-squadlink.debug.xcconfig */;
+			baseConfigurationReference = 1052A5E382CFB76BE18634BC /* Pods-Squadlink.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = squadlink/squadlink.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Squadlink/Squadlink.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				INFOPLIST_FILE = squadlink/Info.plist;
+				INFOPLIST_FILE = Squadlink/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -376,8 +376,8 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.clementgexpo.squadlink;
-				PRODUCT_NAME = squadlink;
-				SWIFT_OBJC_BRIDGING_HEADER = "squadlink/squadlink-Bridging-Header.h";
+				PRODUCT_NAME = Squadlink;
+				SWIFT_OBJC_BRIDGING_HEADER = "Squadlink/Squadlink-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -387,13 +387,13 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 051ADE812BA47B8334835813 /* Pods-squadlink.release.xcconfig */;
+			baseConfigurationReference = E61C0C449420B34B5BCDDDB8 /* Pods-Squadlink.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = squadlink/squadlink.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Squadlink/Squadlink.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				INFOPLIST_FILE = squadlink/Info.plist;
+				INFOPLIST_FILE = Squadlink/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -407,8 +407,8 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.clementgexpo.squadlink;
-				PRODUCT_NAME = squadlink;
-				SWIFT_OBJC_BRIDGING_HEADER = "squadlink/squadlink-Bridging-Header.h";
+				PRODUCT_NAME = Squadlink;
+				SWIFT_OBJC_BRIDGING_HEADER = "Squadlink/Squadlink-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -542,7 +542,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "squadlink" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Squadlink" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -551,7 +551,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "squadlink" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Squadlink" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,

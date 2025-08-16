@@ -7,7 +7,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>squadlink</string>
+    <string>Squadlink</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -81,9 +81,5 @@
     <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>SquadLink a besoin d'accéder à votre localisation pour vous aider à trouver des partenaires d'entraînement à proximité et des salles de sport.</string>
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>SquadLink a besoin d'accéder à votre localisation pour vous aider à trouver des partenaires d'entraînement à proximité et des salles de sport.</string>
   </dict>
 </plist>
