@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
 import { locationService } from '@/services/locationService';
@@ -132,7 +132,11 @@ export default function OnboardingProfile({ onNext, onBack }: OnboardingProfileP
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={styles.scrollContent}
+      >
         <Text style={styles.title}>Créez votre profil</Text>
         <Text style={styles.subtitle}>
           Partagez quelques informations sur vous
@@ -232,7 +236,7 @@ export default function OnboardingProfile({ onNext, onBack }: OnboardingProfileP
             )}
           </View>
         </View>
-      </View>
+      </ScrollView>
 
       <View style={styles.footer}>
         <View style={styles.buttonRow}>
@@ -269,25 +273,28 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 20,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#2c3e50',
-    marginBottom: 8,
+    marginBottom: 6,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#7f8c8d',
-    marginBottom: 32,
+    marginBottom: 20,
     lineHeight: 22,
     textAlign: 'center',
   },
   form: {
-    flex: 1,
+    paddingBottom: 20,
   },
   inputGroup: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   label: {
     fontSize: 16,
@@ -320,7 +327,7 @@ const styles = StyleSheet.create({
   dateHint: {
     fontSize: 12,
     color: '#999',
-    marginTop: 4,
+    marginTop: 2,
     fontStyle: 'italic',
   },
   locationContainer: {
@@ -365,6 +372,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingTop: 20,
+    paddingBottom: 20,
+    backgroundColor: '#fff',
   },
   buttonRow: {
     flexDirection: 'row',
