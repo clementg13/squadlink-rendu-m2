@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import CompatibleProfilesList from '@/components/profile/CompatibleProfilesList';
 import { CompatibleProfile } from '@/services/compatibleProfileService';
 
@@ -11,6 +12,9 @@ jest.mock('@/hooks/useCompatibleProfiles', () => ({
 jest.mock('@/stores/authStore', () => ({
   useAuthUser: jest.fn(),
 }));
+
+// Mock Alert
+jest.spyOn(Alert, 'alert');
 
 describe('CompatibleProfilesList', () => {
   const mockProfiles: CompatibleProfile[] = [
@@ -71,6 +75,7 @@ describe('CompatibleProfilesList', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (Alert.alert as jest.Mock).mockClear();
     require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(mockUseCompatibleProfiles);
     require('@/stores/authStore').useAuthUser.mockReturnValue(mockUseAuthUser);
   });
@@ -298,5 +303,484 @@ describe('CompatibleProfilesList', () => {
     );
 
     expect(getByText('John Doe')).toBeTruthy();
+  });
+
+  // Tests pour améliorer la couverture de code
+  describe('Default profile press behavior', () => {
+    it('should show alert with profile details when no onProfilePress provided', async () => {
+      const { getByText } = render(
+        <CompatibleProfilesList />
+      );
+
+      fireEvent.press(getByText('John Doe'));
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'John Doe',
+          expect.stringContaining('25 ans'),
+          [{ text: 'OK' }]
+        );
+      });
+    });
+
+    it('should handle profile with missing age in alert', async () => {
+      const profileWithoutAge = {
+        ...mockProfiles[0],
+        age: null,
+      };
+
+      const mockWithoutAge = {
+        ...mockUseCompatibleProfiles,
+        profiles: [profileWithoutAge],
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(mockWithoutAge);
+
+      const { getByText } = render(
+        <CompatibleProfilesList />
+      );
+
+      fireEvent.press(getByText('John Doe'));
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'John Doe',
+          expect.stringContaining('Âge non renseigné'),
+          [{ text: 'OK' }]
+        );
+      });
+    });
+
+    it('should handle profile with missing location in alert', async () => {
+      const profileWithoutLocation = {
+        ...mockProfiles[0],
+        location: null,
+      };
+
+      const mockWithoutLocation = {
+        ...mockUseCompatibleProfiles,
+        profiles: [profileWithoutLocation],
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(mockWithoutLocation);
+
+      const { getByText } = render(
+        <CompatibleProfilesList />
+      );
+
+      fireEvent.press(getByText('John Doe'));
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'John Doe',
+          expect.stringContaining('Localisation non renseignée'),
+          [{ text: 'OK' }]
+        );
+      });
+    });
+
+    it('should handle profile with missing biography in alert', async () => {
+      const profileWithoutBio = {
+        ...mockProfiles[0],
+        biography: null,
+      };
+
+      const mockWithoutBio = {
+        ...mockUseCompatibleProfiles,
+        profiles: [profileWithoutBio],
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(mockWithoutBio);
+
+      const { getByText } = render(
+        <CompatibleProfilesList />
+      );
+
+      fireEvent.press(getByText('John Doe'));
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'John Doe',
+          expect.stringContaining('Pas de biographie disponible'),
+          [{ text: 'OK' }]
+        );
+      });
+    });
+  });
+
+  describe('Loading states and footer', () => {
+    it('should handle loading state correctly', () => {
+      const loadingMoreMock = {
+        ...mockUseCompatibleProfiles,
+        loading: true,
+        hasMore: true,
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(loadingMoreMock);
+
+      const { UNSAFE_getByType } = render(
+        <CompatibleProfilesList />
+      );
+
+      // Vérifier que le composant se rend correctement pendant le chargement
+      const flatList = UNSAFE_getByType(require('react-native').FlatList);
+      expect(flatList).toBeTruthy();
+    });
+
+    it('should handle non-loading state correctly', () => {
+      const notLoadingMock = {
+        ...mockUseCompatibleProfiles,
+        loading: false,
+        hasMore: true,
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(notLoadingMock);
+
+      const { getByText } = render(
+        <CompatibleProfilesList />
+      );
+
+      // Vérifier que les profils sont affichés
+      expect(getByText('John Doe')).toBeTruthy();
+    });
+
+    it('should handle empty profiles correctly', () => {
+      const noProfilesLoadingMock = {
+        ...mockUseCompatibleProfiles,
+        loading: true,
+        profiles: [],
+        hasMore: true,
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(noProfilesLoadingMock);
+
+      const { UNSAFE_getByType } = render(
+        <CompatibleProfilesList />
+      );
+
+      // Vérifier que le composant se rend même sans profils
+      const flatList = UNSAFE_getByType(require('react-native').FlatList);
+      expect(flatList).toBeTruthy();
+    });
+  });
+
+  describe('Empty states', () => {
+    it('should handle loading empty state correctly', () => {
+      const loadingEmptyMock = {
+        ...mockUseCompatibleProfiles,
+        loading: true,
+        profiles: [],
+        isEmpty: false,
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(loadingEmptyMock);
+
+      const { UNSAFE_getByType } = render(
+        <CompatibleProfilesList />
+      );
+
+      // Vérifier que la FlatList est présente même en état de chargement vide
+      const flatList = UNSAFE_getByType(require('react-native').FlatList);
+      expect(flatList).toBeTruthy();
+      expect(flatList.props.data).toEqual([]);
+    });
+
+    it('should handle empty state correctly', () => {
+      const emptyMock = {
+        ...mockUseCompatibleProfiles,
+        loading: false,
+        profiles: [],
+        isEmpty: true,
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(emptyMock);
+
+      const { UNSAFE_getByType } = render(
+        <CompatibleProfilesList />
+      );
+
+      // Vérifier que la FlatList est présente même en état vide
+      const flatList = UNSAFE_getByType(require('react-native').FlatList);
+      expect(flatList).toBeTruthy();
+      expect(flatList.props.data).toEqual([]);
+    });
+  });
+
+  describe('Load more functionality', () => {
+    it('should configure onEndReached correctly', () => {
+      const loadMoreMock = jest.fn();
+      const hasMoreMock = {
+        ...mockUseCompatibleProfiles,
+        loading: false,
+        hasMore: true,
+        loadMore: loadMoreMock,
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(hasMoreMock);
+
+      const { UNSAFE_getByType } = render(
+        <CompatibleProfilesList />
+      );
+
+      // Vérifier que onEndReached est configuré sur la FlatList
+      const flatList = UNSAFE_getByType(require('react-native').FlatList);
+      expect(flatList.props.onEndReached).toBeDefined();
+      expect(flatList.props.onEndReachedThreshold).toBe(0.15);
+    });
+
+    it('should handle loading state for load more', () => {
+      const loadMoreMock = jest.fn();
+      const loadingMock = {
+        ...mockUseCompatibleProfiles,
+        loading: true,
+        hasMore: true,
+        loadMore: loadMoreMock,
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(loadingMock);
+
+      const { UNSAFE_getByType } = render(
+        <CompatibleProfilesList />
+      );
+
+      // Vérifier que la configuration est correcte même en état de chargement
+      const flatList = UNSAFE_getByType(require('react-native').FlatList);
+      expect(flatList.props.onEndReached).toBeDefined();
+    });
+
+    it('should handle hasMore false state', () => {
+      const loadMoreMock = jest.fn();
+      const noMoreMock = {
+        ...mockUseCompatibleProfiles,
+        loading: false,
+        hasMore: false,
+        loadMore: loadMoreMock,
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(noMoreMock);
+
+      const { UNSAFE_getByType } = render(
+        <CompatibleProfilesList />
+      );
+
+      // Vérifier que onEndReached est toujours configuré
+      const flatList = UNSAFE_getByType(require('react-native').FlatList);
+      expect(flatList.props.onEndReached).toBeDefined();
+    });
+  });
+
+  describe('Header functionality', () => {
+    it('should handle header configuration correctly', () => {
+      const { UNSAFE_getByType } = render(
+        <CompatibleProfilesList
+          showWelcomeHeader={true}
+        />
+      );
+
+      // Vérifier que la FlatList a un header configuré
+      const flatList = UNSAFE_getByType(require('react-native').FlatList);
+      expect(flatList.props.ListHeaderComponent).toBeDefined();
+    });
+
+    it('should handle single profile count correctly', () => {
+      const singleProfileMock = {
+        ...mockUseCompatibleProfiles,
+        profiles: [mockProfiles[0]],
+        totalCount: 1,
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(singleProfileMock);
+
+      const { getByText } = render(
+        <CompatibleProfilesList
+          showWelcomeHeader={true}
+        />
+      );
+
+      // Vérifier que le profil unique est affiché
+      expect(getByText('John Doe')).toBeTruthy();
+    });
+
+    it('should handle loading state in header', () => {
+      const loadingMock = {
+        ...mockUseCompatibleProfiles,
+        loading: true,
+        profiles: [],
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(loadingMock);
+
+      const { UNSAFE_getByType } = render(
+        <CompatibleProfilesList
+          showWelcomeHeader={true}
+        />
+      );
+
+      // Vérifier que le header est configuré même en état de chargement
+      const flatList = UNSAFE_getByType(require('react-native').FlatList);
+      expect(flatList.props.ListHeaderComponent).toBeDefined();
+    });
+
+    it('should handle empty profiles in header', () => {
+      const noProfilesMock = {
+        ...mockUseCompatibleProfiles,
+        loading: false,
+        profiles: [],
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(noProfilesMock);
+
+      const { UNSAFE_getByType } = render(
+        <CompatibleProfilesList
+          showWelcomeHeader={true}
+        />
+      );
+
+      // Vérifier que le header est configuré même sans profils
+      const flatList = UNSAFE_getByType(require('react-native').FlatList);
+      expect(flatList.props.ListHeaderComponent).toBeDefined();
+    });
+  });
+
+  describe('Refresh functionality', () => {
+    it('should configure refresh control correctly', () => {
+      const refreshMock = jest.fn();
+      const refreshableMock = {
+        ...mockUseCompatibleProfiles,
+        refresh: refreshMock,
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(refreshableMock);
+
+      const { UNSAFE_getByType } = render(
+        <CompatibleProfilesList />
+      );
+
+      // Vérifier que RefreshControl est configuré
+      const flatList = UNSAFE_getByType(require('react-native').FlatList);
+      expect(flatList.props.refreshControl).toBeDefined();
+      expect(flatList.props.refreshControl.props.onRefresh).toBeDefined();
+    });
+
+    it('should show refreshing state correctly', () => {
+      const refreshingMock = {
+        ...mockUseCompatibleProfiles,
+        loading: true,
+        profiles: [],
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(refreshingMock);
+
+      const { UNSAFE_getByType } = render(
+        <CompatibleProfilesList />
+      );
+
+      // Vérifier que RefreshControl est présent et configuré
+      const flatList = UNSAFE_getByType(require('react-native').FlatList);
+      expect(flatList.props.refreshControl).toBeDefined();
+      expect(flatList.props.refreshControl.props.refreshing).toBe(true);
+    });
+  });
+
+  describe('Profile variations', () => {
+    it('should handle profile with undefined age', async () => {
+      const profileWithUndefinedAge = {
+        ...mockProfiles[0],
+        age: undefined,
+      };
+
+      const mockWithUndefinedAge = {
+        ...mockUseCompatibleProfiles,
+        profiles: [profileWithUndefinedAge],
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(mockWithUndefinedAge);
+
+      const { getByText } = render(
+        <CompatibleProfilesList />
+      );
+
+      fireEvent.press(getByText('John Doe'));
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'John Doe',
+          expect.stringContaining('Âge non renseigné'),
+          [{ text: 'OK' }]
+        );
+      });
+    });
+
+    it('should handle profile with empty sports and hobbies arrays', async () => {
+      const profileWithEmptyArrays = {
+        ...mockProfiles[0],
+        sports: [],
+        hobbies: [],
+      };
+
+      const mockWithEmptyArrays = {
+        ...mockUseCompatibleProfiles,
+        profiles: [profileWithEmptyArrays],
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(mockWithEmptyArrays);
+
+      const { getByText } = render(
+        <CompatibleProfilesList />
+      );
+
+      fireEvent.press(getByText('John Doe'));
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'John Doe',
+          expect.stringContaining('Aucun sport'),
+          [{ text: 'OK' }]
+        );
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'John Doe',
+          expect.stringContaining('Aucun hobby'),
+          [{ text: 'OK' }]
+        );
+      });
+    });
+  });
+
+  describe('Edge cases', () => {
+    it('should handle profiles array with mixed data types', () => {
+      const mixedProfiles = [
+        mockProfiles[0],
+        {
+          ...mockProfiles[1],
+          sports: undefined,
+          hobbies: null,
+        },
+      ];
+
+      const mixedMock = {
+        ...mockUseCompatibleProfiles,
+        profiles: mixedProfiles,
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(mixedMock);
+
+      const { getByText } = render(
+        <CompatibleProfilesList />
+      );
+
+      expect(getByText('John Doe')).toBeTruthy();
+      expect(getByText('Jane Smith')).toBeTruthy();
+    });
+
+    it('should handle totalCount being null', () => {
+      const nullTotalCountMock = {
+        ...mockUseCompatibleProfiles,
+        totalCount: null,
+      };
+      require('@/hooks/useCompatibleProfiles').useCompatibleProfiles.mockReturnValue(nullTotalCountMock);
+
+      const { getByText } = render(
+        <CompatibleProfilesList
+          showWelcomeHeader={true}
+        />
+      );
+
+      // Vérifier que les profils sont affichés même avec totalCount null
+      expect(getByText('John Doe')).toBeTruthy();
+      expect(getByText('Jane Smith')).toBeTruthy();
+    });
+
+    it('should handle custom userName prop', () => {
+      const { getByText } = render(
+        <CompatibleProfilesList
+          showWelcomeHeader={true}
+          userName="CustomUser"
+        />
+      );
+
+      // Le userName n'est pas utilisé dans le rendu actuel, mais le composant devrait se rendre normalement
+      expect(getByText('John Doe')).toBeTruthy();
+    });
   });
 }); 
