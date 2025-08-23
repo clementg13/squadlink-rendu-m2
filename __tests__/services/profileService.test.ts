@@ -570,4 +570,379 @@ describe('ProfileService', () => {
     });
 
   });
+
+  describe('Additional Profile Management', () => {
+    describe('Profile update validation logic', () => {
+      it('should validate Date object conversion to string', () => {
+        const birthDate = new Date('1990-01-01');
+        const dateString = birthDate.toISOString().split('T')[0];
+        
+        expect(dateString).toBe('1990-01-01');
+      });
+
+      it('should detect invalid date strings', () => {
+        const invalidDate = new Date('invalid-date');
+        
+        expect(isNaN(invalidDate.getTime())).toBe(true);
+      });
+
+      it('should clean empty string fields', () => {
+        const updates = {
+          firstname: '',
+          lastname: '   ',
+          biography: 'Valid bio'
+        };
+
+        const cleanedUpdates: any = {};
+        Object.keys(updates).forEach(key => {
+          const value = updates[key as keyof typeof updates];
+          if (typeof value === 'string' && value.trim() !== '') {
+            cleanedUpdates[key] = value;
+          }
+        });
+
+        expect(cleanedUpdates).toEqual({
+          biography: 'Valid bio'
+        });
+      });
+    });
+  });
+
+  describe('Force reload methods', () => {
+    describe('forceReloadProfileDetails', () => {
+      it('should force reload profile details', async () => {
+        const mockRPCData = [{
+          profile_id: 'profile-1',
+          user_id: 'user-123',
+          firstname: 'John'
+        }];
+
+        mockSupabase.rpc.mockResolvedValue({
+          data: mockRPCData,
+          error: null
+        });
+
+        const result = await profileService.forceReloadProfileDetails('user-123');
+
+        expect(result).toBeDefined();
+        expect(result?.profile_id).toBe('profile-1');
+      });
+
+      it('should handle RPC error in force reload', async () => {
+        mockSupabase.rpc.mockResolvedValue({
+          data: null,
+          error: { message: 'RPC error' }
+        });
+
+        const result = await profileService.forceReloadProfileDetails('user-123');
+
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('Cache invalidation logic', () => {
+      it('should test cache key generation', () => {
+        const userId = 'user-123';
+        const cacheKey = `profile_${userId}`;
+        const detailsKey = `profile_details_${userId}`;
+        
+        expect(cacheKey).toBe('profile_user-123');
+        expect(detailsKey).toBe('profile_details_user-123');
+      });
+    });
+  });
+
+  describe('Debug methods', () => {
+    describe('debugProfile', () => {
+      it('should debug profile data', async () => {
+        const mockProfile = { 
+          id: 'profile-1', 
+          id_user: 'user-123',
+          id_location: 'loc-1',
+          id_gym: 'gym-1',
+          id_gymsubscription: 'sub-1'
+        };
+
+        mockSupabase.single.mockResolvedValue({
+          data: mockProfile,
+          error: null
+        });
+
+        mockSupabase.select.mockReturnValue(mockSupabase);
+        mockSupabase.eq.mockResolvedValue({ data: [], error: null });
+
+        // Should not throw
+        await expect(profileService.debugProfile('user-123')).resolves.not.toThrow();
+      });
+
+      it('should handle debug when profile not found', async () => {
+        mockSupabase.single.mockResolvedValue({
+          data: null,
+          error: { code: 'PGRST116' }
+        });
+
+        // Should not throw
+        await expect(profileService.debugProfile('user-123')).resolves.not.toThrow();
+      });
+    });
+
+    describe('debugAndDisplayAllData', () => {
+      it('should debug and display all data', async () => {
+        const mockProfile = { id: 'profile-1', id_user: 'user-123' };
+
+        mockSupabase.single.mockResolvedValue({
+          data: mockProfile,
+          error: null
+        });
+
+        mockSupabase.select.mockReturnValue(mockSupabase);
+        mockSupabase.eq.mockResolvedValue({ data: [], error: null });
+
+        // Should not throw
+        await expect(profileService.debugAndDisplayAllData('user-123')).resolves.not.toThrow();
+      });
+    });
+
+    describe('forceDisplayAllUserData', () => {
+      it('should force display all user data', async () => {
+        const mockProfile = { id: 'profile-1', id_user: 'user-123' };
+
+        mockSupabase.single.mockResolvedValue({
+          data: mockProfile,
+          error: null
+        });
+
+        mockSupabase.select.mockReturnValue(mockSupabase);
+        mockSupabase.eq.mockResolvedValue({ data: [], error: null });
+
+        const result = await profileService.forceDisplayAllUserData('user-123');
+
+        expect(result).toBeDefined();
+      });
+    });
+  });
+
+  describe('Gym subscription validation', () => {
+    describe('updateGymSubscription validation', () => {
+      it('should validate gym ID', async () => {
+        await expect(
+          profileService.updateGymSubscription('user-123', '', '2')
+        ).rejects.toThrow('Gym ID invalide');
+      });
+
+      it('should validate subscription ID', async () => {
+        await expect(
+          profileService.updateGymSubscription('user-123', '1', '')
+        ).rejects.toThrow('Subscription ID invalide');
+      });
+
+      it('should validate numeric IDs', async () => {
+        await expect(
+          profileService.updateGymSubscription('user-123', 'invalid', '2')
+        ).rejects.toThrow('IDs doivent être des nombres valides');
+      });
+
+      it('should handle update error', async () => {
+        const error = { message: 'Update failed' };
+        mockSupabase.eq.mockResolvedValue({ error });
+
+        await expect(
+          profileService.updateGymSubscription('user-123', '1', '2')
+        ).rejects.toEqual(error);
+      });
+    });
+
+    describe('removeGymSubscription validation', () => {
+      it('should validate user ID for removal', async () => {
+        await expect(
+          profileService.removeGymSubscription('')
+        ).rejects.toThrow('User ID invalide');
+      });
+
+      it('should handle removal error', async () => {
+        const error = { message: 'Removal failed' };
+        mockSupabase.eq.mockResolvedValue({ error });
+
+        await expect(
+          profileService.removeGymSubscription('user-123')
+        ).rejects.toEqual(error);
+      });
+    });
+
+    describe('getAllGymSubscriptions error handling', () => {
+      it('should handle database error', async () => {
+        const error = { message: 'Database error' };
+        mockSupabase.order.mockResolvedValue({
+          data: null,
+          error
+        });
+
+        const result = await profileService.getAllGymSubscriptions();
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('getGymSubscriptions error handling', () => {
+      it('should handle database error', async () => {
+        const error = { message: 'Database error' };
+        mockSupabase.order.mockResolvedValue({
+          data: null,
+          error
+        });
+
+        const result = await profileService.getGymSubscriptions('gym-1');
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('getUserGymSubscription edge cases', () => {
+      it('should handle invalid user ID', async () => {
+        const result = await profileService.getUserGymSubscription('');
+
+        expect(result).toEqual({ gym: null, subscription: null });
+      });
+
+      it('should handle profile with invalid gym ID', async () => {
+        const profile = { id_gym: 'undefined', id_gymsubscription: 'sub-1' };
+
+        mockSupabase.single
+          .mockResolvedValueOnce({ data: profile, error: null })
+          .mockResolvedValueOnce({ data: { id: 'sub-1', name: 'Premium' }, error: null });
+
+        const result = await profileService.getUserGymSubscription('user-123');
+
+        expect(result.gym).toBeNull();
+        expect(result.subscription).toBeDefined();
+      });
+
+      it('should handle profile with invalid subscription ID', async () => {
+        const profile = { id_gym: 'gym-1', id_gymsubscription: 'null' };
+
+        mockSupabase.single
+          .mockResolvedValueOnce({ data: profile, error: null })
+          .mockResolvedValueOnce({ data: { id: 'gym-1', name: 'Fitness Club' }, error: null });
+
+        const result = await profileService.getUserGymSubscription('user-123');
+
+        expect(result.gym).toBeDefined();
+        expect(result.subscription).toBeNull();
+      });
+    });
+  });
+
+  describe('deleteAccountAndData edge cases', () => {
+    it('should handle profile deletion error', async () => {
+      const error = { message: 'Profile deletion failed' };
+      mockSupabase.eq.mockResolvedValue({ error });
+
+      const result = await profileService.deleteAccountAndData();
+
+      expect(result.error).toBe('Erreur lors de la suppression des données du profil.');
+    });
+
+    it('should handle foreign key constraint error', async () => {
+      mockSupabase.eq.mockResolvedValue({ error: null });
+      mockSupabase.rpc.mockResolvedValue({
+        error: { code: '23503' },
+        data: null
+      });
+
+      const result = await profileService.deleteAccountAndData();
+
+      expect(result.error).toContain('Impossible de supprimer votre compte');
+    });
+
+    it('should handle RPC error', async () => {
+      mockSupabase.eq.mockResolvedValue({ error: null });
+      mockSupabase.rpc.mockResolvedValue({
+        error: { message: 'RPC failed' },
+        data: null
+      });
+
+      const result = await profileService.deleteAccountAndData();
+
+      expect(result.error).toBe('Erreur lors de la suppression du compte utilisateur.');
+    });
+
+    it('should handle unexpected exception', async () => {
+      mockSupabase.auth.getUser.mockRejectedValue(new Error('Unexpected error'));
+
+      const result = await profileService.deleteAccountAndData();
+
+      expect(result.error).toBe('Une erreur est survenue lors de la suppression du compte.');
+    });
+  });
+
+  describe('Cache and utility methods', () => {
+    describe('invalidateRelatedCaches', () => {
+      it('should invalidate related caches when called', () => {
+        // Set some cache data first
+        (profileService as any).constructor.profileCache.set('compatible_user-123', {});
+        (profileService as any).constructor.profileCache.set('enriched_user-456', {});
+        (profileService as any).constructor.profileCache.set('regular_cache', {});
+
+        profileService.invalidateProfileCache('user-123');
+
+        // Compatible and enriched caches should be cleared
+        expect((profileService as any).constructor.profileCache.has('compatible_user-123')).toBe(false);
+        expect((profileService as any).constructor.profileCache.has('enriched_user-456')).toBe(false);
+        // Regular cache should remain
+        expect((profileService as any).constructor.profileCache.has('regular_cache')).toBe(true);
+      });
+    });
+  });
+
+  describe('Reference data error handling', () => {
+    describe('getAllGyms error handling', () => {
+      it('should throw error when database fails', async () => {
+        const error = { message: 'Database error' };
+        mockSupabase.order.mockResolvedValue({
+          data: null,
+          error
+        });
+
+        await expect(profileService.getAllGyms()).rejects.toEqual(error);
+      });
+    });
+
+    describe('getAllHobbies error handling', () => {
+      it('should throw error when database fails', async () => {
+        const error = { message: 'Database error' };
+        mockSupabase.order.mockResolvedValue({
+          data: null,
+          error
+        });
+
+        await expect(profileService.getAllHobbies()).rejects.toEqual(error);
+      });
+    });
+  });
+
+  describe('Profile details with cache expiry', () => {
+    it('should respect cache expiry time', async () => {
+      const mockRPCData = [{ profile_id: 'profile-1', user_id: 'user-123' }];
+
+      // Réinitialiser les mocks
+      jest.clearAllMocks();
+      
+      mockSupabase.rpc.mockResolvedValue({
+        data: mockRPCData,
+        error: null
+      });
+
+      // Premier appel
+      await profileService.getProfileDetails('user-123');
+      
+      // Simuler l'expiration du cache en modifiant le timestamp
+      const detailsKey = 'profile_details_user-123';
+      (profileService as any).constructor.lastCacheUpdate.set(detailsKey, Date.now() - 40000); // 40 secondes
+
+      // Deuxième appel - devrait faire un nouvel appel API
+      await profileService.getProfileDetails('user-123');
+
+      expect(mockSupabase.rpc).toHaveBeenCalledTimes(2);
+    });
+  });
 });

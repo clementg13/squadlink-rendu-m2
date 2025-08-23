@@ -16,7 +16,6 @@ app/
 ├── (public)/                   # 🌐 Routes publiques (sans authentification)
 │   ├── _layout.tsx
 │   ├── auth.tsx                # Page de connexion
-│   ├── forgot-password.tsx     # Réinitialisation mot de passe
 │   ├── onboarding.tsx          # Processus d'inscription
 │   ├── terms.tsx
 │   └── privacy.tsx
@@ -85,7 +84,6 @@ if (!user) {
 |-------|-------|-------------|
 | **Onboarding** | `/(public)/onboarding` | Processus d'inscription complet |
 | **Connexion** | `/(public)/auth` | Connexion utilisateur existant |
-| **Mot de passe oublié** | `/(public)/forgot-password` | Réinitialisation mot de passe |
 | **Terms** | `/(public)/terms` | Conditions d'utilisation |
 | **Privacy** | `/(public)/privacy` | Politique de confidentialité |
 

@@ -106,7 +106,7 @@ function MyComponent() {
 
 ```typescript
 // Hook principal
-const { user, session, loading, signIn, signUp, signOut, resetPassword } = useAuth();
+const { user, session, loading, signIn, signUp, signOut } = useAuth();
 
 // Hook pour vérifier l'authentification
 const isAuthenticated = useIsAuthenticated();

@@ -86,15 +86,7 @@ export default function AuthScreen() {
             />
           </View>
 
-          {/* Lien mot de passe oublié après les champs */}
-          <TouchableOpacity 
-            style={styles.forgotPasswordContainer}
-            onPress={() => router.push('/forgot-password')}
-            accessibilityLabel="Mot de passe oublié"
-            accessibilityHint="Appuyez pour réinitialiser votre mot de passe"
-          >
-            <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
-          </TouchableOpacity>
+
 
           <TouchableOpacity 
             style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
@@ -187,15 +179,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  forgotPasswordContainer: {
-    alignSelf: 'flex-end',
-    marginBottom: 20,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '500',
-  },
+
   signupLinkContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
