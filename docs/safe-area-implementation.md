@@ -24,7 +24,6 @@ Ajout du `SafeAreaProvider` dans le layout principal (`app/_layout.tsx`) pour qu
 Tous les écrans du dossier `app/(public)/` ont été mis à jour pour utiliser le nouveau `SafeAreaWrapper` :
 
 - `auth.tsx` - Écran de connexion
-- `forgot-password.tsx` - Écran de mot de passe oublié
 - `onboarding.tsx` - Écran d'onboarding
 - `privacy.tsx` - Page de politique de confidentialité
 - `terms.tsx` - Page de conditions d'utilisation
@@ -81,7 +80,6 @@ export default function MonEcran() {
 
 ### Écrans publics
 - `auth.tsx` : `#fff` (blanc)
-- `forgot-password.tsx` : `#fff` (blanc)
 - `onboarding.tsx` : `#fff` (blanc)
 - `privacy.tsx` : `#fff` (blanc)
 - `terms.tsx` : `#fff` (blanc)

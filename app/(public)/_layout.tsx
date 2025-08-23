@@ -32,7 +32,6 @@ export default function PublicLayout() {
       }}
     >
       <Stack.Screen name="auth" />
-      <Stack.Screen name="forgot-password" />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="terms" />
       <Stack.Screen name="privacy" />

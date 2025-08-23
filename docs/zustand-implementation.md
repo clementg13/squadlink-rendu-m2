@@ -64,7 +64,6 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
-  resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   
   // Utilitaires
   initialize: () => Promise<void>;
@@ -115,7 +114,6 @@ export const useAuth = () => {
     signIn: store.signIn,
     signUp: store.signUp,
     signOut: store.signOut,
-    resetPassword: store.resetPassword,
   };
 };
 

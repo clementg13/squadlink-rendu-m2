@@ -15,7 +15,6 @@ jest.mock('@/lib/supabase', () => {
     signUp: jest.fn(),
     signInWithPassword: jest.fn(),
     signOut: jest.fn(),
-    resetPasswordForEmail: jest.fn(),
     getSession: jest.fn(),
     onAuthStateChange: jest.fn(),
     getUser: jest.fn(),
@@ -366,43 +365,7 @@ describe('AuthStore', () => {
     });
   });
 
-  describe('Réinitialisation du mot de passe', () => {
-    it('devrait réinitialiser le mot de passe avec succès', async () => {
-      supabase.auth.resetPasswordForEmail.mockResolvedValue({ error: null });
 
-      const { result } = renderHook(() => useAuthStore());
-
-      await act(async () => {
-        const response = await result.current.resetPassword('test@example.com');
-        expect(response.error).toBeNull();
-      });
-
-      expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith('test@example.com');
-    });
-
-    it('devrait gérer les erreurs de réinitialisation', async () => {
-      const mockError = { message: 'Email not found' };
-      supabase.auth.resetPasswordForEmail.mockResolvedValue({ error: mockError });
-
-      const { result } = renderHook(() => useAuthStore());
-
-      await act(async () => {
-        const response = await result.current.resetPassword('test@example.com');
-        expect(response.error).toEqual(mockError);
-      });
-    });
-
-    it('devrait gérer les exceptions lors de la réinitialisation', async () => {
-      supabase.auth.resetPasswordForEmail.mockRejectedValue(new Error('Network error'));
-
-      const { result } = renderHook(() => useAuthStore());
-
-      await act(async () => {
-        const response = await result.current.resetPassword('test@example.com');
-        expect(response.error).toBeDefined();
-      });
-    });
-  });
 
   describe('Initialisation', () => {
     it('devrait initialiser le store avec succès', async () => {
@@ -522,7 +485,6 @@ describe('AuthStore', () => {
       expect(typeof result.current.signUp).toBe('function');
       expect(typeof result.current.signIn).toBe('function');
       expect(typeof result.current.signOut).toBe('function');
-      expect(typeof result.current.resetPassword).toBe('function');
       expect(typeof result.current.initialize).toBe('function');
       expect(typeof result.current.cleanup).toBe('function');
       expect(typeof result.current.setIsOnboarding).toBe('function');
@@ -645,7 +607,6 @@ describe('AuthStore', () => {
       expect(typeof result.current.signUp).toBe('function');
       expect(typeof result.current.signIn).toBe('function');
       expect(typeof result.current.signOut).toBe('function');
-      expect(typeof result.current.resetPassword).toBe('function');
       expect(typeof result.current.initialize).toBe('function');
       expect(typeof result.current.cleanup).toBe('function');
       expect(typeof result.current.setOnAuthChange).toBe('function');

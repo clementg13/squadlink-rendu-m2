@@ -24,7 +24,6 @@ interface AuthState {
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
-  resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
 
   // Méthodes utilitaires
   initialize: () => Promise<void>;
@@ -169,18 +168,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      // Réinitialisation du mot de passe
-      resetPassword: async (email: string) => {
-        try {
-          console.log('🔄 Store: Réinitialisation mot de passe pour:', email);
-          const { error } = await supabase.auth.resetPasswordForEmail(email);
-          console.log('🔄 Store: Résultat réinitialisation:', error ? 'Erreur' : 'Succès');
-          return { error };
-        } catch (error) {
-          console.error('❌ Store: Erreur lors de la réinitialisation du mot de passe:', error);
-          return { error: error as AuthError };
-        }
-      },
+
 
       // Initialisation du store
       initialize: async () => {
@@ -264,7 +252,7 @@ export const useAuth = () => {
     signUp: store.signUp,
     signIn: store.signIn,
     signOut: store.signOut,
-    resetPassword: store.resetPassword,
+
     initialize: store.initialize,
     cleanup: store.cleanup,
     setIsOnboarding: store.setIsOnboarding,
