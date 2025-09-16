@@ -241,7 +241,7 @@ export function useConversation(groupId: number) {
                       )));
                     }
                   }
-                } catch (e) {
+                } catch {
                   // silencieux: garder le fallback si la résolution échoue
                 }
               })();

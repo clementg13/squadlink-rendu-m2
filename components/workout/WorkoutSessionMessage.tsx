@@ -35,7 +35,7 @@ export default function WorkoutSessionMessage({
 
   const ensureUtc = (value: string) => {
     // Si la date n'a pas d'offset explicite ni de 'Z', on la considère comme UTC et on ajoute 'Z'
-    if (typeof value === 'string' && value.length > 0 && !/[zZ]|[\+\-]\d{2}:?\d{2}$/.test(value)) {
+    if (typeof value === 'string' && value.length > 0 && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(value)) {
       return `${value.replace(/\s+/g, 'T')}${value.includes('T') ? '' : 'T00:00:00'}Z`;
     }
     return value;
