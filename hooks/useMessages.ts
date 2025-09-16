@@ -178,7 +178,7 @@ export function useConversation(groupId: number) {
       
       // Ajouter le message à la liste locale et injecter une clé de tri interne ISO
       try {
-        Object.defineProperty(newMessage as any, '__sortDate', {
+        Object.defineProperty(newMessage as unknown as { __sortDate?: string }, '__sortDate', {
           value: new Date().toISOString(),
           enumerable: false,
           configurable: false,
@@ -228,7 +228,7 @@ export function useConversation(groupId: number) {
               status: 'sent',
             };
             try {
-              Object.defineProperty(uiMessage as any, '__sortDate', {
+              Object.defineProperty(uiMessage as unknown as { __sortDate?: string }, '__sortDate', {
                 value: new Date(newMessage.send_date).toISOString(),
                 enumerable: false,
                 configurable: false,

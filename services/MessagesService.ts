@@ -201,7 +201,7 @@ export class MessageService {
           month: '2-digit',
         }).format(date);
       }
-    } catch (_e) {
+    } catch {
       return '';
     }
   }
