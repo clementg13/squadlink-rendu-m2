@@ -342,9 +342,11 @@ export default function ConversationScreen() {
       } else {
         // C'est un message - gérer les différents formats de timestamp
         try {
-          // Prioriser le champ ISO brut pour l'ordre si disponible
-          if ('sentAt' in a && a.sentAt) {
-            aTime = a.sentAt;
+          // Prioriser une date ISO interne si disponible (non énumérable)
+          // @ts-ignore
+          if ((a as any).__sortDate) {
+            // @ts-ignore
+            aTime = (a as any).__sortDate as string;
           } else if (!a.timestamp || a.timestamp === '') {
             console.warn('⚠️ Message avec timestamp invalide:', a);
             return 1;
@@ -385,8 +387,10 @@ export default function ConversationScreen() {
       } else {
         // C'est un message - gérer les différents formats de timestamp
         try {
-          if ('sentAt' in b && b.sentAt) {
-            bTime = b.sentAt;
+          // @ts-ignore
+          if ((b as any).__sortDate) {
+            // @ts-ignore
+            bTime = (b as any).__sortDate as string;
           } else if (!b.timestamp || b.timestamp === '') {
             console.warn('⚠️ Message avec timestamp invalide:', b);
             return -1;

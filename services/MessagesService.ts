@@ -161,34 +161,48 @@ export class MessageService {
   }
 
   private static formatDate(dateString: string): string {
-    const ensureUtc = (value: string) => {
-      if (typeof value === 'string' && value.length > 0 && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(value)) {
-        return `${value.replace(/\s+/g, 'T')}${value.includes('T') ? '' : 'T00:00:00'}Z`;
+    try {
+      // Garde d'entrées invalides ou vides
+      if (!dateString || typeof dateString !== 'string') {
+        return '';
       }
-      return value;
-    };
 
-    const date = new Date(ensureUtc(dateString));
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const ensureUtc = (value: string) => {
+        if (typeof value === 'string' && value.length > 0 && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(value)) {
+          return `${value.replace(/\s+/g, 'T')}${value.includes('T') ? '' : 'T00:00:00'}Z`;
+        }
+        return value;
+      };
 
-    if (diffMinutes < 1) {
-      return 'À l\'instant';
-    } else if (diffMinutes < 60) {
-      return `${diffMinutes}m`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h`;
-    } else if (diffDays < 7) {
-      return `${diffDays}j`;
-    } else {
-      return new Intl.DateTimeFormat('fr-FR', {
-        timeZone: 'Europe/Paris',
-        day: '2-digit',
-        month: '2-digit',
-      }).format(date);
+      const ensured = ensureUtc(dateString);
+      const date = new Date(ensured);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffMinutes < 1) {
+        return 'À l\'instant';
+      } else if (diffMinutes < 60) {
+        return `${diffMinutes}m`;
+      } else if (diffHours < 24) {
+        return `${diffHours}h`;
+      } else if (diffDays < 7) {
+        return `${diffDays}j`;
+      } else {
+        return new Intl.DateTimeFormat('fr-FR', {
+          timeZone: 'Europe/Paris',
+          day: '2-digit',
+          month: '2-digit',
+        }).format(date);
+      }
+    } catch (_e) {
+      return '';
     }
   }
 }
