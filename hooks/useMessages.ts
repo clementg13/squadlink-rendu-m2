@@ -134,6 +134,7 @@ export function useConversation(groupId: number) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const senderNameCacheRef = useRef<Map<string, string>>(new Map());
 
   // Charger les messages
   const loadMessages = useCallback(async () => {
@@ -145,6 +146,12 @@ export function useConversation(groupId: number) {
       
       const data = await ConversationService.getGroupMessages(groupId, user.id);
       setMessages(data);
+      // Pré-remplir un cache des noms pour accélérer la résolution ultérieure
+      data.forEach((msg) => {
+        if (msg.senderId && msg.senderName) {
+          senderNameCacheRef.current.set(msg.senderId, msg.senderName);
+        }
+      });
       
       // Marquer les messages comme lus
       await ConversationService.markMessagesAsRead(groupId, user.id);
@@ -197,18 +204,47 @@ export function useConversation(groupId: number) {
             // Éviter de dupliquer nos propres messages
             if (newMessage.id_sender === user.id) return;
             
-            // Convertir le message de la base de données en format UI
+            // Déterminer un nom d'expéditeur instantané via cache (sinon fallback)
+            const cachedName = senderNameCacheRef.current.get(newMessage.id_sender);
+
+            // Convertir le message de la base de données en format UI (nom provisoire)
             const uiMessage: Message = {
               id: newMessage.id,
               text: newMessage.content,
               senderId: newMessage.id_sender,
-              senderName: `Utilisateur ${newMessage.id_sender.slice(0, 8)}...`,
+              senderName: cachedName || `Utilisateur ${newMessage.id_sender.slice(0, 8)}...`,
               timestamp: ConversationService.formatMessageTime(newMessage.send_date),
               isMe: false,
               status: 'sent',
             };
 
             setMessages(prev => [...prev, uiMessage]);
+
+            // Si pas dans le cache, récupérer prénom/nom et mettre à jour le message inséré
+            if (!cachedName) {
+              (async () => {
+                try {
+                  const { data: profile, error: profileError } = await supabase
+                    .from('profile')
+                    .select('firstname, lastname')
+                    .eq('id_user', newMessage.id_sender)
+                    .single();
+
+                  if (!profileError && profile && (profile.firstname || profile.lastname)) {
+                    const resolvedName = `${profile.firstname || ''} ${profile.lastname || ''}`.trim();
+                    if (resolvedName.length > 0) {
+                      senderNameCacheRef.current.set(newMessage.id_sender, resolvedName);
+                      // Mettre à jour le message correspondant dans le state
+                      setMessages(prev => prev.map(m => (
+                        m.id === newMessage.id ? { ...m, senderName: resolvedName } : m
+                      )));
+                    }
+                  }
+                } catch (e) {
+                  // silencieux: garder le fallback si la résolution échoue
+                }
+              })();
+            }
           }
         );
       } catch (error) {
