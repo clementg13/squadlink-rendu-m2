@@ -176,7 +176,7 @@ export function useConversation(groupId: number) {
         content.trim()
       );
       
-      // Ajouter le message à la liste locale
+      // Ajouter le message à la liste locale (il aura sentAt pour un tri robuste)
       setMessages(prev => [...prev, newMessage]);
       return true;
     } catch (err) {
@@ -214,6 +214,7 @@ export function useConversation(groupId: number) {
               senderId: newMessage.id_sender,
               senderName: cachedName || `Utilisateur ${newMessage.id_sender.slice(0, 8)}...`,
               timestamp: ConversationService.formatMessageTime(newMessage.send_date),
+              sentAt: new Date(newMessage.send_date).toISOString(),
               isMe: false,
               status: 'sent',
             };
