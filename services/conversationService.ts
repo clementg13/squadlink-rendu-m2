@@ -56,6 +56,7 @@ export class ConversationService {
           senderId: msg.id_sender,
           senderName,
           timestamp: this.formatMessageTime(msg.send_date),
+          sentAt: new Date(msg.send_date).toISOString(),
           isMe: msg.id_sender === userId,
           status: 'sent',
         };
@@ -102,6 +103,7 @@ export class ConversationService {
         senderId: data.id_sender,
         senderName: 'Vous',
         timestamp: this.formatMessageTime(data.send_date),
+        sentAt: new Date(data.send_date).toISOString(),
         isMe: true,
         status: 'sent',
       };
@@ -165,7 +167,7 @@ export class ConversationService {
   // Formater l'heure d'un message
   static formatMessageTime(dateString: string): string {
     const ensureUtc = (value: string) => {
-      if (typeof value === 'string' && value.length > 0 && !/[zZ]|[\+\-]\d{2}:?\d{2}$/.test(value)) {
+      if (typeof value === 'string' && value.length > 0 && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(value)) {
         return `${value.replace(/\s+/g, 'T')}${value.includes('T') ? '' : 'T00:00:00'}Z`;
       }
       return value;

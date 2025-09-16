@@ -15,6 +15,8 @@ export interface Message {
   senderId: string;
   senderName: string;
   timestamp: string;
+  // ISO de la date d'envoi pour le tri chronologique fiable
+  sentAt?: string;
   isMe: boolean;
   status?: 'sending' | 'sent' | 'delivered' | 'read';
 }

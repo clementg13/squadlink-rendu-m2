@@ -342,13 +342,16 @@ export default function ConversationScreen() {
       } else {
         // C'est un message - gérer les différents formats de timestamp
         try {
-          if (!a.timestamp || a.timestamp === '') {
+          // Prioriser le champ ISO brut pour l'ordre si disponible
+          if ('sentAt' in a && a.sentAt) {
+            aTime = a.sentAt;
+          } else if (!a.timestamp || a.timestamp === '') {
             console.warn('⚠️ Message avec timestamp invalide:', a);
             return 1;
           }
           
           // Si le timestamp est au format dd/MM HH:MM
-          if (/^\d{2}\/\d{2}\s\d{2}:\d{2}$/.test(a.timestamp)) {
+          if (!aTime && /^\d{2}\/\d{2}\s\d{2}:\d{2}$/.test(a.timestamp)) {
             const [datePart, timePart] = a.timestamp.split(' ');
             const [day, month] = datePart.split('/');
             const [hours, minutes] = timePart.split(':');
@@ -357,14 +360,14 @@ export default function ConversationScreen() {
             aTime = messageDate.toISOString();
           }
           // Si le timestamp est au format HH:MM, utiliser la date d'aujourd'hui
-          else if (/^\d{2}:\d{2}$/.test(a.timestamp)) {
+          else if (!aTime && /^\d{2}:\d{2}$/.test(a.timestamp)) {
             const today = new Date();
             const [hours, minutes] = a.timestamp.split(':');
             today.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
             aTime = today.toISOString();
           } else {
             // Essayer de parser comme une date normale
-            aTime = new Date(a.timestamp).toISOString();
+            aTime = aTime || new Date(a.timestamp).toISOString();
           }
         } catch {
           console.warn('⚠️ Erreur conversion timestamp message:', a.timestamp);
@@ -382,13 +385,15 @@ export default function ConversationScreen() {
       } else {
         // C'est un message - gérer les différents formats de timestamp
         try {
-          if (!b.timestamp || b.timestamp === '') {
+          if ('sentAt' in b && b.sentAt) {
+            bTime = b.sentAt;
+          } else if (!b.timestamp || b.timestamp === '') {
             console.warn('⚠️ Message avec timestamp invalide:', b);
             return -1;
           }
           
           // Si le timestamp est au format dd/MM HH:MM
-          if (/^\d{2}\/\d{2}\s\d{2}:\d{2}$/.test(b.timestamp)) {
+          if (!bTime && /^\d{2}\/\d{2}\s\d{2}:\d{2}$/.test(b.timestamp)) {
             const [datePart, timePart] = b.timestamp.split(' ');
             const [day, month] = datePart.split('/');
             const [hours, minutes] = timePart.split(':');
@@ -397,14 +402,14 @@ export default function ConversationScreen() {
             bTime = messageDate.toISOString();
           }
           // Si le timestamp est au format HH:MM, utiliser la date d'aujourd'hui
-          else if (/^\d{2}:\d{2}$/.test(b.timestamp)) {
+          else if (!bTime && /^\d{2}:\d{2}$/.test(b.timestamp)) {
             const today = new Date();
             const [hours, minutes] = b.timestamp.split(':');
             today.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
             bTime = today.toISOString();
           } else {
             // Essayer de parser comme une date normale
-            bTime = new Date(b.timestamp).toISOString();
+            bTime = bTime || new Date(b.timestamp).toISOString();
           }
         } catch {
           console.warn('⚠️ Erreur conversion timestamp message:', b.timestamp);
