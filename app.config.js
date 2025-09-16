@@ -4,7 +4,7 @@ export default {
   expo: {
     name: 'Squadlink',
     slug: 'squadlink',
-    version: '1.1.2',
+    version: '1.1.3',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'squadlink',
