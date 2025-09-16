@@ -33,19 +33,28 @@ export default function WorkoutSessionMessage({
   // (utile si tu utilises des mocks ou des anciennes données)
   const createdBy = (session as WorkoutSession & { created_by?: string }).created_by ?? session.created_by ?? '';
 
+  const ensureUtc = (value: string) => {
+    // Si la date n'a pas d'offset explicite ni de 'Z', on la considère comme UTC et on ajoute 'Z'
+    if (typeof value === 'string' && value.length > 0 && !/[zZ]|[\+\-]\d{2}:?\d{2}$/.test(value)) {
+      return `${value.replace(/\s+/g, 'T')}${value.includes('T') ? '' : 'T00:00:00'}Z`;
+    }
+    return value;
+  };
+
   const formatDate = (dateString: string) => {
     try {
-      const date = new Date(dateString);
+      const date = new Date(ensureUtc(dateString));
       if (isNaN(date.getTime())) {
         console.warn('⚠️ Date invalide dans formatDate:', dateString);
         return 'Date invalide';
       }
-      return date.toLocaleDateString('fr-FR', {
+      return new Intl.DateTimeFormat('fr-FR', {
+        timeZone: 'Europe/Paris',
         weekday: 'long',
         day: 'numeric',
         month: 'long',
         year: 'numeric',
-      });
+      }).format(date);
     } catch (error) {
       console.error('❌ Erreur formatDate:', error, 'pour:', dateString);
       return 'Date invalide';
@@ -54,15 +63,16 @@ export default function WorkoutSessionMessage({
 
   const formatTime = (dateString: string) => {
     try {
-      const date = new Date(dateString);
+      const date = new Date(ensureUtc(dateString));
       if (isNaN(date.getTime())) {
         console.warn('⚠️ Date invalide dans formatTime:', dateString);
         return 'Heure invalide';
       }
-      return date.toLocaleTimeString('fr-FR', {
+      return new Intl.DateTimeFormat('fr-FR', {
+        timeZone: 'Europe/Paris',
         hour: '2-digit',
         minute: '2-digit',
-      });
+      }).format(date);
     } catch (error) {
       console.error('❌ Erreur formatTime:', error, 'pour:', dateString);
       return 'Heure invalide';

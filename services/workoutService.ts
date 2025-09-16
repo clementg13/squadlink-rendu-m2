@@ -174,12 +174,12 @@ export const workoutService = {
           try {
             const participants = await this.getWorkoutSessionParticipants(session.id);
             
-            // S'assurer que toutes les dates sont des ISO strings valides
+            // Préserver les chaînes de date telles que renvoyées par Supabase pour éviter les décalages horaires
             const cleanSession = {
               ...session,
-              start_date: new Date(session.start_date).toISOString(),
-              end_date: new Date(session.end_date).toISOString(),
-              created_at: session.created_at ? new Date(session.created_at).toISOString() : new Date().toISOString(),
+              start_date: session.start_date,
+              end_date: session.end_date,
+              created_at: session.created_at ?? new Date().toISOString(),
               participants,
               participantCount: participants.length,
             };
@@ -189,9 +189,9 @@ export const workoutService = {
             console.error('❌ Erreur lors de la récupération des participants pour la session', session.id, ':', error);
             return {
               ...session,
-              start_date: new Date(session.start_date).toISOString(),
-              end_date: new Date(session.end_date).toISOString(),
-              created_at: session.created_at ? new Date(session.created_at).toISOString() : new Date().toISOString(),
+              start_date: session.start_date,
+              end_date: session.end_date,
+              created_at: session.created_at ?? new Date().toISOString(),
               participants: [],
               participantCount: 0,
             };

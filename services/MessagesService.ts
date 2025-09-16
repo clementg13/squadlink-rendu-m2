@@ -161,7 +161,14 @@ export class MessageService {
   }
 
   private static formatDate(dateString: string): string {
-    const date = new Date(dateString);
+    const ensureUtc = (value: string) => {
+      if (typeof value === 'string' && value.length > 0 && !/[zZ]|[\+\-]\d{2}:?\d{2}$/.test(value)) {
+        return `${value.replace(/\s+/g, 'T')}${value.includes('T') ? '' : 'T00:00:00'}Z`;
+      }
+      return value;
+    };
+
+    const date = new Date(ensureUtc(dateString));
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
@@ -177,10 +184,11 @@ export class MessageService {
     } else if (diffDays < 7) {
       return `${diffDays}j`;
     } else {
-      return date.toLocaleDateString('fr-FR', { 
-        day: '2-digit', 
-        month: '2-digit' 
-      });
+      return new Intl.DateTimeFormat('fr-FR', {
+        timeZone: 'Europe/Paris',
+        day: '2-digit',
+        month: '2-digit',
+      }).format(date);
     }
   }
 }
