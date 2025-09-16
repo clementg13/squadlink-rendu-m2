@@ -14,6 +14,7 @@ import { ProfileSport, ProfileHobby } from '@/types/profile';
 import { useAuthUser } from '@/stores/authStore';
 import ProfileCard from './ProfileCard';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import { useMatchRefreshStore } from '@/stores/matchRefreshStore';
 
 interface CompatibleProfilesListProps {
   onProfilePress?: (profile: CompatibleProfile) => void;
@@ -27,6 +28,7 @@ export default function CompatibleProfilesList({
   userName: _userName = 'Utilisateur' 
 }: CompatibleProfilesListProps) {
   const user = useAuthUser();
+  const triggerRefresh = useMatchRefreshStore((state) => state.triggerRefresh);
   const {
     profiles,
     loading,
@@ -59,10 +61,12 @@ export default function CompatibleProfilesList({
   }, [onProfilePress]);
 
   // Gérer le pull-to-refresh
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = useCallback(async () => {
     console.log('🔄 CompatibleProfilesList: Pull-to-refresh déclenché');
-    refresh();
-  }, [refresh]);
+    await refresh();
+    // Déclencher le rafraîchissement global pour mettre à jour les autres composants (ex: PendingMatchesNotification)
+    triggerRefresh();
+  }, [refresh, triggerRefresh]);
 
   // Gérer le chargement de plus de profils (scroll infini)
   const handleLoadMore = useCallback(() => {
