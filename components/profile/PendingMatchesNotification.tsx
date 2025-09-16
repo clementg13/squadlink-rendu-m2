@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { MatchService } from '@/services/matchService';
 import { router } from 'expo-router';
 import { useMatchRefreshStore } from '@/stores/matchRefreshStore';
+import { useAuthUser, useAuthLoading } from '@/stores/authStore';
 
 export default function PendingMatchesNotification() {
   const [pendingCount, setPendingCount] = useState(0);
@@ -18,8 +19,15 @@ export default function PendingMatchesNotification() {
   const refreshTrigger = useMatchRefreshStore((state) => state.refreshTrigger);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAnimatedRef = useRef(false);
+  const user = useAuthUser();
+  const authLoading = useAuthLoading();
 
   useEffect(() => {
+    // Attendre que l'auth soit prête et qu'un utilisateur existe
+    if (authLoading || !user?.id) {
+      return;
+    }
+
     // Debounce pour éviter les refreshs trop fréquents
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -44,7 +52,7 @@ export default function PendingMatchesNotification() {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [refreshTrigger, fadeAnim]);
+  }, [refreshTrigger, fadeAnim, user?.id, authLoading]);
 
   const loadPendingCount = async () => {
     try {
