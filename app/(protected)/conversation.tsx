@@ -328,8 +328,8 @@ export default function ConversationScreen() {
   ].sort((a, b) => {
     try {
       // Utiliser created_at pour les séances et timestamp pour les messages
-      let aTime: string;
-      let bTime: string;
+      let aTime: string | null = null;
+      let bTime: string | null = null;
       
       if ('start_date' in a) {
         // C'est une séance d'entraînement
@@ -342,9 +342,9 @@ export default function ConversationScreen() {
       } else {
         // C'est un message - gérer les différents formats de timestamp
         try {
-          // Prioriser le champ ISO brut pour l'ordre si disponible
-          if ('sentAt' in a && a.sentAt) {
-            aTime = a.sentAt;
+          // Prioriser une date ISO interne si disponible (non énumérable)
+          if ((a as unknown as { __sortDate?: string }).__sortDate) {
+            aTime = (a as unknown as { __sortDate?: string }).__sortDate as string;
           } else if (!a.timestamp || a.timestamp === '') {
             console.warn('⚠️ Message avec timestamp invalide:', a);
             return 1;
@@ -385,8 +385,8 @@ export default function ConversationScreen() {
       } else {
         // C'est un message - gérer les différents formats de timestamp
         try {
-          if ('sentAt' in b && b.sentAt) {
-            bTime = b.sentAt;
+          if ((b as unknown as { __sortDate?: string }).__sortDate) {
+            bTime = (b as unknown as { __sortDate?: string }).__sortDate as string;
           } else if (!b.timestamp || b.timestamp === '') {
             console.warn('⚠️ Message avec timestamp invalide:', b);
             return -1;
@@ -418,8 +418,8 @@ export default function ConversationScreen() {
       }
       
       // Validation des dates avant création d'objets Date
-      const dateA = new Date(aTime);
-      const dateB = new Date(bTime);
+      const dateA = new Date((aTime as string));
+      const dateB = new Date((bTime as string));
       
       // Vérifier que les dates sont valides ET dans une plage raisonnable
       const minDate = new Date('1970-01-01').getTime();

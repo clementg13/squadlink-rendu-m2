@@ -176,7 +176,17 @@ export function useConversation(groupId: number) {
         content.trim()
       );
       
-      // Ajouter le message à la liste locale (il aura sentAt pour un tri robuste)
+      // Ajouter le message à la liste locale et injecter une clé de tri interne ISO
+      try {
+        Object.defineProperty(newMessage as unknown as { __sortDate?: string }, '__sortDate', {
+          value: new Date().toISOString(),
+          enumerable: false,
+          configurable: false,
+          writable: false,
+        });
+      } catch {
+        void 0;
+      }
       setMessages(prev => [...prev, newMessage]);
       return true;
     } catch (err) {
@@ -214,10 +224,19 @@ export function useConversation(groupId: number) {
               senderId: newMessage.id_sender,
               senderName: cachedName || `Utilisateur ${newMessage.id_sender.slice(0, 8)}...`,
               timestamp: ConversationService.formatMessageTime(newMessage.send_date),
-              sentAt: new Date(newMessage.send_date).toISOString(),
               isMe: false,
               status: 'sent',
             };
+            try {
+              Object.defineProperty(uiMessage as unknown as { __sortDate?: string }, '__sortDate', {
+                value: new Date(newMessage.send_date).toISOString(),
+                enumerable: false,
+                configurable: false,
+                writable: false,
+              });
+            } catch {
+              void 0;
+            }
 
             setMessages(prev => [...prev, uiMessage]);
 

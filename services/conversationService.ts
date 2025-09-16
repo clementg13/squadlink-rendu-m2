@@ -50,16 +50,23 @@ export class ConversationService {
           senderName = `Utilisateur ${msg.id_sender.slice(0, 8)}...`;
         }
 
-        return {
+        const base: Message = {
           id: msg.id,
           text: msg.content,
           senderId: msg.id_sender,
           senderName,
           timestamp: this.formatMessageTime(msg.send_date),
-          sentAt: new Date(msg.send_date).toISOString(),
           isMe: msg.id_sender === userId,
           status: 'sent',
         };
+        // Ajouter une clé de tri non énumérable avec la vraie date ISO
+        Object.defineProperty(base, '__sortDate', {
+          value: new Date(msg.send_date).toISOString(),
+          enumerable: false,
+          configurable: false,
+          writable: false,
+        });
+        return base;
       });
 
       return uiMessages;
@@ -103,10 +110,15 @@ export class ConversationService {
         senderId: data.id_sender,
         senderName: 'Vous',
         timestamp: this.formatMessageTime(data.send_date),
-        sentAt: new Date(data.send_date).toISOString(),
         isMe: true,
         status: 'sent',
       };
+      Object.defineProperty(uiMessage, '__sortDate', {
+        value: new Date(data.send_date).toISOString(),
+        enumerable: false,
+        configurable: false,
+        writable: false,
+      });
 
       return uiMessage;
 
@@ -166,32 +178,45 @@ export class ConversationService {
 
   // Formater l'heure d'un message
   static formatMessageTime(dateString: string): string {
-    const ensureUtc = (value: string) => {
-      if (typeof value === 'string' && value.length > 0 && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(value)) {
-        return `${value.replace(/\s+/g, 'T')}${value.includes('T') ? '' : 'T00:00:00'}Z`;
+    try {
+      if (!dateString || typeof dateString !== 'string') {
+        return '';
       }
-      return value;
-    };
 
-    const date = new Date(ensureUtc(dateString));
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const ensureUtc = (value: string) => {
+        if (typeof value === 'string' && value.length > 0 && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(value)) {
+          return `${value.replace(/\s+/g, 'T')}${value.includes('T') ? '' : 'T00:00:00'}Z`;
+        }
+        return value;
+      };
 
-    if (diffHours < 24) {
-      return new Intl.DateTimeFormat('fr-FR', {
-        timeZone: 'Europe/Paris',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(date);
-    } else {
-      return new Intl.DateTimeFormat('fr-FR', {
-        timeZone: 'Europe/Paris',
-        day: '2-digit',
-        month: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(date);
+      const ensured = ensureUtc(dateString);
+      const date = new Date(ensured);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+      if (diffHours < 24) {
+        return new Intl.DateTimeFormat('fr-FR', {
+          timeZone: 'Europe/Paris',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(date);
+      } else {
+        return new Intl.DateTimeFormat('fr-FR', {
+          timeZone: 'Europe/Paris',
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(date);
+      }
+    } catch {
+      return '';
     }
   }
 }
